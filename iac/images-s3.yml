@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template for S3 bucket
+
+Resources:
+  ImagesBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+Outputs:
+  ImagesBucketName:
+    Description: Name of the images S3 bucket
+    Value: !Ref ImagesBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-ImagesBucketName"
+  ImagesBucketArn:
+    Description: ARN of the images S3 bucket
+    Value: !GetAtt ImagesBucket.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-ImagesBucketArn"
+  

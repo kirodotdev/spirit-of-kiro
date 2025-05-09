@@ -1,0 +1,30 @@
+import { BedrockRuntimeClient, ConverseCommand } from '@aws-sdk/client-bedrock-runtime';
+
+// Initialize the Bedrock client
+const bedrockClient = new BedrockRuntimeClient({
+  region: 'us-east-1', // Update with your preferred AWS region
+});
+
+export const invoke = async (prompt: object): Promise<string | undefined> => {
+  try {
+    // Create the command to converse with the model
+    const command = new ConverseCommand({
+      modelId: 'us.amazon.nova-lite-v1:0', 
+      ...prompt
+    });
+
+    // Invoke the model using Converse API
+    const response = await bedrockClient.send(command);
+
+    console.info(response);
+    
+    // Extract the response text
+    const output = response.output?.message?.content?.[0]?.text;
+    
+    console.log(`LLM - Latency: ${response.metrics?.latencyMs} Cache: ${response.usage?.cacheReadInputTokens} In: ${response.usage?.inputTokens} Out: ${response.usage?.outputTokens}`);
+    return output;
+  } catch (err) {
+    console.error(err);
+    return undefined;
+  }
+};

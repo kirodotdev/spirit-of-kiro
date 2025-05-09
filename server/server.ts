@@ -1,0 +1,117 @@
+import { type Serve } from 'bun';
+import { ServerWebSocket } from 'bun';
+import handlePing from './handlers/ping';
+import handleSignin from './handlers/signin';
+import handleSignup from './handlers/signup';
+import handlePullItem from './handlers/pull-item';
+import handleListInventory from './handlers/list-inventory';
+import handleDiscardItem from './handlers/discard-item';
+import handleEquipItem from './handlers/equip-item';
+import { formatMessage } from './utils/message';
+import { WebSocketMessage, SignupMessage, SigninMessage, PullItemMessage, ListInventoryMessage, DiscardItemMessage, EquipItemMessage, ConnectionState } from './types';
+import * as config from './config';
+
+interface WebSocketData {
+  state: ConnectionState;
+}
+
+/**
+ * Logs all configuration values for debugging purposes
+ */
+function logConfigForDebugging() {  
+  console.log('\n[DYNAMODB CONFIG]');
+  console.log(JSON.stringify(config.DYNAMODB_CONFIG, null, 2));
+  
+  console.log('\n[S3 CONFIG]');
+  console.log(JSON.stringify(config.S3_CONFIG, null, 2));
+  
+  console.log('\n[CLOUDFRONT CONFIG]');
+  console.log(JSON.stringify(config.CLOUDFRONT_CONFIG, null, 2));
+}
+
+// Log all configuration values before starting the server
+logConfigForDebugging();
+
+export default {
+  port: 8080,
+  async fetch(req, server) {
+    // Upgrade to websocket
+    if (req.headers.get('Upgrade') === 'websocket') {
+      if (server.upgrade(req)) {
+        return;
+      }
+      return new Response('Upgrade failed', { status: 500 });
+    }
+
+    return new Response("404!");
+  },
+  websocket: {
+    open(ws: ServerWebSocket<WebSocketData>) {
+      const state: ConnectionState = { ws };
+      ws.data = { state };
+      console.log('A client connected');
+    },
+    async message(ws: ServerWebSocket<WebSocketData>, message: string | Buffer) {
+      console.log("Server got message", message);
+      if (typeof message !== 'string') {
+        ws.send(formatMessage('error', 'Invalid message format'));
+        return;
+      }
+
+      let data: WebSocketMessage;
+      try {
+        data = JSON.parse(message);
+      } catch (e) {
+        ws.send(formatMessage('error', 'Invalid message format'));
+        return;
+      }
+
+      if (!ws.data?.state) {
+        ws.send(formatMessage('error', 'No connection state'));
+        return;
+      }
+
+      let result: {
+        type: string;
+        body?: any;
+      };
+
+      switch (data.type) {
+        case 'ping':
+          result = await handlePing(ws.data.state);
+          ws.send(formatMessage(result.type))
+          break;
+        case 'signup':
+          result = await handleSignup(ws.data.state, data as SignupMessage);
+          ws.send(formatMessage(result.type, result.body))
+          break;
+        case 'signin':
+          result = await handleSignin(ws.data.state, data as SigninMessage);
+          ws.send(formatMessage(result.type, result.body))
+          break;
+        case 'pull-item':
+          result = await handlePullItem(ws.data.state, data as PullItemMessage);
+          ws.send(formatMessage(result.type, result.body))
+          break;
+        case 'list-inventory':
+          result = await handleListInventory(ws.data.state, data as ListInventoryMessage);
+          ws.send(formatMessage(result.type, result.body))
+          break;
+        case 'discard-item':
+          result = await handleDiscardItem(ws.data.state, data as DiscardItemMessage);
+          ws.send(formatMessage(result.type, result.body));
+          break;
+        case 'equip-item':
+          result = await handleEquipItem(ws.data.state, data as EquipItemMessage);
+          ws.send(formatMessage(result.type, result.body));
+          break;
+        default:
+          ws.send(formatMessage('error', 'Invalid message type'));
+      }
+    },
+    close(_ws, _code, _message) {
+      console.log('Client disconnected');
+    },
+    drain(_ws) { }
+  }
+} satisfies Serve;

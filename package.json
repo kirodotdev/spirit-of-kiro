@@ -1,0 +1,14 @@
+{
+  "name": "ai-scrapyard",
+  "version": "1.0.0",
+  "description": "AI-powered scrapyard game with client and server components",
+  "scripts": {
+    "start": "bun launch.ts",
+    "dev": "bun launch.ts"
+  },
+  "dependencies": {
+    "@types/uuid": "^10.0.0",
+    "bun": "^1.0.0",
+    "uuid": "^11.1.0"
+  }
+}

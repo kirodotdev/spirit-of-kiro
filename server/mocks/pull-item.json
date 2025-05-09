@@ -1,0 +1,33 @@
+{
+  "story": "The portal crackles with interdimensional static before belching out a cloud of flour dust. Through the haze tumbles what appears to be a possessed kitchen appliance, its beaters spinning lazily and trailing wisps of otherworldly energy.",
+  "items": [{
+      "name": "ValhallaMix 3000 Battle Mixer",
+      "weight": "4.2 lbs",
+      "value": 245,
+      "icon": "mixer",
+      "description": "A hand mixer that seems to have been enchanted by ancient Norse kitchen magic. The chrome body features runic engravings that pulse with a faint blue glow, and the beaters are forged from what appears to be dwarven steel. Small sparks occasionally shoot from the speed settings which are labeled in Elder Futhark.",
+      "color": "Chrome and Battle-Scarred Bronze",
+      "materials": ["enchanted metal", "dwarven steel", "runic crystal"],
+      "damage": "Speed setting 3 causes dimensional rifts, right beater slightly bent from fighting frost giants",
+      "equipmentSlots": [
+          {
+              "slot": "hands",
+              "effects": "User's beard grows 3 inches longer and braids itself automatically (beardless users manifest a ghostly Viking beard)"
+          },
+          {
+              "slot": "toolbelt",
+              "effects": "Emits war chants when cooking, all baked goods come out shaped like longships"
+          }
+      ],
+      "skills": [
+          {
+              "name": "Whisk of the Valkyries",
+              "description": "Summons a spectral choir of Valkyries to help whip cream or beat eggs while singing epic ballads about your baking prowess"
+          },
+          {
+              "name": "Ragnarök Roll",
+              "description": "Violently mixes ingredients while creating a small localized thunder storm, guaranteed to make the fluffiest meringue in the nine realms"
+          }
+      ]
+  }]
+}

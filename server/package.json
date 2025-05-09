@@ -1,0 +1,27 @@
+{
+  "name": "websocket-server",
+  "version": "1.0.0",
+  "description": "A simple Node.js websocket server",
+  "main": "server.js",
+  "scripts": {
+    "start": "bun server.js",
+    "test": "bun test --bail --reporter=junit --reporter-outfile=./bun-tests.xml"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.0.0",
+    "@aws-sdk/client-dynamodb": "^3.0.0",
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/lib-dynamodb": "^3.0.0",
+    "sharp": "^0.34.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.1.14"
+  },
+  "aiEditorAgent": {
+    "testConfig": {
+      "script": "test",
+      "testReportPath": "./bun-tests.xml"
+    }
+  }
+}

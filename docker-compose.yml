@@ -1,0 +1,125 @@
+
+networks:
+  # This special network is configured so that the local metadata
+  # service can bind to the specific IP address that ECS uses
+  # in production
+  credentials_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: "169.254.170.0/24"
+          gateway: 169.254.170.1
+
+volumes:
+  # Shared volume for environment variables between containers
+  shared_env:
+
+services:
+ # Storage for game data
+ dynamodb-local:
+   command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+   image: "amazon/dynamodb-local:latest"
+   container_name: dynamodb-local
+   ports:
+     - "8000:8000"
+   volumes:
+     - "./docker/dynamodb:/home/dynamodblocal/data"
+   working_dir: /home/dynamodblocal
+   networks:
+     - credentials_network
+
+ # Hosts the backend WebSocket server 
+ server:
+   build:
+     context: ./server
+     dockerfile: Dockerfile
+   container_name: server
+   ports:
+     - "8080:8080"
+   depends_on:
+     # We must wait for the DB to available
+     dynamodb-local:
+        condition: service_started
+
+     # We must wait for IaC templates to be deployed to the AWS account
+     iac:
+        condition: service_completed_successfully
+   environment:
+     AWS_REGION: us-east-1
+     DYNAMODB_ENDPOINT: http://dynamodb-local:8000
+     # This ENV VAR enables credentials
+     # Set it to "/creds" or "/role/<role name>"
+     AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: "/creds"
+     # Enables V3 Metadata
+     ECS_CONTAINER_METADATA_URI: "http://169.254.170.2/v3"
+   volumes:
+     - "shared_env:/shared"
+   networks:
+     - credentials_network
+   develop:
+     watch:
+       - action: sync
+         path: ./server
+         target: /app
+         ignore:
+           - node_modules/
+
+ # Hosts the web server for the game client
+ client:
+   build:
+     context: ./client
+     dockerfile: Dockerfile
+   container_name: client
+   ports:
+     - "5173:5173"
+   depends_on:
+     - server
+   environment:
+     VITE_API_URL: http://server:8080
+   networks:
+     - credentials_network
+   develop:
+     watch:
+       - action: sync
+         path: ./client
+         target: /app
+         ignore:
+           - node_modules/
+
+ # The bootstrap container that sets up the AWS account
+ iac:
+   build:
+     context: ./iac
+     dockerfile: Dockerfile
+   container_name: iac
+   volumes:
+     - "./iac:/app"
+     - "shared_env:/shared"
+   environment:
+     AWS_REGION: us-east-1
+     # This ENV VAR enables credentials
+     AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: "/creds"
+     # Enables V3 Metadata
+     ECS_CONTAINER_METADATA_URI: "http://169.254.170.2/v3"
+   networks:
+     - credentials_network
+
+ # This container vends credentials to your containers
+ ecs-local-endpoints:
+    # The Amazon ECS Local Container Endpoints Docker Image
+    image: amazon/amazon-ecs-local-container-endpoints
+    volumes:
+      # Mount /var/run so we can access docker.sock and talk to Docker
+      - /var/run:/var/run
+      # Mount the shared configuration directory, used by the AWS CLI and AWS SDKs
+      # On Windows, this directory can be found at "%UserProfile%\.aws"
+      # In the endpoints image, $HOME is set to /home.
+      - $HOME/.aws/:/home/.aws/
+    environment:
+      # You can change which AWS CLI Profile is used
+      AWS_PROFILE: "default"
+    networks:
+      credentials_network:
+        # This special IP address is recognized by the AWS SDKs and AWS CLI
+        ipv4_address: "169.254.170.2"
+

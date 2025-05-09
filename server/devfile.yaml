@@ -1,0 +1,30 @@
+schemaVersion: 2.0.0
+components:
+  - name: dev 
+    container:
+      image: public.ecr.aws/aws-mde/universal-image:latest
+      env: 
+        - name: DYNAMODB_ENDPOINT
+          value: http://dynamodb:8000
+      endpoints:
+        - name: api
+          targetPort: 8080
+          protocol: ws
+  - name: dynamodb    
+    container:
+      image: public.ecr.aws/aws-dynamodb-local/aws-dynamodb-local:latest
+      endpoints:
+        - name: dynamodb
+          targetPort: 8000
+          protocol: http
+          secure: false
+      
+commands:
+  - id: install
+    exec:
+      component: dev
+      commandLine: "npx bun install"
+  - id: test 
+    exec:
+      component: dev
+      commandLine: "npx bun test __tests__/server.test.ts"
