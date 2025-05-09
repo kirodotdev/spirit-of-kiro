@@ -29,7 +29,7 @@ export async function generateImage(prompt) {
         negativeText: 'shadow'
       },
       imageGenerationConfig: {
-        cfgScale: 9.5,
+        cfgScale: 9.9,
         seed: Math.floor(Math.random() * 1000000),
         quality: "standard", 
         // Smallest possible size for Nova canvas (https://docs.aws.amazon.com/nova/latest/userguide/image-gen-access.html#image-gen-resolutions)

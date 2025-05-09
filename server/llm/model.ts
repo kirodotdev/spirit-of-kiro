@@ -15,8 +15,6 @@ export const invoke = async (prompt: object): Promise<string | undefined> => {
 
     // Invoke the model using Converse API
     const response = await bedrockClient.send(command);
-
-    console.info(response);
     
     // Extract the response text
     const output = response.output?.message?.content?.[0]?.text;
