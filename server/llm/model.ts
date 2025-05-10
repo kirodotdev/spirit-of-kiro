@@ -9,7 +9,7 @@ export const invoke = async (prompt: object): Promise<string | undefined> => {
   try {
     // Create the command to converse with the model
     const command = new ConverseCommand({
-      modelId: 'us.amazon.nova-lite-v1:0', 
+      modelId: 'us.amazon.nova-pro-v1:0', 
       ...prompt
     });
 

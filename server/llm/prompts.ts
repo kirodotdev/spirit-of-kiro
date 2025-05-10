@@ -32,17 +32,16 @@ export const generateItems = async function (itemCount: number): Promise<any> {
             icon - short visual description, less than 10 words
             materials - array of material types
             damage - A short description of damaged or missing parts
-            skills[] - If the item seems like a tool that could be used on another item, this is an array of active crafting skills 
-                      Each skill should be an object with "name" and "description" and "outcome"
-                      "name" must be a verb-like action, performed against an external entity, not self
-                      "description" should be slightly corny and fun, in the spririt of a whacky D&D adventure
-                      "outcome" is an enum of one of the following:
-                         consume_self - This item is destroyed to change the other item
-                         consume_other - This item changes by destroying the other item
-                         change_other - This item changes the other item
-                         change_self - This item changes itself
-                         combine_with - This item combines with another item
-                         split_other - This item splits the other item into two or more items
+            skills[] 
+              "outcome" is an enum of one of the following:
+                  "consume self" - Change other, for actions like install, inject, graft, deploy
+                  "consume other" - Change self by consuming, for actions like eat, absorb
+                  "modify other" - For actions like paint, heat, enchant
+                  "combine with" - For actions like haunt, supercharge
+                  "split other" - For actions like cut, unscrew, smash, slice
+              "name" must be a verb-like action, performed using this item
+              "description" should be slightly corny and fun, in the spririt of a whacky D&D adventure
+              
           `
       },
       {

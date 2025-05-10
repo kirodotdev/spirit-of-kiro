@@ -492,8 +492,8 @@ onUnmounted(() => {
 
 .material-tag {
   /* Extends the .tag class */
-  background-color: rgba(255, 255, 255, 0.7);
-  color: #333;
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #ddd;
   font-weight: normal;
 }
 
