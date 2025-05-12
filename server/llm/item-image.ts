@@ -3,6 +3,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import { S3_CONFIG, CLOUDFRONT_CONFIG } from '../config';
+import { nearestMatches, storeKeyValue } from '../state/vector-store';
 
 const IMAGES_BUCKET_NAME = S3_CONFIG.bucketName;
 if (!IMAGES_BUCKET_NAME) {
@@ -93,4 +94,57 @@ export async function generateAndUploadImage(item) {
   }  const fileName = `${item.id}.png`;
   const s3Url = await uploadToS3(imageData, fileName);
   return s3Url;
+}
+
+/**
+ * Gets the key to use for vector operations for an item
+ * @param {Object} item - The item object
+ * @returns {string} - Key for vector operations
+ */
+function getItemVectorKey(item) {
+  // Use the item's icon as the key for vector operations
+  return item.icon;
+}
+
+/**
+ * Gets an image for an item, either from the vector store or by generating a new one
+ * @param {Object} item - The item object to get an image for
+ * @param {number} [similarityThreshold=0.3] - Threshold for considering images similar (0-1)
+ * @returns {Promise<string>} - URL of the image
+ */
+export async function getImage(item, similarityThreshold = 0.3) {
+  try {
+    // Get the key for vector operations
+    const itemKey = getItemVectorKey(item);
+    
+    // Search for similar images in the vector store
+    const similarImages = await nearestMatches(
+      itemKey,
+      5,  // Limit to top 5 results
+      similarityThreshold
+    );
+    
+    // If we found a similar image, return its URL
+    if (similarImages.length > 0) {
+      console.log(`Found similar image for ${item.icon} with similarity score ${similarImages[0].score}`);
+      return similarImages[0].value; // The value field contains the image URL
+    }
+    
+    // No similar image found, generate a new one
+    console.log(`No similar image found for ${item.icon}, generating new image`);
+    const imageUrl = await generateAndUploadImage(item);
+    
+    // Store the new image with its key
+    await storeKeyValue(
+      itemKey,  // Use item icon as the key
+      imageUrl,  // Store the image URL as the value
+      { id: item.id, name: item.name }  // Store item metadata
+    );
+    
+    return imageUrl;
+  } catch (error) {
+    console.error('Error in getImage:', error);
+    // Fall back to generating a new image if anything fails
+    return generateAndUploadImage(item);
+  }
 }

@@ -1,7 +1,8 @@
 import { createClient } from 'redis';
+import { REDIS_CONFIG } from '../config';
 
 const redisClient = createClient({
-    url: 'redis://localhost:6379'
+    url: `redis://${REDIS_CONFIG.host}:${REDIS_CONFIG.port}`
 });
 
 redisClient.on('error', err => console.error('Redis Client Error', err));

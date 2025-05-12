@@ -13,6 +13,8 @@ networks:
 volumes:
   # Shared volume for environment variables between containers
   shared_env:
+  # Persistent storage for Redis data
+  redis_data:
 
 services:
  # Storage for game data
@@ -44,9 +46,14 @@ services:
      # We must wait for IaC templates to be deployed to the AWS account
      iac:
         condition: service_completed_successfully
+
+     # We must wait for Redis to be available
+     redis:
+        condition: service_started
    environment:
      AWS_REGION: us-east-1
      DYNAMODB_ENDPOINT: http://dynamodb-local:8000
+     REDIS_HOST: redis
      # This ENV VAR enables credentials
      # Set it to "/creds" or "/role/<role name>"
      AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: "/creds"
@@ -103,6 +110,18 @@ services:
      AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: "/creds"
      # Enables V3 Metadata
      ECS_CONTAINER_METADATA_URI: "http://169.254.170.2/v3"
+   networks:
+     - credentials_network
+
+ # Redis - in-memory database
+ redis:
+   image: redis:latest
+   container_name: redis
+   command: redis-server --save 60 1 --appendonly yes
+   ports:
+     - "6379:6379"
+   volumes:
+     - "redis_data:/data"
    networks:
      - credentials_network
 

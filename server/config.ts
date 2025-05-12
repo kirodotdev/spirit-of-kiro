@@ -40,3 +40,8 @@ export const S3_CONFIG = {
 export const CLOUDFRONT_CONFIG = {
   domain: getEnv('CLOUDFRONT_DOMAIN'),
 };
+
+export const REDIS_CONFIG = {
+  host: getEnv('REDIS_HOST') || 'localhost',
+  port: 6379
+};
