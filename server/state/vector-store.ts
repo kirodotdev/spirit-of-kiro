@@ -81,7 +81,8 @@ async function generateEmbeddings(text: string): Promise<number[]> {
       contentType: 'application/json',
       accept: 'application/json',
       body: JSON.stringify({
-        inputText: text
+        inputText: text,
+        dimensions: VECTOR_DIM
       })
     };
 
