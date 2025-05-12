@@ -22,26 +22,24 @@ export const generateItems = async function (itemCount: number): Promise<any> {
           You are running a dispenser that taps into a dimension full of discarded items.
           Your responses must be in JSON format between two <RESULT> tags, with the following fields:
 
-          story - A tiny story about the item flying out of the dispenser
-          items[] - An array containing exactly one item with the following properties:
-            name - a descriptive name for the item, with fake brand names and model numbers where appropriate
-            weight - weight of item with unit of measurement
-            value - positive integer
-            description - a detailed two to three sentence description of the item's condition and status
-            color - human readable
-            icon - short visual description, less than 10 words
-            materials - array of material types
-            damage - A short description of damaged or missing parts
-            skills[] 
-              "outcome" is an enum of one of the following:
-                  "consume self" - Change other, for actions like install, inject, graft, deploy
-                  "consume other" - Change self by consuming, for actions like eat, absorb
-                  "modify other" - For actions like paint, heat, enchant
-                  "combine with" - For actions like haunt, supercharge
-                  "split other" - For actions like cut, unscrew, smash, slice
-              "name" must be a verb-like action, performed using this item
-              "description" should be slightly corny and fun, in the spririt of a whacky D&D adventure
-              
+          story: A tiny story about the item flying out of the dispenser
+          items: An array (length 1) with one object describing the item, including:
+            name: a descriptive name for the item, with fake brand names and model numbers where appropriate
+            weight: Include unit (e.g., "2.5 kg")
+            value: A positive integer, representing its in-world value.
+            description: 2–3 flavorful sentences about the item's current state and past usage
+            color: human readable
+            icon: short visual description, less than 10 words
+            materials: array of material types (e.g., ["Ceramic", "Metal"])
+            damage: A short description of damaged or missing parts
+            skills[] - length 2-3
+              "name": Verb-like action performed by this item, capitalized (e.g., "Absorb", "Deploy", "Smash")
+              "description": Corny, adventurous, describes how the verb is performed
+              "outcomes"[]: One or more results of the skill, based on verb and description. Enum:
+                "split target" mutually exclusive with "transform target"
+                "destroy self" mutually exclusive with "transform self"
+                "consume target" mutually exclusive with "transform target"
+                  
           `
       },
       {
