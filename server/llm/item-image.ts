@@ -3,7 +3,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import { S3_CONFIG, CLOUDFRONT_CONFIG } from '../config';
-import { nearestMatches, storeKeyValue } from '../state/vector-store';
+import { nearestMatch, storeKeyValue } from '../state/vector-store';
 
 const IMAGES_BUCKET_NAME = S3_CONFIG.bucketName;
 if (!IMAGES_BUCKET_NAME) {
@@ -77,7 +77,6 @@ export async function uploadToS3(imageData, fileName) {
 
 export async function generateAndUploadImage(item) {
   const imagePrompt = `Single, standalone ${item.icon}. Simple, rounded pixel art design, soft pastel colors. Neutral, solid color background`;
-  console.log(imagePrompt);
   let attempts = 0;
   let imageData;
   while (attempts < 3) {
@@ -118,27 +117,22 @@ export async function getImage(item, similarityThreshold = 0.3) {
     const itemKey = getItemVectorKey(item);
     
     // Search for similar images in the vector store
-    const similarImages = await nearestMatches(
-      itemKey,
-      5,  // Limit to top 5 results
-      similarityThreshold
-    );
-    
-    // If we found a similar image, return its URL
-    if (similarImages.length > 0) {
-      console.log(`Found similar image for ${item.icon} with similarity score ${similarImages[0].score}`);
-      return similarImages[0].value; // The value field contains the image URL
+    const similarImage = await nearestMatch(itemKey);
+
+    if (similarImage && similarImage.score < similarityThreshold) {
+      console.log(`Found similar image for ${item.icon} with similarity score ${similarImage.score}`);
+      return similarImage.value;
     }
     
     // No similar image found, generate a new one
-    console.log(`No similar image found for ${item.icon}, generating new image`);
+    console.log(`No similar image found for ${item.icon}, closest match`, similarImage);
     const imageUrl = await generateAndUploadImage(item);
     
     // Store the new image with its key
     await storeKeyValue(
       itemKey,  // Use item icon as the key
       imageUrl,  // Store the image URL as the value
-      { id: item.id, name: item.name }  // Store item metadata
+      { id: item.id, text: itemKey }  // Store item metadata
     );
     
     return imageUrl;

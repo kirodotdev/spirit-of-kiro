@@ -13,21 +13,17 @@ import { randomUUID } from 'node:crypto';
 
 // Constants
 const VECTOR_INDEX = 'vector_index';
-const VECTOR_DIM = 1536; // Titan embeddings dimension
-const TITAN_MODEL_ID = 'amazon.titan-embed-text-v1';
+const VECTOR_DIM = 256; // Titan embeddings dimension
+const TITAN_MODEL_ID = 'amazon.titan-embed-text-v2:0';
 
 // Initialize Bedrock client
 const bedrockRuntime = new BedrockRuntimeClient({ region: "us-east-1" });
 
-/**
- * Interface for vector search results
- */
-interface VectorSearchResult {
-  id: string;
-  score: number;
-  value: string;
-  metadata?: Record<string, any>;
-}
+const float32Buffer = (arr) => {
+  const floatArray = new Float32Array(arr);
+  const float32Buffer = Buffer.from(floatArray.buffer);
+  return float32Buffer;
+};
 
 /**
  * Ensures the vector index exists in Redis
@@ -35,7 +31,12 @@ interface VectorSearchResult {
  * 
  * @returns Promise<boolean> - True if index exists or was created successfully
  */
+let checkedIndex = false;
 async function ensureVectorIndex(): Promise<boolean> {
+  if (checkedIndex == true) {
+    return true;
+  }
+
   try {
     // Check if index exists
     const indices = await redisClient.sendCommand(['FT._LIST']);
@@ -55,6 +56,8 @@ async function ensureVectorIndex(): Promise<boolean> {
       'metadata', 'TEXT',
       'createdAt', 'TEXT', 'SORTABLE'
     ]);
+
+    checkedIndex = true;
     
     console.log('Vector index created successfully');
     return true;
@@ -152,8 +155,10 @@ export async function storeKeyValue(
 export async function nearestMatch(
   inputKey: string,
   limit: number = 1
-): Promise<VectorSearchResult | null> {
+): Promise<any> {
   try {
+    console.log('Ensure index exists');
+
     // Ensure vector index exists
     const indexExists = await ensureVectorIndex();
     if (!indexExists) {
@@ -164,16 +169,32 @@ export async function nearestMatch(
     const vector = await generateEmbeddings(inputKey);
     
     // Perform vector search in Redis
-    const results = await redisClient.sendCommand([
-      'FT.SEARCH', VECTOR_INDEX,
-      '*=>[KNN', limit, '@vector', '$query_vector', 'AS', 'score', ']',
-      'PARAMS', '2', 'query_vector', Buffer.from(new Float32Array(vector).buffer).toString('base64'),
-      'DIALECT', '2',
-      'LIMIT', '0', limit.toString(),
-      'SORTBY', 'score', 'ASC'
-    ]);
+    const searchQuery = `*=>[KNN 1 @vector $query_vector AS score]`;
+    const results = await redisClient.ft.search(VECTOR_INDEX, searchQuery, {
+      PARAMS: {
+        query_vector: float32Buffer(vector)
+      },
+      RETURN: ['score', 'value', 'key_text'],
+      SORTBY: {
+        BY: 'score'
+      }
+    })
+
+    if (!results) {
+      return;
+    }
+
+    if (results && results.total == 0) {
+      return;
+    }
+
+    if (!results.documents) {
+      return;
+    }
+
+    return results.documents[0];
     
-    if (!results || results.length <= 1) {
+    /*if (!results || results.length <= 1) {
       return null;
     }
     
@@ -197,80 +218,10 @@ export async function nearestMatch(
       score,
       value,
       metadata: metadataStr ? JSON.parse(metadataStr) : undefined
-    };
+    };*/
   } catch (error) {
     console.error('Error finding nearest match:', error);
     throw new Error(`Failed to find nearest match: ${error.message}`);
-  }
-}
-
-/**
- * Finds multiple nearest matches for an input key in the vector store
- * 
- * @param inputKey - Key to find nearest matches for
- * @param limit - Maximum number of results to return
- * @param scoreThreshold - Maximum score threshold (lower is better)
- * @returns Promise<VectorSearchResult[]> - Array of nearest matches
- */
-export async function nearestMatches(
-  inputKey: string,
-  limit: number = 10,
-  scoreThreshold: number = 0.3
-): Promise<VectorSearchResult[]> {
-  try {
-    // Ensure vector index exists
-    const indexExists = await ensureVectorIndex();
-    if (!indexExists) {
-      throw new Error('Failed to ensure vector index exists');
-    }
-    
-    // Generate embeddings for the input key
-    const vector = await generateEmbeddings(inputKey);
-    
-    // Perform vector search in Redis
-    const results = await redisClient.sendCommand([
-      'FT.SEARCH', VECTOR_INDEX,
-      '*=>[KNN', limit, '@vector', '$query_vector', 'AS', 'score', ']',
-      'PARAMS', '2', 'query_vector', Buffer.from(new Float32Array(vector).buffer).toString('base64'),
-      'DIALECT', '2',
-      'LIMIT', '0', limit.toString(),
-      'SORTBY', 'score', 'ASC'
-    ]);
-    
-    if (!results || results.length <= 1) {
-      return [];
-    }
-    
-    // Parse results
-    const totalResults = results[0] as number;
-    const searchResults: VectorSearchResult[] = [];
-    
-    for (let i = 1; i <= totalResults * 2; i += 2) {
-      const id = (results[i] as string).replace('vector:', '');
-      const fields = results[i + 1] as string[];
-      
-      // Extract fields
-      const value = fields[fields.indexOf('value') + 1] as string;
-      const score = parseFloat(fields[fields.indexOf('score') + 1] as string);
-      const metadataStr = fields[fields.indexOf('metadata') + 1] as string;
-      
-      // Skip results above threshold (higher score = less similar)
-      if (score > scoreThreshold) {
-        continue;
-      }
-      
-      searchResults.push({
-        id,
-        score,
-        value,
-        metadata: metadataStr ? JSON.parse(metadataStr) : undefined
-      });
-    }
-    
-    return searchResults;
-  } catch (error) {
-    console.error('Error finding nearest matches:', error);
-    throw new Error(`Failed to find nearest matches: ${error.message}`);
   }
 }
 

@@ -1,7 +1,7 @@
 import { ConnectionState, PullItemMessage } from '../types';
 import { generateItems } from '../llm/prompts';
 import { createItem, moveItemLocation, findJunkItem } from '../state/item-store';
-import { generateAndUploadImage } from '../llm/item-image';
+import { getImage } from '../llm/item-image';
 
 interface PullItemResponse {
   type: string;
@@ -52,7 +52,7 @@ export default async function handlePullItem(state: ConnectionState, _data: Pull
 
     // Generate and upload an image for the item
     try {
-      const imageUrl = await generateAndUploadImage(savedItem);
+      const imageUrl = await getImage(savedItem);
       // Update the item with the image URL
       savedItem.imageUrl = imageUrl;
     } catch (error) {
