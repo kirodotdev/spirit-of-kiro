@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template for AWS MemoryDB cluster
+
+Parameters:
+  NodeType:
+    Type: String
+    Description: The compute and memory capacity of the nodes in the MemoryDB cluster
+    Default: db.r6g.large
+    AllowedValues:
+      - db.t4g.small
+      - db.t4g.medium
+      - db.r6g.large
+      - db.r6g.xlarge
+      - db.r6g.2xlarge
+  
+  NumShards:
+    Type: Number
+    Description: The number of shards in the MemoryDB cluster
+    Default: 1
+    MinValue: 1
+    MaxValue: 500
+  
+  NumReplicasPerShard:
+    Type: Number
+    Description: The number of replicas per shard in the MemoryDB cluster
+    Default: 0
+    MinValue: 0
+    MaxValue: 5
+  
+  EngineVersion:
+    Type: String
+    Description: The version of Redis OSS to use
+    Default: '7.1'
+    AllowedValues:
+      - '6.2'
+      - '7.0'
+      - '7.1'
+  
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: The ID of the VPC where the MemoryDB cluster will be deployed
+  
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: The IDs of the subnets where the MemoryDB cluster will be deployed
+
+Resources:
+  MemoryDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for MemoryDB cluster
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          CidrIp: 10.0.0.0/16  # Restrict to VPC CIDR - adjust as needed
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-memorydb-sg"
+
+  MemoryDBSubnetGroup:
+    Type: AWS::MemoryDB::SubnetGroup
+    Properties:
+      Description: Subnet group for MemoryDB cluster
+      SubnetIds: !Ref SubnetIds
+      SubnetGroupName: !Sub "${AWS::StackName}-memorydb-subnet-group"
+      Tags:
+        - Key: Name
+          Value: !Sub "${AWS::StackName}-memorydb-subnet-group"
+
+  MemoryDBCluster:
+    Type: AWS::MemoryDB::Cluster
+    Properties:
+      ClusterName: !Sub "${AWS::StackName}-memorydb"
+      NodeType: !Ref NodeType
+      EngineVersion: !Ref EngineVersion
+      NumShards: !Ref NumShards
+      NumReplicasPerShard: !Ref NumReplicasPerShard
+      SubnetGroupName: !Ref MemoryDBSubnetGroup
+      # Immutable parameter group that enables Vector Search
+      ParameterGroupName: default.memorydb-redis7.search
+      SecurityGroupIds:
+        - !GetAtt MemoryDBSecurityGroup.GroupId
+      ACLName: open-access
+      TLSEnabled: false  # Disable TLS for simplicity, enable for production
+      MaintenanceWindow: "sun:05:00-sun:06:00"
+      SnapshotRetentionLimit: 7
+
+Outputs:
+  MemoryDBEndpoint:
+    Value: !GetAtt MemoryDBCluster.ClusterEndpoint.Address
+
