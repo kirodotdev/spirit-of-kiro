@@ -47,14 +47,13 @@ async function ensureVectorIndex(): Promise<boolean> {
     // Create vector index with COSINE distance metric
     await redisClient.sendCommand([
       'FT.CREATE', VECTOR_INDEX,
-      'ON', 'HASH',
-      'PREFIX', '1', 'vector:',
+      'ON', 'HASH', 'PREFIX', '1', 'vector:',
       'SCHEMA',
-      'vector', 'VECTOR', 'FLAT', '6', 'TYPE', 'FLOAT32', 'DIM', VECTOR_DIM.toString(), 'DISTANCE_METRIC', 'COSINE',
-      'value', 'TEXT',
-      'key_text', 'TEXT',
-      'metadata', 'TEXT',
-      'createdAt', 'TEXT', 'SORTABLE'
+        'vector', 'VECTOR', 'HNSW', '6', 'TYPE', 'FLOAT32', 'DIM', VECTOR_DIM.toString(), 'DISTANCE_METRIC', 'COSINE',
+        'value', 'TEXT',
+        'key_text', 'TEXT',
+        'metadata', 'TEXT',
+        'createdAt', 'TEXT'
     ]);
 
     checkedIndex = true;

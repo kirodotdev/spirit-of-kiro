@@ -150,6 +150,11 @@ fi
 
 echo "ECR Repository URI: $ECR_REPOSITORY_URI"
 
+# Create a timestamp-based tag for the Docker image
+TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
+IMAGE_TAG="${TIMESTAMP}"
+echo "Using image tag: $IMAGE_TAG"
+
 # Get ECR login token and login with Podman
 echo "Logging in to ECR with Podman"
 aws ecr get-login-password | podman login --username AWS --password-stdin "$ECR_REPOSITORY_URI"
@@ -169,8 +174,9 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Tag the image with the ECR repository URI
-echo "Tagging Docker image"
+# Tag the image with the ECR repository URI and timestamp
+echo "Tagging Docker image with timestamp"
+podman tag "$ECR_REPOSITORY_NAME" "$ECR_REPOSITORY_URI:$IMAGE_TAG"
 podman tag "$ECR_REPOSITORY_NAME" "$ECR_REPOSITORY_URI:latest"
 
 if [ $? -ne 0 ]; then
@@ -178,16 +184,17 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Push the image to ECR
-echo "Pushing Docker image to ECR"
+# Push the images to ECR
+echo "Pushing Docker images to ECR"
+podman push "$ECR_REPOSITORY_URI:$IMAGE_TAG"
 podman push "$ECR_REPOSITORY_URI:latest"
 
 if [ $? -ne 0 ]; then
-  echo "Error: Failed to push Docker image to ECR"
+  echo "Error: Failed to push Docker images to ECR"
   exit 1
 fi
 
-echo "Successfully pushed Docker image to ECR"
+echo "Successfully pushed Docker images to ECR with tag: $IMAGE_TAG"
 
 # Return to the iac directory
 cd iac
@@ -222,10 +229,11 @@ aws cloudformation deploy \
   --parameter-overrides \
     Environment="prod" \
     CpuArchitecture="ARM64" \
-    ContainerImageUrl="$ECR_REPOSITORY_URI:latest" \
+    ContainerImageUrl="$ECR_REPOSITORY_URI:$IMAGE_TAG" \
     S3BucketName=$IMAGES_BUCKET_NAME \
     CloudFrontDomain=$DISTRIBUTION_DOMAIN \
     RedisHost=$REDIS_ENDPOINT \
+    MemoryDBSecurityGroupId=$MEMORYDB_SG_RESOURCE_ID \
     VpcId=$DEFAULT_VPC_ID \
     PrivateSubnetIds=$PRIVATE_SUBNET_IDS \
     PublicSubnetIds=$PUBLIC_SUBNET_IDS

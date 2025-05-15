@@ -1,66 +1,36 @@
 # Item Images Server
 
-A simple REST API server built with Bun for managing item images for the AI Scrapyard game.
+A simple REST API server built with Bun for generating and managing item images for this game. Note: there is an officially deployed central version of this service, so you don't necessarily need to build, deploy, and run this service yourself.
 
 ## Features
 
-- Serve static image files
-- List all available images
-- Get specific images by ID/filename
-- Upload new images
-- Delete existing images
-- CORS support for client applications
+- Generate images for items, based on a short description of them
+- Use a vector embedding to keep track of generated images
+- Match incoming image requests to previously generated images using a vector database, as an optimization
+- Stores item images in S3, with a CloudFront distribution in front
 
 ## API Endpoints
 
-- `GET /images` - List all available images
-- `GET /images/:id` - Get a specific image by ID/filename
-- `POST /images` - Upload a new image (multipart/form-data)
-- `DELETE /images/:id` - Delete an image
+__`GET /`__
 
-## Setup
+Simple healthcheck. Just returns 200 status code
 
-1. Install dependencies:
-   ```
-   bun install
-   ```
+__`GET /image?description=red%20bag`__
 
-2. Start the server:
-   ```
-   bun start
-   ```
+Fetch an image. The image will either be freshly generated if this
+is the first time anyone has requested an image with this description.
+Or a previously generated matching image will be returned, if a
+closely matching image is found in the vector database.
 
-   Or for development with auto-reload:
-   ```
-   bun dev
-   ```
+Returned images will have a dimension of 320 pixels by 320 pixels, and will be in a cute pixel art style. Expect response times of about 600ms if a previously generated image is found, and response times of about 5-10 seconds if no matching image is found, and a fresh image must be generated from scratch.
 
-## Configuration
+Example response:
 
-The server runs on port 3001 by default, but you can configure it using environment variables:
-
-```
-PORT=8080 bun start
+```json
+{
+  "id": "b3108a46-3054-423d-87dd-02d2865069d4",
+  "description": "red bag",
+  "imageUrl": "https://d8a4w5rlouwtf.cloudfront.net/e63251b2-5f61-4c1c-84e1-be0c6f8fd79b.png"
+}
 ```
 
-## Example Usage
-
-### List all images
-```
-curl http://localhost:3001/images
-```
-
-### Get a specific image
-```
-curl http://localhost:3001/images/example.jpg
-```
-
-### Upload an image
-```
-curl -X POST -F "image=@/path/to/local/image.jpg" http://localhost:3001/images
-```
-
-### Delete an image
-```
-curl -X DELETE http://localhost:3001/images/example.jpg
-```

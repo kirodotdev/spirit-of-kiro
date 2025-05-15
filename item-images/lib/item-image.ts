@@ -53,9 +53,9 @@ export async function generateImage(prompt) {
 }
 
 export async function uploadToS3(imageData, fileName) {
-  // Resize the base64 image to 128x128 pixels
+  // Resize the base64 image to 320x320 pixels
   const resizedImageBuffer = await sharp(Buffer.from(imageData, 'base64'))
-    .resize(128, 128)
+    .resize(320, 320)
     .toBuffer();
 
   const params = {
@@ -125,7 +125,7 @@ export async function getImage(item, similarityThreshold = 0.25) {
     }
     
     // No similar image found, generate a new one
-    console.log(`No similar image found for ${item.icon}, closest score ${similarImage.value.score}`);
+    console.log(`No similar image found for ${item.icon}`);
     const imageUrl = await generateAndUploadImage(item);
     
     // Store the new image with its key
