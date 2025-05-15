@@ -39,8 +39,6 @@ export async function handleImageRoute(req: Request): Promise<Response> {
       });
     }
 
-    console.log(`Generating image for description: ${description}`);
-
     // Create a simple item object with the description as the icon
     const item: Item = {
       id: randomUUID(),
@@ -55,8 +53,6 @@ export async function handleImageRoute(req: Request): Promise<Response> {
       description: item.icon,
       imageUrl: imageUrl
     };
-
-    console.log(response);
 
     // Return the image URL in a JSON response
     return new Response(JSON.stringify(response), {

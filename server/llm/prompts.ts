@@ -29,7 +29,7 @@ export const generateItems = async function (itemCount: number): Promise<any> {
             value: A positive integer, representing its in-world value.
             description: 2–3 flavorful sentences about the item's current state and past usage
             color: human readable
-            icon: short visual description, less than 10 words
+            icon: short three word description of material, adjective, and item
             materials: array of material types (e.g., ["Ceramic", "Metal"])
             damage: A short description of damaged or missing parts
             skills[] - length 2-3

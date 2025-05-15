@@ -45,3 +45,7 @@ export const REDIS_CONFIG = {
   host: getEnv('REDIS_HOST') || 'localhost',
   port: 6379
 };
+
+export const ITEM_IMAGES_SERVICE_CONFIG = {
+  url: getEnv('ITEM_IMAGES_SERVICE_URL') || 'http://kiro-game-images-service-alb-559009974.us-west-2.elb.amazonaws.com',
+};

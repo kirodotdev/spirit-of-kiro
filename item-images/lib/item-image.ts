@@ -27,7 +27,7 @@ export async function generateImage(prompt) {
       taskType: "TEXT_IMAGE", 
       textToImageParams: {
         text: prompt,
-        negativeText: 'shadow'
+        negativeText: 'shadow, floor, human, person, realistic'
       },
       imageGenerationConfig: {
         cfgScale: 9.9,
@@ -112,20 +112,20 @@ function getItemVectorKey(item) {
  * @returns {Promise<string>} - URL of the image
  */
 export async function getImage(item, similarityThreshold = 0.25) {
+  let similarImage;
   try {
     // Get the key for vector operations
     const itemKey = getItemVectorKey(item);
     
     // Search for similar images in the vector store
-    const similarImage = await nearestMatch(itemKey);
+    similarImage = await nearestMatch(itemKey);
 
     if (similarImage && similarImage.value.score < similarityThreshold) {
-      console.log(`Found similar image for ${item.icon} with similarity score ${similarImage.value.score}`);
+      console.log(`MATCH: "${item.icon}" to "${similarImage.value.text}" with score ${similarImage.value.score}: ${similarImage.value.value}`);
       return similarImage.value.value;
     }
     
     // No similar image found, generate a new one
-    console.log(`No similar image found for ${item.icon}`);
     const imageUrl = await generateAndUploadImage(item);
     
     // Store the new image with its key
@@ -135,10 +135,15 @@ export async function getImage(item, similarityThreshold = 0.25) {
       { id: item.id, text: itemKey }  // Store item metadata
     );
     
+    console.log(`NEW: "${item.icon}" Closest match "${similarImage.value.key_text}" with score ${similarImage.value.score}: ${imageUrl}`);
     return imageUrl;
   } catch (error) {
-    console.error('Error in getImage:', error);
-    // Fall back to generating a new image if anything fails
-    return generateAndUploadImage(item);
+
+    if (similarImage) {
+      console.log(`"ERROR: ${item.icon}" fallback to "${similarImage.value.text}" with score ${similarImage.value.score}: ${similarImage.value.value}`);      
+      return similarImage.value.value;
+    } else {
+      throw error;
+    }
   }
 }

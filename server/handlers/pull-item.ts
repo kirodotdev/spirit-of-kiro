@@ -1,7 +1,7 @@
 import { ConnectionState, PullItemMessage } from '../types';
 import { generateItems } from '../llm/prompts';
 import { createItem, moveItemLocation, findJunkItem } from '../state/item-store';
-import { getImage } from '../llm/item-image';
+import { ITEM_IMAGES_SERVICE_CONFIG } from '../config';
 
 interface PullItemResponse {
   type: string;
@@ -45,20 +45,31 @@ export default async function handlePullItem(state: ConnectionState, _data: Pull
     // Generate a GUID for the item
     const id = crypto.randomUUID();
 
+    console.log('Created item', itemData);
+
+    // Fetch image from the item-images service
+    try {
+      const imageServiceUrl = `${ITEM_IMAGES_SERVICE_CONFIG.url}/image`;
+      const description = itemData.icon; // Use the item's icon as the description
+      const response = await fetch(`${imageServiceUrl}?description=${encodeURIComponent(description)}`);
+
+      if (!response.ok) {
+        throw new Error(`Image service returned status ${response.status}`);
+      }
+
+      const imageData = await response.json();
+
+      console.log("Got item image", imageData);
+
+      // Update the item with the image URL from the service
+      itemData.imageUrl = imageData.imageUrl;
+    } catch (error) {
+      console.error('Error fetching image from item-images service:', error);
+      // Continue without image if fetching fails
+    }
+
     // Store in DynamoDB and get full item back
     const savedItem = await createItem(id, state.userId, itemData);
-
-    console.log('Created item', savedItem.id);
-
-    // Generate and upload an image for the item
-    try {
-      const imageUrl = await getImage(savedItem);
-      // Update the item with the image URL
-      savedItem.imageUrl = imageUrl;
-    } catch (error) {
-      console.error('Error generating image for item:', error);
-      // Continue without image if generation fails
-    }
 
     // Return the full result with story and single item
     return {

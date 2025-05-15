@@ -2,6 +2,8 @@
 
 A simple REST API server built with Bun for generating and managing item images for this game. Note: there is an officially deployed central version of this service, so you don't necessarily need to build, deploy, and run this service yourself.
 
+The officially hosted version is available at: http://kiro-game-images-service-alb-559009974.us-west-2.elb.amazonaws.com/
+
 ## Features
 
 - Generate images for items, based on a short description of them

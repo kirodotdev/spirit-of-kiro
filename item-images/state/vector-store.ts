@@ -136,7 +136,6 @@ export async function storeKeyValue(
       createdAt: new Date().toISOString()
     });
     
-    console.log(`Stored key-value pair with ID: ${id}`);
     return id;
   } catch (error) {
     console.error('Error storing key-value pair:', error);
@@ -157,8 +156,6 @@ export async function nearestMatch(
   limit: number = 1
 ): Promise<any> {
   try {
-    console.log('Ensure index exists');
-
     // Ensure vector index exists
     const indexExists = await ensureVectorIndex();
     if (!indexExists) {
@@ -174,7 +171,7 @@ export async function nearestMatch(
       PARAMS: {
         query_vector: float32Buffer(vector)
       },
-      RETURN: ['score', 'value', 'key_text'],
+      RETURN: ['score', 'value', 'key_text', 'metadata'],
       SORTBY: {
         BY: 'score'
       }
