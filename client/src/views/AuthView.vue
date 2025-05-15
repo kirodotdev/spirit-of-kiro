@@ -67,7 +67,10 @@ const setupListeners = () => {
   const successType = isLogin.value ? 'signin_success' : 'signup_success'
   const failureType = isLogin.value ? 'signin_failure' : 'signup_failure'
   
-  successListenerId = gameStore.addEventListener(successType, () => {
+  successListenerId = gameStore.addEventListener(successType, (data) => {
+    if (data && data.userId) {
+      gameStore.userId = data.userId
+    }
     router.push('/play')
     removeListeners();
   })

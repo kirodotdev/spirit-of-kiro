@@ -1,4 +1,3 @@
-
 export interface PhysicsProperties {
   angle: number;  // Angle in degrees
   velocity: number;  // Velocity in tiles per second
@@ -10,460 +9,299 @@ export interface PhysicsProperties {
   mass: number;  // Mass of object for collision calculations
 }
 
-export interface CollisionSides {
-  top: boolean;
-  bottom: boolean;
-  left: boolean;
-  right: boolean;
-}
-
-export interface PhysicsState {
-  position: {
-    row: number;
-    col: number;
-  };
-  dimensions: {
-    width: number;
-    depth: number;
-    height: number;
-  };
-  physics: PhysicsProperties;
+export interface Vector2D {
+  x: number;
+  y: number;
 }
 
 export interface CollisionResult {
-  colliding: boolean;
-  horizontalOverlap: number;
-  verticalOverlap: number;
-  overlapDirection: {
-    top: boolean;
-    bottom: boolean;
-    left: boolean;
-    right: boolean;
-  };
+  collided: boolean;
+  newVelocity?: Vector2D;
+  newPosition?: Vector2D;
 }
 
-export function checkCollisionWith(movingObjectStart: PhysicsState, movingObjectEnd: PhysicsState, targetObject: PhysicsState): CollisionResult {
-  // Extract position and dimensions for the target object
-  const targetLeft = targetObject.position.col;
-  const targetRight = targetObject.position.col + targetObject.dimensions.width;
-  const targetTop = targetObject.position.row;
-  const targetBottom = targetObject.position.row + targetObject.dimensions.depth;
-
-  // Extract start and end positions for the moving object
-  const startLeft = movingObjectStart.position.col;
-  const startRight = startLeft + movingObjectStart.dimensions.width;
-  const startTop = movingObjectStart.position.row;
-  const startBottom = startTop + movingObjectStart.dimensions.depth;
-
-  const endLeft = movingObjectEnd.position.col;
-  const endRight = endLeft + movingObjectEnd.dimensions.width;
-  const endTop = movingObjectEnd.position.row;
-  const endBottom = endTop + movingObjectEnd.dimensions.depth;
-
-  // Check for height-based collision (if objects are at different heights)
-  const movingHeight = movingObjectEnd.physics.height;
-  const targetHeight = targetObject.physics.height;
-  const movingMaxHeight = movingHeight + movingObjectEnd.dimensions.height;
-  const targetMaxHeight = targetHeight + targetObject.dimensions.height;
-
-  // If one object is above the other's maximum height, no collision
-  if (movingHeight > targetMaxHeight || targetHeight > movingMaxHeight) {
-    return {
-      colliding: false,
-      horizontalOverlap: 0,
-      verticalOverlap: 0,
-      overlapDirection: { top: false, bottom: false, left: false, right: false }
-    };
-  }
-
-  // Determine direction of movement
-  const movingRight = endLeft > startLeft;
-  const movingDown = endTop > startTop;
-
-  // Calculate current overlaps at the end position
-  let horizontalOverlap = 0;
-  let verticalOverlap = 0;
-
-  // Calculate horizontal overlap at end position
-  if (endRight > targetLeft && endLeft < targetRight) {
-    horizontalOverlap = Math.min(endRight, targetRight) - Math.max(endLeft, targetLeft);
-  }
-
-  // Calculate vertical overlap at end position
-  if (endBottom > targetTop && endTop < targetBottom) {
-    verticalOverlap = Math.min(endBottom, targetBottom) - Math.max(endTop, targetTop);
-  }
-
-  // Initialize collision sides
-  const overlapDirection = {
-    left: false,
-    right: false,
-    top: false,
-    bottom: false
-  };
-
-  // Check if there's a collision at the end position
-  const isColliding = horizontalOverlap > 0 && verticalOverlap > 0;
-
-  if (isColliding) {
-    // Determine which sides were hit based on movement direction
-
-    // Moving right and hit the left side of target
-    if (movingRight && startRight <= targetLeft && endRight > targetLeft) {
-      overlapDirection.right = true;
-      horizontalOverlap = endRight - targetLeft;
-    }
-    // Moving left and hit the right side of target
-    else if (!movingRight && startLeft >= targetRight && endLeft < targetRight) {
-      overlapDirection.left = true;
-      horizontalOverlap = targetRight - endLeft;
-    }
-    // Object moved entirely inside target horizontally or was already overlapping
-    else if (endLeft >= targetLeft && endRight <= targetRight) {
-      // Determine which side is closer based on movement direction
-      if (movingRight) {
-        overlapDirection.right = true;
-        horizontalOverlap = endRight - targetLeft;
-      } else {
-        overlapDirection.left = true;
-        horizontalOverlap = targetRight - endLeft;
-      }
-    }
-    // Object partially overlaps target horizontally
-    else {
-      // Determine which side has more overlap
-      const leftOverlap = endRight - targetLeft;
-      const rightOverlap = targetRight - endLeft;
-
-      if (leftOverlap < rightOverlap) {
-        overlapDirection.right = true;
-        horizontalOverlap = leftOverlap;
-      } else {
-        overlapDirection.left = true;
-        horizontalOverlap = rightOverlap;
-      }
-    }
-
-    // Moving down and hit the top side of target
-    if (movingDown && startBottom <= targetTop && endBottom > targetTop) {
-      overlapDirection.bottom = true;
-      verticalOverlap = endBottom - targetTop;
-    }
-    // Moving up and hit the bottom side of target
-    else if (!movingDown && startTop >= targetBottom && endTop < targetBottom) {
-      overlapDirection.top = true;
-      verticalOverlap = targetBottom - endTop;
-    }
-    // Object moved entirely inside target vertically or was already overlapping
-    else if (endTop >= targetTop && endBottom <= targetBottom) {
-      // Determine which side is closer based on movement direction
-      if (movingDown) {
-        overlapDirection.bottom = true;
-        verticalOverlap = endBottom - targetTop;
-      } else {
-        overlapDirection.top = true;
-        verticalOverlap = targetBottom - endTop;
-      }
-    }
-    // Object partially overlaps target vertically
-    else {
-      // Determine which side has more overlap
-      const topOverlap = endBottom - targetTop;
-      const bottomOverlap = targetBottom - endTop;
-
-      if (topOverlap < bottomOverlap) {
-        overlapDirection.bottom = true;
-        verticalOverlap = topOverlap;
-      } else {
-        overlapDirection.top = true;
-        verticalOverlap = bottomOverlap;
-      }
-    }
-
-    // For objects that moved entirely inside the target, determine the smallest overlap
-    // to provide the most efficient way to move the object back outside
-    if (endLeft > targetLeft && endRight < targetRight &&
-      endTop > targetTop && endBottom < targetBottom) {
-
-      // Find the smallest overlap to determine which side was hit first
-      const overlaps = [
-        { side: 'left', value: targetRight - endLeft },
-        { side: 'right', value: endRight - targetLeft },
-        { side: 'top', value: targetBottom - endTop },
-        { side: 'bottom', value: endBottom - targetTop }
-      ];
-
-      // Sort by smallest overlap
-      overlaps.sort((a, b) => a.value - b.value);
-
-      // Reset all directions
-      overlapDirection.left = false;
-      overlapDirection.right = false;
-      overlapDirection.top = false;
-      overlapDirection.bottom = false;
-
-      // Set only the direction with smallest overlap
-      const smallestOverlap = overlaps[0];
-      if (smallestOverlap.side === 'left') {
-        overlapDirection.left = true;
-        horizontalOverlap = smallestOverlap.value;
-        verticalOverlap = 0;
-      } else if (smallestOverlap.side === 'right') {
-        overlapDirection.right = true;
-        horizontalOverlap = smallestOverlap.value;
-        verticalOverlap = 0;
-      } else if (smallestOverlap.side === 'top') {
-        overlapDirection.top = true;
-        verticalOverlap = smallestOverlap.value;
-        horizontalOverlap = 0;
-      } else if (smallestOverlap.side === 'bottom') {
-        overlapDirection.bottom = true;
-        verticalOverlap = smallestOverlap.value;
-        horizontalOverlap = 0;
-      }
-    }
-  }
-
-  // Return collision data
+// Convert angle in degrees and magnitude to a vector
+export function angleToVector(angle: number, magnitude: number): Vector2D {
+  const radians = angle * (Math.PI / 180);
   return {
-    colliding: isColliding,
-    horizontalOverlap,
-    verticalOverlap,
-    overlapDirection
+    x: Math.cos(radians) * magnitude,
+    y: Math.sin(radians) * magnitude
   };
 }
 
-export function resolveCollision(obj1: PhysicsState, obj2: PhysicsState): [PhysicsState, PhysicsState] {
-  // Get collision information
-  // Since resolveCollision is used for objects that are already colliding,
-  // we use the same state for start and end positions
-  const collisionResult = checkCollisionWith(obj1, obj1, obj2);
-
-  // Calculate collision normal
-  const dx = obj2.position.col - obj1.position.col;
-  const dy = obj2.position.row - obj1.position.row;
-  const distance = Math.sqrt(dx * dx + dy * dy);
-
-  // Avoid division by zero
-  const nx = distance > 0 ? dx / distance : 0;
-  const ny = distance > 0 ? dy / distance : 0;
-
-  // Convert angles to velocity components
-  const angle1 = obj1.physics.angle * (Math.PI / 180);
-  const angle2 = obj2.physics.angle * (Math.PI / 180);
-
-  const v1x = obj1.physics.velocity * Math.cos(angle1);
-  const v1y = obj1.physics.velocity * Math.sin(angle1);
-  const v2x = obj2.physics.velocity * Math.cos(angle2);
-  const v2y = obj2.physics.velocity * Math.sin(angle2);
-
-  // Calculate relative velocity
-  const rvx = v2x - v1x;
-  const rvy = v2y - v1y;
-  const velAlongNormal = rvx * nx + rvy * ny;
-
-  // Calculate restitution (using bounce strength)
-  const restitution = Math.min(obj1.physics.bounceStrength, obj2.physics.bounceStrength);
-
-  // Calculate masses
-  const m1 = obj1.physics.mass || 1;
-  const m2 = obj2.physics.mass || 1;
-
-  let newV1x = v1x;
-  let newV1y = v1y;
-  let newV2x = v2x;
-  let newV2y = v2y;
-
-  // Handle separation based on overlap information
-  if (collisionResult.colliding) {
-    // Determine which direction has the smallest overlap
-    const isHorizontalOverlapSmaller = collisionResult.horizontalOverlap < collisionResult.verticalOverlap;
-
-    // Calculate separation vector based on overlap direction
-    let sepX = 0;
-    let sepY = 0;
-
-    if (isHorizontalOverlapSmaller) {
-      // Horizontal separation
-      sepX = collisionResult.horizontalOverlap * (collisionResult.overlapDirection.left ? -1 : 1);
-    } else {
-      // Vertical separation
-      sepY = collisionResult.verticalOverlap * (collisionResult.overlapDirection.top ? -1 : 1);
-    }
-
-    // Apply separation force based on mass ratio
-    const totalMass = m1 + m2;
-    const m1Ratio = m2 / totalMass;
-    const m2Ratio = m1 / totalMass;
-
-    // Calculate separation velocity components
-    const separationStrength = 2.0;
-    const sep1x = -sepX * separationStrength * m1Ratio;
-    const sep1y = -sepY * separationStrength * m1Ratio;
-    const sep2x = sepX * separationStrength * m2Ratio;
-    const sep2y = sepY * separationStrength * m2Ratio;
-
-    // Apply separation velocity
-    newV1x += sep1x;
-    newV1y += sep1y;
-    newV2x += sep2x;
-    newV2y += sep2y;
-  }
-
-  // Only apply collision response if objects are moving towards each other
-  if (velAlongNormal < 0) {
-    // Calculate impulse
-    const j = -(1 + restitution) * velAlongNormal / (1 / m1 + 1 / m2);
-    const impulseX = j * nx;
-    const impulseY = j * ny;
-
-    newV1x -= (impulseX / m1);
-    newV1y -= (impulseY / m1);
-    newV2x += (impulseX / m2);
-    newV2y += (impulseY / m2);
-  }
-
-  // Convert back to angle/velocity format
-  const newObj1 = {
-    ...obj1,
-    position: {
-      row: obj1.position.row,
-      col: obj1.position.col
-    },
-    physics: {
-      ...obj1.physics,
-      angle: Math.atan2(newV1y, newV1x) * (180 / Math.PI),
-      velocity: Math.sqrt(newV1x * newV1x + newV1y * newV1y),
-    }
-  };
-
-  const newObj2 = {
-    ...obj2,
-    position: {
-      row: obj2.position.row,
-      col: obj2.position.col
-    },
-    physics: {
-      ...obj2.physics,
-      angle: Math.atan2(newV2y, newV2x) * (180 / Math.PI),
-      velocity: Math.sqrt(newV2x * newV2x + newV2y * newV2y),
-    }
-  };
-
-  // Apply position adjustments to prevent overlap
-  if (collisionResult.colliding) {
-    // Determine which direction has the smallest overlap
-    const isHorizontalOverlapSmaller = collisionResult.horizontalOverlap < collisionResult.verticalOverlap;
-
-    // Calculate position adjustments based on mass ratio
-    const totalMass = m1 + m2;
-    const m1Ratio = m2 / totalMass;
-    const m2Ratio = m1 / totalMass;
-
-    if (isHorizontalOverlapSmaller) {
-      // Horizontal adjustment
-      const adjustment = collisionResult.horizontalOverlap * 1.05; // Add a small buffer
-      if (collisionResult.overlapDirection.left) {
-        newObj1.position.col += adjustment * m1Ratio;
-        newObj2.position.col -= adjustment * m2Ratio;
-      } else {
-        newObj1.position.col -= adjustment * m1Ratio;
-        newObj2.position.col += adjustment * m2Ratio;
-      }
-    } else {
-      // Vertical adjustment
-      const adjustment = collisionResult.verticalOverlap * 1.05; // Add a small buffer
-      if (collisionResult.overlapDirection.top) {
-        newObj1.position.row += adjustment * m1Ratio;
-        newObj2.position.row -= adjustment * m2Ratio;
-      } else {
-        newObj1.position.row -= adjustment * m1Ratio;
-        newObj2.position.row += adjustment * m2Ratio;
-      }
-    }
-  }
-
-  // Update active states
-  newObj1.physics.active = newObj1.physics.velocity > 0 || newObj1.physics.verticalVelocity > 0 || newObj1.physics.height > 0;
-  newObj2.physics.active = newObj2.physics.velocity > 0 || newObj2.physics.verticalVelocity > 0 || newObj2.physics.height > 0;
-
-  return [newObj1, newObj2];
+// Convert a vector to angle in degrees and magnitude
+export function vectorToAngle(vector: Vector2D): { angle: number, magnitude: number } {
+  const magnitude = Math.sqrt(vector.x * vector.x + vector.y * vector.y);
+  let angle = Math.atan2(vector.y, vector.x) * (180 / Math.PI);
+  if (angle < 0) angle += 360;
+  return { angle, magnitude };
 }
 
-export function updatePhysics(state: PhysicsState, deltaTime: number): PhysicsState {
-  if (!state.physics.active) {
-    return state;
+// Apply physics update to an object's position based on its physics properties
+export function updatePhysicsPosition(
+  row: number, 
+  col: number, 
+  physics: PhysicsProperties, 
+  deltaTime: number
+): { row: number, col: number, physics: PhysicsProperties } {
+  if (!physics.active || physics.velocity <= 0) {
+    return { row, col, physics };
   }
 
-  const gravity = 9.8; // 9 tiles per second 
-  const deltaSeconds = deltaTime / 1000;
-
-  // Convert angle to radians
-  const angleRad = state.physics.angle * (Math.PI / 180);
-
-  // Apply friction to horizontal velocity
-  const frictionFactor = Math.pow(1 - state.physics.friction, deltaSeconds);
-  let newVelocity = state.physics.velocity * frictionFactor;
-
-  // Stop horizontal velocity once object slows enough
-  if (newVelocity < .25) {
+  // Convert angle and velocity to vector
+  const velocityVector = angleToVector(physics.angle, physics.velocity);
+  
+  // Update position based on velocity
+  const newCol = col + (velocityVector.x * deltaTime);
+  const newRow = row + (velocityVector.y * deltaTime);
+  
+  // Apply friction to slow down the object
+  let newVelocity = physics.velocity * (1 - physics.friction * deltaTime);
+  
+  // Update vertical position based on vertical velocity
+  let newHeight = physics.height + (physics.verticalVelocity * deltaTime);
+  let newVerticalVelocity = physics.verticalVelocity;
+  
+  // Apply gravity if object is above ground
+  const gravity = 9.8; // Gravity constant in tile units per second squared
+  newVerticalVelocity -= gravity * deltaTime;
+  
+  // Check for ground collision
+  if (newHeight <= 0) {
+    newHeight = 0;
+    // Bounce with reduced velocity based on bounce strength
+    if (newVerticalVelocity < 0) {
+      newVerticalVelocity = -newVerticalVelocity * physics.bounceStrength;
+      
+      // Apply some horizontal bounce effect too
+      const horizontalBounceEffect = 0.8; // How much of the bounce affects horizontal movement
+      newVelocity = newVelocity * (1 + (Math.abs(newVerticalVelocity) * horizontalBounceEffect * 0.1));
+      
+      // Stop very small bounces to prevent endless tiny bounces
+      if (Math.abs(newVerticalVelocity) < 0.1) {
+        newVerticalVelocity = 0;
+      }
+    }
+  }
+  
+  // Stop physics if velocity is very low
+  if (newVelocity < .1) {
     newVelocity = 0;
   }
 
-  // Calculate lateral velocity components
-  const velocityX = newVelocity * Math.cos(angleRad);
-  const velocityY = newVelocity * Math.sin(angleRad);
+  if (Math.abs(newVerticalVelocity) < .1) {
+    newVerticalVelocity = 0;
+  }
 
-  // Update vertical motion with gravity
-  let newHeight = 0;
-  let newVerticalVelocity = 0;
-  if (state.physics.height >= 0) {
-    newVerticalVelocity = state.physics.verticalVelocity - gravity * deltaSeconds;
-    newHeight = state.physics.height + newVerticalVelocity * deltaSeconds;
+  if (newHeight < .1 && newVerticalVelocity == 0) {
+    newHeight = 0;
+  }
+  
+  // Update physics properties
+  const updatedPhysics = { 
+    ...physics, 
+    velocity: newVelocity,
+    height: newHeight,
+    verticalVelocity: newVerticalVelocity,
+    active: newVelocity > 0 || newHeight > 0 || Math.abs(newVerticalVelocity) > 0
+  };
+  
+  return { row: newRow, col: newCol, physics: updatedPhysics };
+}
 
-    // Handle bouncing off the ground
-    if (newHeight <= 0) {
-      newHeight = 0;
-      newVerticalVelocity = -newVerticalVelocity * state.physics.bounceStrength;
+// Check for collision between two objects
+export function checkCollision(
+  obj1: { row: number, col: number, width: number, depth: number, physics: PhysicsProperties },
+  obj2: { row: number, col: number, width: number, depth: number, physics: PhysicsProperties }
+): boolean {
+  // Simple height-based collision check
+  const heightDifference = Math.abs(obj1.physics.height - obj2.physics.height);
+  if (heightDifference > Math.max(obj1.width, obj1.depth, obj2.width, obj2.depth) * 0.5) {
+    return false;
+  }
+  
+  // Check for rectangle overlap
+  return (
+    obj1.col < obj2.col + obj2.width &&
+    obj1.col + obj1.width > obj2.col &&
+    obj1.row < obj2.row + obj2.depth &&
+    obj1.row + obj1.depth > obj2.row
+  );
+}
 
-      // If bounce is too weak, stop vertical motion and set height to 0
-      if (Math.abs(newVerticalVelocity) < .25) {
-        newVerticalVelocity = 0;
-        newHeight = 0;
+// Handle collision between two objects with momentum transfer
+export function handleCollision(
+  obj1: { row: number, col: number, width: number, depth: number, physics: PhysicsProperties },
+  obj2: { row: number, col: number, width: number, depth: number, physics: PhysicsProperties }
+): { obj1Physics: PhysicsProperties, obj2Physics: PhysicsProperties } {
+  // Convert angles and velocities to vectors
+  const v1 = angleToVector(obj1.physics.angle, obj1.physics.velocity);
+  const v2 = angleToVector(obj2.physics.angle, obj2.physics.velocity);
+  
+  // Calculate centers of objects
+  const center1 = { x: obj1.col + obj1.width / 2, y: obj1.row + obj1.depth / 2 };
+  const center2 = { x: obj2.col + obj2.width / 2, y: obj2.row + obj2.depth / 2 };
+  
+  // Calculate collision normal (direction from obj1 to obj2)
+  const collisionNormal = {
+    x: center2.x - center1.x,
+    y: center2.y - center1.y
+  };
+  
+  // Normalize the collision normal
+  const distance = Math.sqrt(collisionNormal.x * collisionNormal.x + collisionNormal.y * collisionNormal.y);
+  if (distance === 0) {
+    // Objects are exactly at the same position, push in random direction
+    const randomAngle = Math.random() * 360;
+    collisionNormal.x = Math.cos(randomAngle * (Math.PI / 180));
+    collisionNormal.y = Math.sin(randomAngle * (Math.PI / 180));
+  } else {
+    collisionNormal.x /= distance;
+    collisionNormal.y /= distance;
+  }
+  
+  // Calculate relative velocity
+  const relativeVelocity = {
+    x: v2.x - v1.x,
+    y: v2.y - v1.y
+  };
+  
+  // Calculate relative velocity in terms of the collision normal
+  const velocityAlongNormal = relativeVelocity.x * collisionNormal.x + relativeVelocity.y * collisionNormal.y;
+  
+  // Do not resolve if objects are moving away from each other
+  if (velocityAlongNormal > 0) {
+    return { obj1Physics: obj1.physics, obj2Physics: obj2.physics };
+  }
+  
+  // Calculate restitution (bounciness)
+  const restitution = Math.min(obj1.physics.bounceStrength, obj2.physics.bounceStrength);
+  
+  // Calculate impulse scalar
+  const impulseScalar = -(1 + restitution) * velocityAlongNormal / 
+                        (1 / obj1.physics.mass + 1 / obj2.physics.mass);
+  
+  // Apply impulse
+  const impulse = {
+    x: impulseScalar * collisionNormal.x,
+    y: impulseScalar * collisionNormal.y
+  };
+  
+  // Update velocities
+  const newV1 = {
+    x: v1.x - (impulse.x / obj1.physics.mass),
+    y: v1.y - (impulse.y / obj1.physics.mass)
+  };
+  
+  const newV2 = {
+    x: v2.x + (impulse.x / obj2.physics.mass),
+    y: v2.y + (impulse.y / obj2.physics.mass)
+  };
+  
+  // Convert back to angle and magnitude
+  const newObj1 = vectorToAngle(newV1);
+  const newObj2 = vectorToAngle(newV2);
+  
+  // Create new physics objects with updated values
+  const obj1Physics: PhysicsProperties = {
+    ...obj1.physics,
+    active: true,
+    angle: newObj1.angle,
+    velocity: newObj1.magnitude,
+    // Add a small vertical bounce on collision
+    verticalVelocity: obj1.physics.verticalVelocity + Math.random() * 0.5
+  };
+  
+  const obj2Physics: PhysicsProperties = {
+    ...obj2.physics,
+    active: true,
+    angle: newObj2.angle,
+    velocity: newObj2.magnitude,
+    // Add a small vertical bounce on collision
+    verticalVelocity: obj2.physics.verticalVelocity + Math.random() * 0.5
+  };
+  
+  return { obj1Physics, obj2Physics };
+}
+
+// Check for wall collisions and update physics accordingly
+export function handleWallCollision(
+  row: number,
+  col: number,
+  width: number,
+  depth: number,
+  physics: PhysicsProperties,
+  walls: Array<{ row: number, col: number, width: number, depth: number }>
+): { row: number, col: number, physics: PhysicsProperties } {
+  // Skip if physics is not active
+  if (!physics.active) {
+    return { row, col, physics };
+  }
+  
+  let newRow = row;
+  let newCol = col;
+  let newPhysics = { ...physics };
+  
+  // Check collision with each wall
+  for (const wall of walls) {
+    // Check if object overlaps with wall
+    if (
+      col < wall.col + wall.width &&
+      col + width > wall.col &&
+      row < wall.row + wall.depth &&
+      row + depth > wall.row
+    ) {
+      // Calculate overlap on each axis
+      const overlapLeft = (wall.col + wall.width) - col;
+      const overlapRight = (col + width) - wall.col;
+      const overlapTop = (wall.row + wall.depth) - row;
+      const overlapBottom = (row + depth) - wall.row;
+      
+      // Find the smallest overlap
+      const minOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+      
+      // Determine which side of the wall was hit
+      if (minOverlap === overlapLeft) {
+        // Hit left side of wall
+        newCol = wall.col + wall.width;
+        // Reflect angle
+        const velocity = angleToVector(physics.angle, physics.velocity);
+        velocity.x = -velocity.x * physics.bounceStrength;
+        const newAngleData = vectorToAngle(velocity);
+        newPhysics.angle = newAngleData.angle;
+        newPhysics.velocity = newAngleData.magnitude;
+      } else if (minOverlap === overlapRight) {
+        // Hit right side of wall
+        newCol = wall.col - width;
+        // Reflect angle
+        const velocity = angleToVector(physics.angle, physics.velocity);
+        velocity.x = -velocity.x * physics.bounceStrength;
+        const newAngleData = vectorToAngle(velocity);
+        newPhysics.angle = newAngleData.angle;
+        newPhysics.velocity = newAngleData.magnitude;
+      } else if (minOverlap === overlapTop) {
+        // Hit top side of wall
+        newRow = wall.row + wall.depth;
+        // Reflect angle
+        const velocity = angleToVector(physics.angle, physics.velocity);
+        velocity.y = -velocity.y * physics.bounceStrength;
+        const newAngleData = vectorToAngle(velocity);
+        newPhysics.angle = newAngleData.angle;
+        newPhysics.velocity = newAngleData.magnitude;
+      } else if (minOverlap === overlapBottom) {
+        // Hit bottom side of wall
+        newRow = wall.row - depth;
+        // Reflect angle
+        const velocity = angleToVector(physics.angle, physics.velocity);
+        velocity.y = -velocity.y * physics.bounceStrength;
+        const newAngleData = vectorToAngle(velocity);
+        newPhysics.angle = newAngleData.angle;
+        newPhysics.velocity = newAngleData.magnitude;
       }
     }
   }
 
-  // Anti infinite bounce
-  if (newHeight < .01 && Math.abs(newVerticalVelocity) < .01) {
-    newVerticalVelocity = 0;
-    newHeight = 0;
-  }
-
-  // Calculate proposed new position
-  const proposedPosition = {
-    row: state.position.row + (velocityY * deltaSeconds),
-    col: state.position.col + (velocityX * deltaSeconds)
-  };
-
-  // The actual new position will be validated against collisions
-  const newPosition = {
-    row: proposedPosition.row,
-    col: proposedPosition.col
-  };
-
-  // Check if object has essentially stopped moving
-  const isMoving = newVelocity > 0 || Math.abs(newVerticalVelocity) > 0 || newHeight > 0;
-
-  return {
-    position: newPosition,
-    dimensions: state.dimensions,
-    physics: {
-      ...state.physics,
-      velocity: newVelocity,
-      height: newHeight,
-      verticalVelocity: newVerticalVelocity,
-      active: isMoving
-    }
-  };
+  newPhysics.active = true;
+  
+  return { row: newRow, col: newCol, physics: newPhysics };
 }

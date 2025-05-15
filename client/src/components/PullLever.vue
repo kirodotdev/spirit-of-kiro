@@ -29,6 +29,7 @@ const isRotating = ref(false);
 const isPulled = ref(false);
 const currentRotation = ref(props.props.initialAngle || 0);
 const gameStore = useGameStore();
+const localInventory = ref<any[]>([]);
 
 function handlePlayerInteraction() {
   if (!props.playerIsNear || isPulling.value || isRotating.value) {
@@ -64,8 +65,16 @@ function handlePlayerInteraction() {
       // Emit lever-pulled event
       gameStore.emitEvent('lever-pulled');
       
-      // Request an item from the server
-      gameStore.pullItem();
+      // Check if we have local inventory items to prioritize
+      if (localInventory.value.length > 0) {
+        // Pop an item from the local inventory
+        const item = localInventory.value.shift();
+        // Emit the pulled-item event with the local item
+        gameStore.emitEvent('pulled-item', { item });
+      } else {
+        // If no local items, request a new one from the server
+        gameStore.pullItem();
+      }
       
       // Auto reset if configured
       if (props.props.autoReset) {
@@ -116,6 +125,14 @@ function resetLever() {
   animateReset();
 }
 
+// Handle inventory list response from server
+function handleInventoryList(data: any) {
+  if (data && Array.isArray(data)) {
+    localInventory.value = data;
+    console.log('Received inventory items:', localInventory.value);
+  }
+}
+
 // Calculate pivot point based on configuration
 const getPivotPoint = () => {
   const pivotConfig = props.props.pivotPoint || 'bottom';
@@ -138,16 +155,19 @@ const getPivotPoint = () => {
 };
 
 let interactionListenerId: string;
-// No longer need pulledItemListenerId
+let inventoryListenerId: string;
 
 onMounted(() => {
   interactionListenerId = gameStore.addEventListener('player-interaction', handlePlayerInteraction);
+  inventoryListenerId = gameStore.addEventListener('inventory-items', handleInventoryList);
   
-  // We no longer need to listen for pulled-item event here as Dispenser will handle it
+  // Fetch inventory when component mounts
+  gameStore.listInventory(`${gameStore.userId}:main`);
 });
 
 onUnmounted(() => {
   gameStore.removeEventListener('player-interaction', interactionListenerId);
+  gameStore.removeEventListener('inventory-items', inventoryListenerId);
 });
 </script>
 

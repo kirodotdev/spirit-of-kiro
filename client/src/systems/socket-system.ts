@@ -124,6 +124,23 @@ export class SocketSystem {
 
     this.ws.value.send(JSON.stringify(message))
   }
+
+  listInventory(inventoryId: string) {
+    console.log('requesting inventory list');
+    if (!this.ws.value || !this.isAuthenticated.value) {
+      console.error('Cannot list inventory: not connected or not authenticated')
+      return
+    }
+
+    const message = {
+      type: 'list-inventory',
+      body: {
+        inventoryId: inventoryId
+      }
+    }
+
+    this.ws.value.send(JSON.stringify(message))
+  }
   
   /**
    * Schedule a reconnection attempt with exponential backoff

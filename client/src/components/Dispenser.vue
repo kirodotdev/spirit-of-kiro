@@ -65,7 +65,7 @@ function spawnItemGameObject(data: any) {
         active: true,
         angle: Math.floor(Math.random() * (100 - 80 + 1)) + 80,
         velocity: 10,
-        friction: 0.90,
+        friction: 2,
         height: itemHeight,
         verticalVelocity: -1,
         bounceStrength: 0.4,

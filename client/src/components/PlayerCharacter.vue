@@ -125,7 +125,7 @@ const throwHeldItem = () => {
       active: true,
       angle: angle.value,
       velocity: THROW_IMPULSE,
-      friction: 0.9,
+      friction: 2,
       height: 3, // Start a bit above ground
       verticalVelocity: 0,
       bounceStrength: 0.4,
@@ -237,7 +237,7 @@ const updateMovement = () => {
       active: true,
       angle: angle.value,
       velocity: MOVEMENT_IMPULSE,
-      friction: 0.9, // High friction for responsive controls
+      friction: 3, // High friction for responsive controls
       height: 0,
       verticalVelocity: 0,
       bounceStrength: 0.1,

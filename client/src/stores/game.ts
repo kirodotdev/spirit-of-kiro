@@ -12,6 +12,7 @@ export const useGameStore = defineStore('game', () => {
   const ws = ref<WebSocket | null>(null)
   const wsConnected = ref(false)
   const isAuthenticated = ref(false)
+  const userId = ref<string | null>(null)
   const objects = ref<GameObject[]>([])
   const items = ref<Item[]>([])
   const tileSize = ref(50)
@@ -47,6 +48,7 @@ export const useGameStore = defineStore('game', () => {
     removeEventListener: socketSystem.removeEventListener.bind(socketSystem),
     emitEvent: socketSystem.emitEvent.bind(socketSystem),
     pullItem: socketSystem.pullItem.bind(socketSystem),
+    listInventory: socketSystem.listInventory.bind(socketSystem),
     reconnect: socketSystem.reconnect.bind(socketSystem),
     cleanup: socketSystem.cleanup.bind(socketSystem),
 
