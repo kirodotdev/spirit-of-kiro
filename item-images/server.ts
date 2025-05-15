@@ -29,7 +29,7 @@ const server = serve({
     }
 
     // Handle /health endpoint
-    if (url.pathname === "/health" && method === "GET") {
+    if (url.pathname === "/" && method === "GET") {
       return new Response("OK", {
         status: 200,
         headers: {
