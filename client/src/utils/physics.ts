@@ -114,9 +114,15 @@ export function checkCollision(
   obj1: { row: number, col: number, width: number, depth: number, physics: PhysicsProperties },
   obj2: { row: number, col: number, width: number, depth: number, physics: PhysicsProperties }
 ): boolean {
-  // Simple height-based collision check
-  const heightDifference = Math.abs(obj1.physics.height - obj2.physics.height);
-  if (heightDifference > Math.max(obj1.width, obj1.depth, obj2.width, obj2.depth) * 0.5) {
+  // Improved height-based collision check
+  // Calculate the effective height range for each object
+  const obj1MinHeight = obj1.physics.height;
+  const obj1MaxHeight = obj1.physics.height + Math.max(obj1.width, obj1.depth);
+  const obj2MinHeight = obj2.physics.height;
+  const obj2MaxHeight = obj2.physics.height + Math.max(obj2.width, obj2.depth);
+  
+  // Check if height ranges overlap
+  if (obj1MaxHeight < obj2MinHeight || obj1MinHeight > obj2MaxHeight) {
     return false;
   }
   
@@ -202,14 +208,36 @@ export function handleCollision(
   const newObj1 = vectorToAngle(newV1);
   const newObj2 = vectorToAngle(newV2);
   
+  // Calculate height difference and adjust vertical velocities to separate objects vertically
+  const heightDifference = obj1.physics.height - obj2.physics.height;
+  let obj1VerticalVelocity = obj1.physics.verticalVelocity;
+  let obj2VerticalVelocity = obj2.physics.verticalVelocity;
+  
+  // If objects are at similar heights, give them opposing vertical velocities to separate
+  if (Math.abs(heightDifference) < 0.5) {
+    const verticalSeparationImpulse = 2.0; // Strength of vertical separation
+    if (heightDifference > 0) {
+      // obj1 is higher, push it up more
+      obj1VerticalVelocity = Math.max(obj1VerticalVelocity, verticalSeparationImpulse);
+      obj2VerticalVelocity = Math.min(obj2VerticalVelocity, -verticalSeparationImpulse * 0.5);
+    } else {
+      // obj2 is higher, push it up more
+      obj2VerticalVelocity = Math.max(obj2VerticalVelocity, verticalSeparationImpulse);
+      obj1VerticalVelocity = Math.min(obj1VerticalVelocity, -verticalSeparationImpulse * 0.5);
+    }
+  } else {
+    // Add a small random vertical bounce on collision
+    obj1VerticalVelocity += Math.random() * 0.8 - 0.2; // -0.2 to 0.6 range
+    obj2VerticalVelocity += Math.random() * 0.8 - 0.2;
+  }
+  
   // Create new physics objects with updated values
   const obj1Physics: PhysicsProperties = {
     ...obj1.physics,
     active: true,
     angle: newObj1.angle,
     velocity: newObj1.magnitude,
-    // Add a small vertical bounce on collision
-    verticalVelocity: obj1.physics.verticalVelocity + Math.random() * 0.5
+    verticalVelocity: obj1VerticalVelocity
   };
   
   const obj2Physics: PhysicsProperties = {
@@ -217,8 +245,7 @@ export function handleCollision(
     active: true,
     angle: newObj2.angle,
     velocity: newObj2.magnitude,
-    // Add a small vertical bounce on collision
-    verticalVelocity: obj2.physics.verticalVelocity + Math.random() * 0.5
+    verticalVelocity: obj2VerticalVelocity
   };
   
   return { obj1Physics, obj2Physics };
@@ -299,4 +326,47 @@ export function handleWallCollision(
   newPhysics.active = true;
   
   return { row: newRow, col: newCol, physics: newPhysics };
+}
+
+// Function to detect and fix objects that are stuck in the air
+export function detectAndFixStuckObjects(
+  obj: { row: number, col: number, width: number, depth: number, physics: PhysicsProperties }
+): PhysicsProperties {
+  const physics = obj.physics;
+  
+  // Check if object is potentially stuck (above ground but not moving much)
+  if (
+    physics.height > 0.1 && // Object is above ground
+    Math.abs(physics.verticalVelocity) < 0.2 && // Very little vertical movement
+    physics.velocity < 0.2 // Very little horizontal movement
+  ) {
+    // Object appears to be stuck, apply a small downward force to help it fall
+    return {
+      ...physics,
+      active: true,
+      verticalVelocity: -1.0, // Apply downward velocity
+      // Add a tiny random horizontal impulse to help break free from overlaps
+      angle: Math.random() * 360,
+      velocity: 0.5 + Math.random() * 0.5
+    };
+  }
+  
+  // Check for objects that have been above ground with minimal movement for too long
+  // This is a more aggressive unstuck mechanism that should rarely be needed
+  if (
+    physics.height > 3 && // Significantly above ground
+    Math.abs(physics.verticalVelocity) < 0.1 && // Almost no vertical movement
+    physics.velocity < 0.1 // Almost no horizontal movement
+  ) {
+    // Force object to ground level with a reset
+    return {
+      ...physics,
+      active: true,
+      height: 0,
+      verticalVelocity: 0,
+      velocity: 0
+    };
+  }
+  
+  return physics;
 }
