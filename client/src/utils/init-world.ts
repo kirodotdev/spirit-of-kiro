@@ -296,17 +296,6 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
     width: 2,
     depth: 2,
     height: 4,
-    physics: {
-      active: false,
-      angle: 0,
-      velocity: 0,
-      friction: 0.5,
-      height: 0,
-      verticalVelocity: 0,
-      bounceStrength: 0.3,
-      mass: 1,
-      physicsType: PhysicsType.Field
-    },
     props: {}
   })
 }

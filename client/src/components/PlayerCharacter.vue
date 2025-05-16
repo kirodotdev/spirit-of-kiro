@@ -5,6 +5,7 @@ import GameItem from './GameItem.vue';
 import ghostNorth from '../assets/ghost/north.png';
 import ghostSouth from '../assets/ghost/south.png';
 import ghostSouthwest from '../assets/ghost/southwest.png';
+import { storeToRefs } from 'pinia'
 
 interface Props {
   id: string;
@@ -25,31 +26,32 @@ const props = defineProps<Props>();
 
 import { useGameStore } from '../stores/game';
 const gameStore = useGameStore();
+const { heldItemId } = storeToRefs(gameStore);
 
 // Track pressed keys
 // Shared state for key tracking
 const pressedKeys = ref<Set<string>>(new Set());
 
-// Track the currently held item
-const heldItemId = ref<string | null>(null);
-const heldItem = computed(() => {
-  if (heldItemId.value) {
-    return gameStore.itemsById.get(heldItemId.value);
-  } else {
-    return null
-  }
-})
-
-// Determine CSS class based on item rarity, similar to GameItem.vue
+// Determine CSS class based on item rarity
 const getRarityClass = computed(() => {
-  if (!heldItem) return 'item-common';
+  if (!heldItem.value) return 'item-common';
   
-  const value = heldItem.value.value;
+  // First value is a deref of the ref, the second is the actual item value
+  const value = heldItem.value.value; 
   if (value > 1000) return 'item-legendary';
   if (value > 500) return 'item-epic';
   if (value > 250) return 'item-rare';
   if (value > 100) return 'item-uncommon';
   return 'item-common';
+});
+
+// Computed property for the held item
+const heldItem = computed(() => {
+  if (heldItemId.value) {
+    return gameStore.itemsById.get(heldItemId.value);
+  } else {
+    return null;
+  }
 });
 
 const handleKeyDown = (e: KeyboardEvent) => {
@@ -105,7 +107,7 @@ const handleKeyUp = (e: KeyboardEvent) => {
 
 // Handle item pickup event
 const handleItemPickup = (data: any) => {
-  console.log(`Request to pickup item ${data.id}`)
+  console.log(`Pickup item ${data.id}`);
   heldItemId.value = data.id;
   
   // Emit hint event when item is picked up with HTML formatting
@@ -122,7 +124,7 @@ const throwHeldItem = () => {
   const item = heldItem.value;
   if (!item) return;
 
-  let throwOffset = 0
+  let throwOffset = 0;
   if (angle.value == 270) {
     throwOffset = 1;  // When throwing an item while facing back, offset it a bit
   }
@@ -283,7 +285,7 @@ onUnmounted(() => {
   window.removeEventListener('keyup', handleKeyUp);
   pressedKeys.value.clear();
   
-  // Remove event listener
+  // Remove event listeners
   gameStore.removeEventListener('item-pickup', itemPickupListenerId);
 });
 

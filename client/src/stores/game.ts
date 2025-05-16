@@ -16,6 +16,7 @@ export const useGameStore = defineStore('game', () => {
   const objects = ref<GameObject[]>([])
   const items = ref<Item[]>([])
   const tileSize = ref(50)
+  const heldItemId = ref<string | null>(null)
 
   // Flags
   const debug = ref(false)
@@ -41,6 +42,7 @@ export const useGameStore = defineStore('game', () => {
     tileSize,
     interactionLocked,
     hasActivePhysics,
+    heldItemId,
 
     // Socket actions
     initWebSocket: socketSystem.initWebSocket.bind(socketSystem),

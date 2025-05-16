@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import garbageImage from '../assets/garbage.png';
 import { useGameStore } from '../stores/game';
+import { ref, onMounted, onUnmounted } from 'vue';
+import { storeToRefs } from 'pinia'
 
 defineProps<{
   row: number;
@@ -13,12 +15,27 @@ defineProps<{
 }>();
 
 const gameStore = useGameStore();
+const { heldItemId } = storeToRefs(gameStore);
+let interactionListenerId: string;
 
+// Function to handle player interaction with the garbage can
 const interaction = () => {
-  console.log('Garbage interaction');
+  if (!heldItemId.value) {
+    // Nothing held
+    return;
+  }
+
+  console.log(`Discarding ${heldItemId.value}`)
 };
 
-defineExpose({ interaction });
+onMounted(() => {
+  interactionListenerId = gameStore.addEventListener('player-interaction', interaction);
+});
+
+onUnmounted(() => {
+  // Clean up event listener
+  gameStore.removeEventListener(interactionListenerId);
+});
 </script>
 
 <template>
