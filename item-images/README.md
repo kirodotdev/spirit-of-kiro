@@ -1,13 +1,16 @@
 # Item Images Server
 
-A simple REST API server built with Bun for generating and managing item images for this game. Note: there is an officially deployed central version of this service, so you don't necessarily need to build, deploy, and run this service yourself.
+A REST API server, for generating and managing item images for this game. 
+
+There is an officially deployed central version of this service,
+so you don't necessarily need to build, deploy, and run this service yourself.
 
 The officially hosted version is available at: http://kiro-game-images-service-alb-559009974.us-west-2.elb.amazonaws.com/
 
 ## Features
 
 - Generate images for items, based on a short description of them
-- Use a vector embedding to keep track of generated images
+- Uses vector embeddings to keep track of all it's generated images, by description
 - Match incoming image requests to previously generated images using a vector database, as an optimization
 - Stores item images in S3, with a CloudFront distribution in front
 

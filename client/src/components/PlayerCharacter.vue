@@ -59,14 +59,17 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
   const key = e.key.toLowerCase();
   
-  if (key === 'e') {
+  if (key === 't') {
     if (heldItemId.value) {
       // If holding an item, throw it
       throwHeldItem();
-    } else {
-      // Otherwise, use normal interaction
-      gameStore.emitEvent('player-interaction');
     }
+    return;
+  }
+  
+  if (key === 'e') {
+    // Use for interaction only
+    gameStore.emitEvent('player-interaction');
     return;
   }
   
@@ -107,7 +110,7 @@ const handleItemPickup = (data: any) => {
   
   // Emit hint event when item is picked up with HTML formatting
   gameStore.emitEvent('hint', {
-    message: "<b>E</b> - Throw<br><b>I</b> - Inspect",
+    message: "<b>T</b> - Throw<br><b>I</b> - Inspect",
     duration: 0 // 0 means it stays until cleared
   });
 };
