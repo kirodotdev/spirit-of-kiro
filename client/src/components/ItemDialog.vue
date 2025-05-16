@@ -137,7 +137,7 @@ onUnmounted(() => {
           </div>
           
           <div class="item-skills" v-if="currentItem?.skills && currentItem.skills.length > 0">
-            <h3>Skills:</h3>
+            <h3>Quirks:</h3>
             <div v-for="(skill, index) in currentItem.skills" :key="index" class="skill-item">
               <div class="skill-header">
                 <div class="skill-name">{{ skill.name }}</div>
