@@ -8,6 +8,7 @@
     <div class="game-container" :style="{width: `${tileSize * gridSize}px`, height: `${tileSize * gridSize}px`}">
       <GameGrid :grid-size="gridSize" :tile-size="tileSize" />
       <GameObjects :gameObjects="gameStore.objects" :tileSize="tileSize" />
+      <HintDisplay />
     </div>
     <div class="connection-status" :class="{ connected: gameStore.wsConnected }" />
   </div>
@@ -18,6 +19,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useGameStore } from '../stores/game'
 import GameGrid from '../components/GameGrid.vue'
 import GameObjects from '../components/GameObjects.vue'
+import HintDisplay from '../components/HintDisplay.vue'
 import { setupGameObjects } from '../utils/init-world'
 import { storeToRefs } from 'pinia'
 

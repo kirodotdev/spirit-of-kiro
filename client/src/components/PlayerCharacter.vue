@@ -94,6 +94,12 @@ const handleKeyUp = (e: KeyboardEvent) => {
 const handleItemPickup = (data: any) => {
   console.log(`Request to pickup item ${data.id}`)
   heldItemId.value = data.id;
+  
+  // Emit hint event when item is picked up
+  gameStore.emitEvent('hint', {
+    message: "E - Throw",
+    duration: 0 // 0 means it stays until cleared
+  });
 };
 
 // Throw the currently held item
@@ -135,6 +141,9 @@ const throwHeldItem = () => {
   
   // Clear the held item
   heldItemId.value = null;
+  
+  // Clear the hint when item is thrown
+  gameStore.emitEvent('clear-hint');
 };
 
 // Computed property for current sprite
