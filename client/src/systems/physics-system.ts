@@ -1,5 +1,6 @@
 import { computed, watch } from 'vue';
 import type { GameObject } from './game-object-system';
+import { useGameStore } from '../stores/game';
 import { 
   updatePhysicsPosition, 
   checkCollision, 
@@ -17,12 +18,14 @@ export class PhysicsSystem {
   private physicsObjects = computed(() => this.objects.value.filter(obj => obj.physics))
   private walls = computed(() => this.objects.value.filter(obj => obj.physics && obj.physics.mass == Infinity))
   private activeObjects = computed(() => this.physicsObjects.value.filter(obj => obj.physics.active == true))
+  private gameStore;
 
   constructor(objects: Ref<GameObject[]>, hasActivePhysics: Ref<boolean>) {
     this.objects = objects;
     this.hasActivePhysics = hasActivePhysics;
     this.lastTimestamp = performance.now();
     const self = this;
+    this.gameStore = useGameStore();
 
     // Watch activeObjects to control physics loop
     watch(this.activeObjects, (newActiveObjects) => {
@@ -170,6 +173,16 @@ export class PhysicsSystem {
           // Update physics properties
           obj1.physics = obj1Physics;
           obj2.physics = obj2Physics;
+          
+          // Check if either object has an event property in its physics configuration
+          // and emit that event with the ID of the colliding object
+          
+          if (obj1.physics.event && typeof obj1.physics.event === 'string') {
+            this.gameStore.emitEvent(obj1.physics.event, { id: obj2.id });
+          }
+          if (obj2.physics.event && typeof obj2.physics.event === 'string') {
+            this.gameStore.emitEvent(obj2.physics.event, { id: obj1.id });
+          }
           
           // Slightly separate objects to prevent sticking
           const pushFactor = 0.05;

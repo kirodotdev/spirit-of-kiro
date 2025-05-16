@@ -96,11 +96,11 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
   })
 
   gameStore.addObject({
-    id: 'bottomwall',
+    id: 'bottomwall-left',
     type: Wall,
     row: gridSize - 1.5,
     col: 1,
-    width: gridSize,
+    width: 8,
     depth: 2.5,
     height: 5,
     physics: {
@@ -112,6 +112,49 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
       verticalVelocity: 0,
       bounceStrength: 0,
       mass: Infinity
+    },
+    props: {}
+  })
+
+  gameStore.addObject({
+    id: 'bottomwall-right',
+    type: Wall,
+    row: gridSize - 1.5,
+    col: 13,
+    width: 8,
+    depth: 2.5,
+    height: 5,
+    physics: {
+      active: false,
+      angle: 0,
+      velocity: 0,
+      friction: 1,
+      height: 0,
+      verticalVelocity: 0,
+      bounceStrength: 0,
+      mass: Infinity
+    },
+    props: {}
+  })
+
+  gameStore.addObject({
+    id: 'door-block',
+    type: Wall,
+    row: gridSize + .5,
+    col: 9,
+    width: 4,
+    depth: .1,
+    height: 1,
+    physics: {
+      active: false,
+      angle: 0,
+      velocity: 0,
+      friction: 1,
+      height: 0,
+      verticalVelocity: 0,
+      bounceStrength: 0,
+      mass: Infinity,
+      event: 'sell-item'
     },
     props: {}
   })

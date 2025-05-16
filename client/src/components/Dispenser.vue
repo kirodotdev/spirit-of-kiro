@@ -27,6 +27,9 @@ function handleLeverPulled() {
 }
 
 function spawnItemGameObject(data: any) {
+  // Check if the item has a story (newly generated) or not (from inventory)
+  const isFromInventory = data && data.item && !data.story;
+  
   if (data && data.story) {
     gameStore.emitEvent('announce', {
       message: data.story,
@@ -59,7 +62,7 @@ function spawnItemGameObject(data: any) {
       height: 1,
       props: { 
         itemId,
-        pickedUp: false // Set pickedUp flag to false for new items from dispenser
+        pickedUp: isFromInventory // Set pickedUp flag to true for items from inventory, false for newly generated items
       },
       physics: {
         active: true,

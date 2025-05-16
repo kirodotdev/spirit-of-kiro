@@ -12,6 +12,7 @@
     </div>
     <div class="connection-status" :class="{ connected: gameStore.wsConnected }" />
     <ItemDialog />
+    <SellDialog />
   </div>
 </template>
 
@@ -22,6 +23,7 @@ import GameGrid from '../components/GameGrid.vue'
 import GameObjects from '../components/GameObjects.vue'
 import HintDisplay from '../components/HintDisplay.vue'
 import ItemDialog from '../components/ItemDialog.vue'
+import SellDialog from '../components/SellDialog.vue'
 import { setupGameObjects } from '../utils/init-world'
 import { storeToRefs } from 'pinia'
 
