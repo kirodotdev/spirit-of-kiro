@@ -6,6 +6,7 @@ import Wall from '../components/Wall.vue'
 import Shelf from '../components/Shelf.vue'
 import PullLever from '../components/PullLever.vue'
 import Garbage from '../components/Garbage.vue'
+import { PhysicsType } from './physics'
 
 export function setupGameObjects(gameStore: any, gridSize: number) {
   // System items
@@ -17,6 +18,17 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
     width: 1,
     depth: 1,
     height: 1,
+    physics: {
+      active: false,
+      angle: 0,
+      velocity: 0,
+      friction: 0.5,
+      height: 0,
+      verticalVelocity: 0,
+      bounceStrength: 0.3,
+      mass: 1,
+      physicsType: PhysicsType.Dynamic
+    },
     props: {}
   })
 
@@ -48,7 +60,8 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
       height: 0,
       verticalVelocity: 0,
       bounceStrength: 0,
-      mass: Infinity
+      mass: Infinity,
+      physicsType: PhysicsType.Static
     },
     props: {}
   })
@@ -69,7 +82,8 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
       height: 0,
       verticalVelocity: 0,
       bounceStrength: 0,
-      mass: Infinity
+      mass: Infinity,
+      physicsType: PhysicsType.Static
     },
     props: {}
   })
@@ -90,7 +104,8 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
       height: 0,
       verticalVelocity: 0,
       bounceStrength: 0,
-      mass: Infinity
+      mass: Infinity,
+      physicsType: PhysicsType.Static
     },
     props: {}
   })
@@ -111,7 +126,8 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
       height: 0,
       verticalVelocity: 0,
       bounceStrength: 0,
-      mass: Infinity
+      mass: Infinity,
+      physicsType: PhysicsType.Static
     },
     props: {}
   })
@@ -132,13 +148,36 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
       height: 0,
       verticalVelocity: 0,
       bounceStrength: 0,
-      mass: Infinity
+      mass: Infinity,
+      physicsType: PhysicsType.Static
     },
     props: {}
   })
 
   gameStore.addObject({
     id: 'door-block',
+    type: Wall,
+    row: gridSize + .25,
+    col: 9,
+    width: 4,
+    depth: .25,
+    height: 1,
+    physics: {
+      active: false,
+      angle: 0,
+      velocity: 0,
+      friction: 1,
+      height: 0,
+      verticalVelocity: 0,
+      bounceStrength: 0,
+      mass: Infinity,
+      physicsType: PhysicsType.Static
+    },
+    props: {}
+  })
+
+  gameStore.addObject({
+    id: 'sell-field',
     type: Wall,
     row: gridSize + .5,
     col: 9,
@@ -153,8 +192,8 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
       height: 0,
       verticalVelocity: 0,
       bounceStrength: 0,
-      mass: Infinity,
-      event: 'sell-item'
+      event: 'sell-item',
+      physicsType: PhysicsType.Field
     },
     props: {}
   })
@@ -176,7 +215,8 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
       height: 0,
       verticalVelocity: 0,
       bounceStrength: 0,
-      mass: Infinity
+      mass: Infinity,
+      physicsType: PhysicsType.Static
     },
     props: {}
   })
@@ -197,7 +237,8 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
       height: 0,
       verticalVelocity: 0,
       bounceStrength: 0,
-      mass: Infinity
+      mass: Infinity,
+      physicsType: PhysicsType.Static
     },
     props: {}
   })
@@ -218,7 +259,8 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
       height: 0,
       verticalVelocity: 0,
       bounceStrength: 0,
-      mass: Infinity
+      mass: Infinity,
+      physicsType: PhysicsType.Static
     },
     props: {}
   })
@@ -254,6 +296,17 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
     width: 2,
     depth: 2,
     height: 4,
+    physics: {
+      active: false,
+      angle: 0,
+      velocity: 0,
+      friction: 0.5,
+      height: 0,
+      verticalVelocity: 0,
+      bounceStrength: 0.3,
+      mass: 1,
+      physicsType: PhysicsType.Field
+    },
     props: {}
   })
 }

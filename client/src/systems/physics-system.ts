@@ -6,7 +6,8 @@ import {
   checkCollision, 
   handleCollision, 
   handleWallCollision,
-  detectAndFixStuckObjects
+  detectAndFixStuckObjects,
+  PhysicsType
 } from '../utils/physics';
 
 export class PhysicsSystem {
@@ -76,8 +77,8 @@ export class PhysicsSystem {
     const self = this;
     // Update positions based on physics properties
     for (const obj of this.physicsObjects.value) {
-      if (obj.physics.mass == Infinity) {
-        // Walls don't collide with walls
+      if (obj.physics.physicsType == PhysicsType.Static || obj.physics.physicsType == PhysicsType.Field) {
+        // These items don't collide with each other
         continue;
       }
 
@@ -109,7 +110,8 @@ export class PhysicsSystem {
           row: wall.row,
           col: wall.col,
           width: wall.width || 1,
-          depth: wall.depth || 1
+          depth: wall.depth || 1,
+          height: wall.height || 1 // Pass wall height with default of 1
         }))
       );
       
@@ -129,7 +131,8 @@ export class PhysicsSystem {
         const obj1 = this.physicsObjects.value[i];
         const obj2 = this.physicsObjects.value[j];
 
-        if (obj1.physics.mass == Infinity || obj2.physics.mass == Infinity) {
+        if (obj1.physics.physicsType == PhysicsType.Static || obj2.physics.physicsType == PhysicsType.Static) {
+          // Static type collisions were handled already
           continue;
         }
         
@@ -151,54 +154,68 @@ export class PhysicsSystem {
           }
         );
         
-        if (colliding) {
-          // Handle collision with momentum transfer
-          const { obj1Physics, obj2Physics } = handleCollision(
-            {
-              row: obj1.row,
-              col: obj1.col,
-              width: obj1.width || 1,
-              depth: obj1.depth || 1,
-              physics: obj1.physics
-            },
-            {
-              row: obj2.row,
-              col: obj2.col,
-              width: obj2.width || 1,
-              depth: obj2.depth || 1,
-              physics: obj2.physics
-            }
-          );
+        if (!colliding) {
+          continue;
+        }
           
-          // Update physics properties
-          obj1.physics = obj1Physics;
-          obj2.physics = obj2Physics;
-          
-          // Check if either object has an event property in its physics configuration
-          // and emit that event with the ID of the colliding object
-          
+        if (obj1.physics.physicsType == PhysicsType.Field || obj2.physics.physicsType == PhysicsType.Field) {
+          // Field type collisions don't actually collide, but they do event.
           if (obj1.physics.event && typeof obj1.physics.event === 'string') {
             this.gameStore.emitEvent(obj1.physics.event, { id: obj2.id });
           }
           if (obj2.physics.event && typeof obj2.physics.event === 'string') {
             this.gameStore.emitEvent(obj2.physics.event, { id: obj1.id });
           }
-          
-          // Slightly separate objects to prevent sticking
-          const pushFactor = 0.05;
-          const centerDiffX = obj2.col - obj1.col;
-          const centerDiffY = obj2.row - obj1.row;
-          const distance = Math.sqrt(centerDiffX * centerDiffX + centerDiffY * centerDiffY);
-          
-          if (distance > 0) {
-            const normalX = centerDiffX / distance;
-            const normalY = centerDiffY / distance;
-            
-            obj1.col -= normalX * pushFactor;
-            obj1.row -= normalY * pushFactor;
-            obj2.col += normalX * pushFactor;
-            obj2.row += normalY * pushFactor;
+
+          continue;
+        }
+
+        // Handle collision with momentum transfer
+        const { obj1Physics, obj2Physics } = handleCollision(
+          {
+            row: obj1.row,
+            col: obj1.col,
+            width: obj1.width || 1,
+            depth: obj1.depth || 1,
+            physics: obj1.physics
+          },
+          {
+            row: obj2.row,
+            col: obj2.col,
+            width: obj2.width || 1,
+            depth: obj2.depth || 1,
+            physics: obj2.physics
           }
+        );
+        
+        // Update physics properties
+        obj1.physics = obj1Physics;
+        obj2.physics = obj2Physics;
+        
+        // Check if either object has an event property in its physics configuration
+        // and emit that event with the ID of the colliding object
+        
+        if (obj1.physics.event && typeof obj1.physics.event === 'string') {
+          this.gameStore.emitEvent(obj1.physics.event, { id: obj2.id });
+        }
+        if (obj2.physics.event && typeof obj2.physics.event === 'string') {
+          this.gameStore.emitEvent(obj2.physics.event, { id: obj1.id });
+        }
+        
+        // Slightly separate objects to prevent sticking
+        const pushFactor = 0.05;
+        const centerDiffX = obj2.col - obj1.col;
+        const centerDiffY = obj2.row - obj1.row;
+        const distance = Math.sqrt(centerDiffX * centerDiffX + centerDiffY * centerDiffY);
+        
+        if (distance > 0) {
+          const normalX = centerDiffX / distance;
+          const normalY = centerDiffY / distance;
+          
+          obj1.col -= normalX * pushFactor;
+          obj1.row -= normalY * pushFactor;
+          obj2.col += normalX * pushFactor;
+          obj2.row += normalY * pushFactor;
         }
       }
     }

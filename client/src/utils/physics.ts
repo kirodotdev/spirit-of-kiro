@@ -1,3 +1,9 @@
+export enum PhysicsType {
+  Static = "static",
+  Field = "field",
+  Dynamic = "dynamic"
+}
+
 export interface PhysicsProperties {
   angle: number;  // Angle in degrees
   velocity: number;  // Velocity in tiles per second
@@ -7,6 +13,7 @@ export interface PhysicsProperties {
   verticalVelocity: number;  // Vertical velocity in tile units per second
   bounceStrength: number;  // How much velocity is retained on bounce (0-1)
   mass: number;  // Mass of object for collision calculations
+  physicsType?: PhysicsType;  // Type of physics object (static, field, or dynamic), defaults to dynamic
 }
 
 export interface Vector2D {
@@ -258,7 +265,7 @@ export function handleWallCollision(
   width: number,
   depth: number,
   physics: PhysicsProperties,
-  walls: Array<{ row: number, col: number, width: number, depth: number }>
+  walls: Array<{ row: number, col: number, width: number, depth: number, height?: number }>
 ): { row: number, col: number, physics: PhysicsProperties } {  
   let newRow = row;
   let newCol = col;
@@ -266,6 +273,14 @@ export function handleWallCollision(
   
   // Check collision with each wall
   for (const wall of walls) {
+    // Get wall height (default to 1 if not specified)
+    const wallHeight = wall.height !== undefined ? wall.height : 1;
+    
+    // Skip collision check if object's height is greater than wall's height
+    if (physics.height > wallHeight) {
+      continue;
+    }
+    
     // Check if object overlaps with wall
     if (
       col < wall.col + wall.width &&
