@@ -31,8 +31,8 @@ const item = store.itemsById.get(props.props.itemId);
 // Dialog state
 const showDialog = ref(false);
 
-// Use the item's imageUrl if available, otherwise get a random icon
-const icon = computed(() => item?.imageUrl || 'bad image url');
+// Use the item's imageUrl if available, otherwise use generic.png
+const icon = computed(() => item?.imageUrl || '/src/assets/generic.png');
 
 // Determine CSS class based on item value
 const getRarityClass = computed(() => {

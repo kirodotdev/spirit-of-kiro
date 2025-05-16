@@ -72,6 +72,11 @@ export class PhysicsSystem {
     const self = this;
     // Update positions based on physics properties
     for (const obj of this.physicsObjects.value) {
+      if (obj.physics.mass == Infinity) {
+        // Walls don't collide with walls
+        continue;
+      }
+
       // Update position based on physics
       const { row, col, physics } = updatePhysicsPosition(
         obj.row, 

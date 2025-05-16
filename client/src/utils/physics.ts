@@ -232,12 +232,7 @@ export function handleWallCollision(
   depth: number,
   physics: PhysicsProperties,
   walls: Array<{ row: number, col: number, width: number, depth: number }>
-): { row: number, col: number, physics: PhysicsProperties } {
-  // Skip if physics is not active
-  if (!physics.active) {
-    return { row, col, physics };
-  }
-  
+): { row: number, col: number, physics: PhysicsProperties } {  
   let newRow = row;
   let newCol = col;
   let newPhysics = { ...physics };

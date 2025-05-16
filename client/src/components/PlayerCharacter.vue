@@ -304,7 +304,7 @@ onUnmounted(() => {
       }">
       <div class="item-container" :class="getRarityClass">
         <img 
-          :src="heldItem.imageUrl" 
+          :src="heldItem.imageUrl || '/src/assets/generic.png'" 
           :alt="heldItem.name"
           class="held-item-image"
         />
