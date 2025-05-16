@@ -1,18 +1,27 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useGameStore } from '../stores/game';
 
-interface Props {
-  item: any; // The item data to display
-  visible: boolean; // Whether the dialog is visible
-  imageUrl: string; // URL of the item image
-  rarityClass: string; // CSS class for item rarity
-}
+const store = useGameStore();
 
-const props = defineProps<Props>();
+// State to track dialog visibility and current item
+const visible = ref(false);
+const currentItem = ref<any>(null);
 
-const emit = defineEmits<{
-  (e: 'close'): void;
-}>();
+// Computed properties for the dialog
+const imageUrl = computed(() => currentItem.value?.imageUrl || '/src/assets/generic.png');
+
+// Determine CSS class based on item value
+const rarityClass = computed(() => {
+  if (!currentItem.value || currentItem.value.value === undefined) return 'item-common';
+  
+  const value = currentItem.value.value;
+  if (value > 1000) return 'item-legendary';
+  if (value > 500) return 'item-epic';
+  if (value > 250) return 'item-rare';
+  if (value > 100) return 'item-uncommon';
+  return 'item-common';
+});
 
 // Format outcome text for display
 function formatOutcome(outcome: string): string {
@@ -38,15 +47,65 @@ function getOutcomeClass(outcome: string): string {
 }
 
 function closeDialog() {
-  emit('close');
+  visible.value = false;
+  store.interactionLocked = false;
+  
+  // Complete the pickup process when dialog is closed
+  if (currentItem.value) {
+    store.removeObject(currentItem.value.gameObjectId);
+    store.emitEvent('item-pickup', {
+      id: currentItem.value.id
+    });
+  }
 }
+
+// Function to handle keydown events
+function handleKeyDown(event: KeyboardEvent) {
+  // Check if the pressed key is Escape and the dialog is visible
+  if (event.key === 'Escape' && visible.value) {
+    closeDialog();
+  }
+}
+
+// Listen for inspect-item events
+let inspectItemListenerId: string;
+
+onMounted(() => {
+  inspectItemListenerId = store.addEventListener('inspect-item', (data) => {
+    console.log('inspect-item data', data)
+    if (data && data.id) {
+      // Get the item data directly from the store using the ID
+      const itemData = store.itemsById.get(data.id);
+      if (itemData) {
+        currentItem.value = itemData;
+        // Store the game object ID for later removal
+        currentItem.value.gameObjectId = data.id;
+        visible.value = true;
+        store.interactionLocked = true;
+      }
+    }
+  });
+  
+  // Add event listener for keydown to handle Escape key
+  window.addEventListener('keydown', handleKeyDown);
+});
+
+onUnmounted(() => {
+  store.removeEventListener('inspect-item', inspectItemListenerId);
+  // Remove the keydown event listener
+  window.removeEventListener('keydown', handleKeyDown);
+  // Make sure to unlock interactions if component is unmounted while dialog is open
+  if (visible.value) {
+    store.interactionLocked = false;
+  }
+})
 </script>
 
 <template>
   <div v-if="visible" class="item-dialog-overlay">
     <div class="item-dialog" :class="rarityClass">
       <div class="dialog-header">
-        <h2>{{ item?.name || 'Unknown Item' }}</h2>
+        <h2>{{ currentItem?.name || 'Unknown Item' }}</h2>
         <button class="close-button" @click="closeDialog">×</button>
       </div>
       <div class="dialog-content">
@@ -56,30 +115,30 @@ function closeDialog() {
             <span class="tag item-rarity" :class="rarityClass">
               {{ rarityClass.replace('item-', '').charAt(0).toUpperCase() + rarityClass.replace('item-', '').slice(1) }}
             </span>
-            <span v-for="(material, index) in item?.materials" :key="index" class="tag material-tag">{{ material }}</span>
+            <span v-for="(material, index) in currentItem?.materials" :key="index" class="tag material-tag">{{ material }}</span>
           </div>
         </div>
         <div class="dialog-details">
-          <p class="item-description">{{ item?.description || 'No description available.' }}</p>
+          <p class="item-description">{{ currentItem?.description || 'No description available.' }}</p>
           
           <div class="item-stats">
-            <div class="stat-row" v-if="item?.value !== undefined">
+            <div class="stat-row" v-if="currentItem?.value !== undefined">
               <span class="stat-label">Value:</span>
-              <span class="stat-value">{{ item.value }}</span>
+              <span class="stat-value">{{ currentItem.value }}</span>
             </div>
-            <div class="stat-row" v-if="item?.weight">
+            <div class="stat-row" v-if="currentItem?.weight">
               <span class="stat-label">Weight:</span>
-              <span class="stat-value">{{ item.weight }}</span>
+              <span class="stat-value">{{ currentItem.weight }}</span>
             </div>
-            <div class="stat-row" v-if="item?.damage">
+            <div class="stat-row" v-if="currentItem?.damage">
               <span class="stat-label">Damage:</span>
-              <span class="stat-value">{{ item.damage }}</span>
+              <span class="stat-value">{{ currentItem.damage }}</span>
             </div>
           </div>
           
-          <div class="item-skills" v-if="item?.skills && item.skills.length > 0">
+          <div class="item-skills" v-if="currentItem?.skills && currentItem.skills.length > 0">
             <h3>Skills:</h3>
-            <div v-for="(skill, index) in item.skills" :key="index" class="skill-item">
+            <div v-for="(skill, index) in currentItem.skills" :key="index" class="skill-item">
               <div class="skill-header">
                 <div class="skill-name">{{ skill.name }}</div>
                 <div class="skill-outcomes" v-if="skill.outcomes && skill.outcomes.length > 0">

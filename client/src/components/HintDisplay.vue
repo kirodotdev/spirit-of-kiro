@@ -2,8 +2,8 @@
   <div 
     class="hint-display" 
     :class="{ 'hint-visible': isVisible }"
+    v-html="currentHint"
   >
-    {{ currentHint }}
   </div>
 </template>
 

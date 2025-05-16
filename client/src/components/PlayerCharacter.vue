@@ -69,6 +69,16 @@ const handleKeyDown = (e: KeyboardEvent) => {
     }
     return;
   }
+  
+  if (key === 'i') {
+    if (heldItemId.value) {
+      // If holding an item, inspect it
+      gameStore.emitEvent('inspect-item', {
+        id: heldItemId.value
+      });
+    }
+    return;
+  }
 
   if (['w', 'a', 's', 'd'].includes(key)) {
     pressedKeys.value.add(key);
@@ -95,9 +105,9 @@ const handleItemPickup = (data: any) => {
   console.log(`Request to pickup item ${data.id}`)
   heldItemId.value = data.id;
   
-  // Emit hint event when item is picked up
+  // Emit hint event when item is picked up with HTML formatting
   gameStore.emitEvent('hint', {
-    message: "E - Throw",
+    message: "<b>E</b> - Throw<br><b>I</b> - Inspect",
     duration: 0 // 0 means it stays until cleared
   });
 };

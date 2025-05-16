@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { type PhysicsProperties } from '../utils/physics';
-import { onMounted, onUnmounted, computed, ref } from 'vue';
+import { onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from '../stores/game';
-import ItemDialog from './ItemDialog.vue';
 
 const store = useGameStore();
 
@@ -27,8 +26,7 @@ const props = defineProps<Props>();
 // Get the item details directly from the itemsById Map
 const item = store.itemsById.get(props.props.itemId);
 
-// Dialog state
-const showDialog = ref(false);
+// No dialog state needed anymore
 
 // Use the item's imageUrl if available, otherwise use generic.png
 const icon = computed(() => item?.imageUrl || '/src/assets/generic.png');
@@ -57,26 +55,13 @@ function handlePlayerInteraction() {
     return;
   }
 
-  // If the item hasn't been picked up yet, show the dialog first
+  // If the item hasn't been picked up yet, emit inspect-item event
   if (!props.props.pickedUp) {
-    showDialog.value = true;
-    // Lock player interaction while dialog is open
-    store.interactionLocked = true;
-    return;
+    store.emitEvent('inspect-item', {
+      id: props.props.itemId
+    });
   }
 
-  completePickup();
-}
-
-function handleDialogClose() {
-  showDialog.value = false;
-  store.interactionLocked = false;
-  
-  // Complete the pickup process (the item is now considered picked up)
-  completePickup();
-}
-
-function completePickup() {
   // Remove the item from the game world so it no longer renders
   // but we will keep it inside of the item list, so that the
   // player can pick it up.
@@ -90,25 +75,13 @@ function completePickup() {
 }
 
 let interactionListenerId: string;
-let inspectItemListenerId: string;
 
 onMounted(() => {
   interactionListenerId = store.addEventListener('player-interaction', handlePlayerInteraction);
-  inspectItemListenerId = store.addEventListener('inspect-item', (data) => {
-    if (data && data.id === props.props.itemId) {
-      showDialog.value = true;
-      store.interactionLocked = true;
-    }
-  });
 });
 
 onUnmounted(() => {
   store.removeEventListener('player-interaction', interactionListenerId);
-  store.removeEventListener('inspect-item', inspectItemListenerId);
-  // Make sure to unlock interactions if component is unmounted while dialog is open
-  if (showDialog.value) {
-    store.interactionLocked = false;
-  }
 });
 </script>
 
@@ -181,14 +154,7 @@ onUnmounted(() => {
     <!--<div class="item-name" :class="getRarityClass">{{ item?.name || 'Unknown Item' }}</div>-->
   </div>
   
-  <!-- Use the extracted ItemDialog component -->
-  <ItemDialog 
-    :item="item" 
-    :visible="showDialog" 
-    :image-url="icon" 
-    :rarity-class="getRarityClass" 
-    @close="handleDialogClose"
-  />
+
 </template>
 
 <style scoped>

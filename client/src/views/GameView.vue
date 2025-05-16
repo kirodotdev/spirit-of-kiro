@@ -11,6 +11,7 @@
       <HintDisplay />
     </div>
     <div class="connection-status" :class="{ connected: gameStore.wsConnected }" />
+    <ItemDialog />
   </div>
 </template>
 
@@ -20,6 +21,7 @@ import { useGameStore } from '../stores/game'
 import GameGrid from '../components/GameGrid.vue'
 import GameObjects from '../components/GameObjects.vue'
 import HintDisplay from '../components/HintDisplay.vue'
+import ItemDialog from '../components/ItemDialog.vue'
 import { setupGameObjects } from '../utils/init-world'
 import { storeToRefs } from 'pinia'
 
