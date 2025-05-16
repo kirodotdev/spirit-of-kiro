@@ -25,7 +25,10 @@ const interaction = () => {
     return;
   }
 
-  console.log(`Discarding ${heldItemId.value}`)
+  // Emit intent-to-discard-item event with the held item ID
+  gameStore.emitEvent('intent-to-discard-item', {
+    id: heldItemId.value
+  });
 };
 
 onMounted(() => {

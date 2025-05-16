@@ -117,6 +117,17 @@ const handleItemPickup = (data: any) => {
   });
 };
 
+// Handle item discarded event
+const handleItemDiscarded = (data: any) => {
+  console.log(`Item discarded: ${data.itemId}`);
+  // If the discarded item is the one we're holding, clear it
+  if (heldItemId.value === data.itemId) {
+    heldItemId.value = null;
+    // Clear the hint when item is discarded
+    gameStore.emitEvent('clear-hint');
+  }
+};
+
 // Throw the currently held item
 const throwHeldItem = () => {
   if (!heldItemId.value) return;
@@ -271,6 +282,7 @@ const updateMovement = () => {
 };
 
 let itemPickupListenerId: string;
+let itemDiscardedListenerId: string;
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
@@ -278,6 +290,9 @@ onMounted(() => {
   
   // Listen for item pickup events
   itemPickupListenerId = gameStore.addEventListener('item-pickup', handleItemPickup);
+  
+  // Listen for item discarded events
+  itemDiscardedListenerId = gameStore.addEventListener('item-discarded', handleItemDiscarded);
 });
 
 onUnmounted(() => {
@@ -287,6 +302,7 @@ onUnmounted(() => {
   
   // Remove event listeners
   gameStore.removeEventListener('item-pickup', itemPickupListenerId);
+  gameStore.removeEventListener('item-discarded', itemDiscardedListenerId);
 });
 
 </script>
