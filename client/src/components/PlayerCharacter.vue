@@ -70,11 +70,6 @@ const handleKeyDown = (e: KeyboardEvent) => {
   }
   
   if (key === 'e') {
-    if (heldItemId.value) {
-      // If holding an item, throw it in order to pick up the new item.
-      throwHeldItem();
-    }
-
     // Use for interaction only
     gameStore.emitEvent('player-interaction');
     return;
@@ -112,6 +107,11 @@ const handleKeyUp = (e: KeyboardEvent) => {
 
 // Handle item pickup event
 const handleItemPickup = (data: any) => {
+  if (heldItemId.value) {
+    // If holding an item, throw it in order to pick up the new item.
+    throwHeldItem();
+  }
+
   console.log(`Pickup item ${data.id}`);
   heldItemId.value = data.id;
   

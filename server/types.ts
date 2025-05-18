@@ -51,4 +51,12 @@ export interface EquipItemMessage {
     };
 }
 
-export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | EquipItemMessage;
+export interface MoveItemMessage {
+    type: 'move-item';
+    body: {
+        itemId: string;
+        targetInventory: string;
+    };
+}
+
+export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | EquipItemMessage | MoveItemMessage;
