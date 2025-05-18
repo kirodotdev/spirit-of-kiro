@@ -64,7 +64,6 @@ watch(() => props.show, (newValue) => {
             @click="item && handleItemClick(item)"
           >
             <img v-if="item" :src="item.imageUrl" class="item-image" :alt="item.name" />
-            <div v-if="item" class="item-name">{{ item.name }}</div>
           </div>
           <!-- Add empty slots to fill the grid if needed -->
           <div 
@@ -172,8 +171,8 @@ watch(() => props.show, (newValue) => {
 }
 
 .item-image {
-  max-width: 80%;
-  max-height: 60%;
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
 }
 

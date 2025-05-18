@@ -5,7 +5,7 @@ interface MoveItemMessage {
   type: 'move-item';
   body: {
     itemId: string;
-    targetInventory: string;
+    targetInventoryId: string;
   };
 }
 
@@ -62,7 +62,7 @@ export default async function handleMoveItem(state: ConnectionState, data: MoveI
     }
 
     // Parse the current location to get the source inventory
-    const [sourceUserId, sourceInventory] = currentLocation.split(':');
+    const [sourceUserId, sourceInventoryName] = currentLocation.split(':');
     
     // Check that the item belongs to the current user
     if (sourceUserId !== state.userId) {
@@ -73,7 +73,7 @@ export default async function handleMoveItem(state: ConnectionState, data: MoveI
     }
     
     // Check that the source inventory is valid
-    if (!VALID_INVENTORIES.includes(sourceInventory)) {
+    if (!VALID_INVENTORIES.includes(sourceInventoryName)) {
       return {
         type: 'error',
         body: `Source item is not in a valid inventory for moving. Item is in inventory ${currentLocation}`
@@ -81,7 +81,7 @@ export default async function handleMoveItem(state: ConnectionState, data: MoveI
     }
     
     // Check that source and target are not the same
-    if (sourceInventory === targetInventory) {
+    if (sourceInventoryName === targetInventoryName) {
       return {
         type: 'error',
         body: 'Item is already in the given inventory'
@@ -94,7 +94,7 @@ export default async function handleMoveItem(state: ConnectionState, data: MoveI
     
     return {
       type: 'item-moved',
-      body: { itemId, targetInventory }
+      body: { itemId, targetInventoryId }
     };
   } catch (error) {
     console.error('Error moving item:', error);

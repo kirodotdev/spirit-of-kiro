@@ -28,6 +28,11 @@ function handlePlayerInteraction() {
   if (!props.playerIsNear) {
     return;
   }
+
+  if (!gameStore.heldItemId) {
+    showFullscreen.value = true;
+    return;
+  }
   
   // Check if player is holding an item
   if (gameStore.heldItemId) {
@@ -37,14 +42,9 @@ function handlePlayerInteraction() {
       linkedInventory.value
     );
     
-    // Reset the held item
+    // Remove the held item
     gameStore.heldItemId = null;
   }
-  
-  showFullscreen.value = true;
-  
-  // Refresh chest inventory when opened
-  gameStore.listInventory(linkedInventory.value);
 }
 
 // Handle inventory list response from server
@@ -54,12 +54,25 @@ function handleInventoryList(data: any) {
   }
 }
 
+// Handle item-moved event
+function handleItemMoved(data: any) {
+  if (data && data.targetInventoryId === linkedInventory.value) {
+    // Refresh the inventory when an item is moved to this chest
+    gameStore.listInventory(linkedInventory.value);
+
+    // Open the chest
+    showFullscreen.value = true;
+  }
+}
+
 let interactionListenerId: string;
 let inventoryListenerId: string;
+let itemMovedListenerId: string;
 
 onMounted(() => {
   interactionListenerId = gameStore.addEventListener('player-interaction', handlePlayerInteraction);
   inventoryListenerId = gameStore.addEventListener(`inventory-items:${inventoryName}`, handleInventoryList);
+  itemMovedListenerId = gameStore.addEventListener('item-moved', handleItemMoved);
   
   // Fetch chest inventory when component mounts
   gameStore.listInventory(linkedInventory.value);
@@ -68,6 +81,7 @@ onMounted(() => {
 onUnmounted(() => {
   gameStore.removeEventListener('player-interaction', interactionListenerId);
   gameStore.removeEventListener(`inventory-items:${inventoryName}`, inventoryListenerId);
+  gameStore.removeEventListener('item-moved', itemMovedListenerId);
 });
 
 const closeFullscreen = () => {
