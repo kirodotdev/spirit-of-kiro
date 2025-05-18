@@ -129,7 +129,6 @@ function resetLever() {
 function handleInventoryList(data: any) {
   if (data && Array.isArray(data)) {
     localInventory.value = data;
-    console.log('Received inventory items:', localInventory.value);
   }
 }
 
@@ -159,7 +158,7 @@ let inventoryListenerId: string;
 
 onMounted(() => {
   interactionListenerId = gameStore.addEventListener('player-interaction', handlePlayerInteraction);
-  inventoryListenerId = gameStore.addEventListener('inventory-items', handleInventoryList);
+  inventoryListenerId = gameStore.addEventListener('inventory-items:main', handleInventoryList);
   
   // Fetch inventory when component mounts
   gameStore.listInventory(`${gameStore.userId}:main`);
@@ -167,7 +166,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   gameStore.removeEventListener('player-interaction', interactionListenerId);
-  gameStore.removeEventListener('inventory-items', inventoryListenerId);
+  gameStore.removeEventListener('inventory-items:main', inventoryListenerId);
 });
 </script>
 

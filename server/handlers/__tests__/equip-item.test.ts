@@ -67,7 +67,7 @@ describe('Equip Item handler', () => {
     authSocket.send(formatMessage('list-inventory', { inventoryId: `${testUser.userId}:hands` }));
     const inventoryResponse = await once(authSocket, 'message');
     const inventoryData = eventToData(inventoryResponse);
-    expect(inventoryData.type).toEqual('inventory-items');
+    expect(inventoryData.type).toEqual('inventory-items:hands');
     expect(inventoryData.body.length).toEqual(1);
     expect(inventoryData.body[0].id).toEqual(itemId);
   }, 20000);

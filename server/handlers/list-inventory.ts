@@ -31,8 +31,10 @@ export default async function handleListInventory(state: ConnectionState, data: 
 
   try {
     const items = await listInventoryItems(data.body.inventoryId);
+    // Extract inventory name from inventoryId (format: userId:inventoryName)
+    const inventoryName = data.body.inventoryId.split(':')[1] || 'unknown';
     return {
-      type: 'inventory-items',
+      type: `inventory-items:${inventoryName}`,
       body: items
     };
   } catch (error) {

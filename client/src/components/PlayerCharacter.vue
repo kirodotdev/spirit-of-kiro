@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, onBeforeUnmount, computed } from 'vue';
 import { type PhysicsProperties } from '../utils/physics';
 import GameItem from './GameItem.vue';
 import ghostNorth from '../assets/ghost/north.png';
@@ -31,6 +31,11 @@ const { heldItemId } = storeToRefs(gameStore);
 // Track pressed keys
 // Shared state for key tracking
 const pressedKeys = ref<Set<string>>(new Set());
+
+// Function to clear all pressed keys
+const clearPressedKeys = () => {
+  pressedKeys.value.clear();
+};
 
 // Determine CSS class based on item rarity
 const getRarityClass = computed(() => {
@@ -292,6 +297,7 @@ let itemDiscardedListenerId: string;
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
   window.addEventListener('keyup', handleKeyUp);
+  window.addEventListener('blur', clearPressedKeys);
   
   // Listen for item pickup events
   itemPickupListenerId = gameStore.addEventListener('item-pickup', handleItemPickup);
@@ -303,11 +309,16 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
   window.removeEventListener('keyup', handleKeyUp);
+  window.removeEventListener('blur', clearPressedKeys);
   pressedKeys.value.clear();
   
   // Remove event listeners
   gameStore.removeEventListener('item-pickup', itemPickupListenerId);
   gameStore.removeEventListener('item-discarded', itemDiscardedListenerId);
+});
+
+onBeforeUnmount(() => {
+  clearPressedKeys();
 });
 
 </script>

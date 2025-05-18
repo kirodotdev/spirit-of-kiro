@@ -43,14 +43,6 @@ const handleAction = (action: string) => {
   console.log(`Chest action: ${action}`);
   // Handle specific chest actions here
 };
-
-const interaction = () => {
-  if (props.playerIsNear) {
-    showFullscreen.value = true;
-  }
-};
-
-defineExpose({ interaction });
 </script>
 
 <template>

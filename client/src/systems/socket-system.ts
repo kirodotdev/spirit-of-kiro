@@ -126,7 +126,6 @@ export class SocketSystem {
   }
 
   listInventory(inventoryId: string) {
-    console.log('requesting inventory list');
     if (!this.ws.value || !this.isAuthenticated.value) {
       console.error('Cannot list inventory: not connected or not authenticated')
       return
