@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import chestImage from '../assets/chest.png';
+import chestOpenImage from '../assets/chest-open.png';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useGameStore } from '../stores/game';
+import ChestFullscreen from './ChestFullscreen.vue';
 
-defineProps<{
+const props = defineProps<{
   row: number;
   col: number;
   tileSize: number;
@@ -13,44 +16,83 @@ defineProps<{
 }>();
 
 const gameStore = useGameStore();
+const showFullscreen = ref(false);
+
+function handlePlayerInteraction() {
+  if (!props.playerIsNear) {
+    return;
+  }
+  showFullscreen.value = true;
+}
+
+let interactionListenerId: string;
+
+onMounted(() => {
+  interactionListenerId = gameStore.addEventListener('player-interaction', handlePlayerInteraction);
+});
+
+onUnmounted(() => {
+  gameStore.removeEventListener('player-interaction', interactionListenerId);
+});
+
+const closeFullscreen = () => {
+  showFullscreen.value = false;
+};
+
+const handleAction = (action: string) => {
+  console.log(`Chest action: ${action}`);
+  // Handle specific chest actions here
+};
 
 const interaction = () => {
-  console.log('Chest interaction');
+  if (props.playerIsNear) {
+    showFullscreen.value = true;
+  }
 };
 
 defineExpose({ interaction });
 </script>
 
 <template>
-  <div :style="{
-    position: 'absolute',
-    top: `${row * tileSize}px`,
-    left: `${col * tileSize}px`,
-    width: `${width * tileSize}px`,
-    height: `${depth * tileSize}px`,
-    border: gameStore.debug ? '1px solid red': 'none'
-  }">
-    <div v-if="playerIsNear" class="interact-prompt">E</div>
-    <img 
-      :src="chestImage" 
-      :width="width * tileSize" 
-      :style="{
-        position: 'absolute',
-        top: `-${tileSize * .5}px`
-      }"
-      :class="['chest', { 'chest-active': playerIsNear }]"
-      alt="Chest"
-    />
-    <!-- Height visualization line (only visible in debug mode) -->
-    <div v-if="gameStore.debug" class="height-line" :style="{
+  <div>
+    <!-- Regular chest view -->
+    <div :style="{
       position: 'absolute',
-      left: '0',
-      bottom: '0',
-      width: '2px',
-      height: `${height * tileSize}px`,
-      backgroundColor: 'blue',
-      zIndex: 1000
-    }" />
+      top: `${row * tileSize}px`,
+      left: `${col * tileSize}px`,
+      width: `${width * tileSize}px`,
+      height: `${depth * tileSize}px`,
+      border: gameStore.debug ? '1px solid red': 'none'
+    }">
+      <div v-if="playerIsNear" class="interact-prompt">E</div>
+      <img 
+        :src="chestImage" 
+        :width="width * tileSize" 
+        :style="{
+          position: 'absolute',
+          top: `-${tileSize * .5}px`
+        }"
+        :class="['chest', { 'chest-active': playerIsNear }]"
+        alt="Chest"
+      />
+      <!-- Height visualization line (only visible in debug mode) -->
+      <div v-if="gameStore.debug" class="height-line" :style="{
+        position: 'absolute',
+        left: '0',
+        bottom: '0',
+        width: '2px',
+        height: `${height * tileSize}px`,
+        backgroundColor: 'blue',
+        zIndex: 1000
+      }" />
+    </div>
+
+    <ChestFullscreen
+      :show="showFullscreen"
+      :chest-image="chestOpenImage"
+      @close="closeFullscreen"
+      @action="handleAction"
+    />
   </div>
 </template>
 
