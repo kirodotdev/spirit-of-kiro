@@ -167,7 +167,6 @@ export class SocketSystem {
       type: 'move-item',
       body: {
         itemId: itemId,
-        sourceInventoryId: sourceInventoryId,
         targetInventoryId: targetInventoryId
       }
     }

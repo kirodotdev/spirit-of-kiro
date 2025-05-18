@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import chestImage from '../assets/chest.png';
 import chestOpenImage from '../assets/chest-open.png';
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import ChestFullscreen from './ChestFullscreen.vue';
 
@@ -19,14 +19,32 @@ const gameStore = useGameStore();
 const showFullscreen = ref(false);
 const localInventory = ref<any[]>([]);
 
+const inventoryName = "chest1";
+const linkedInventory = computed(() => {
+  return `${gameStore.userId}:${inventoryName}`
+})
+
 function handlePlayerInteraction() {
   if (!props.playerIsNear) {
     return;
   }
+  
+  // Check if player is holding an item
+  if (gameStore.heldItemId) {
+    // Move the held item to the chest inventory
+    gameStore.moveItem(
+      gameStore.heldItemId,
+      linkedInventory.value
+    );
+    
+    // Reset the held item
+    gameStore.heldItemId = null;
+  }
+  
   showFullscreen.value = true;
   
   // Refresh chest inventory when opened
-  gameStore.listInventory(`${gameStore.userId}:chest1`);
+  gameStore.listInventory(linkedInventory.value);
 }
 
 // Handle inventory list response from server
@@ -41,15 +59,15 @@ let inventoryListenerId: string;
 
 onMounted(() => {
   interactionListenerId = gameStore.addEventListener('player-interaction', handlePlayerInteraction);
-  inventoryListenerId = gameStore.addEventListener('inventory-items:chest1', handleInventoryList);
+  inventoryListenerId = gameStore.addEventListener(`inventory-items:${inventoryName}`, handleInventoryList);
   
   // Fetch chest inventory when component mounts
-  gameStore.listInventory(`${gameStore.userId}:chest1`);
+  gameStore.listInventory(linkedInventory.value);
 });
 
 onUnmounted(() => {
   gameStore.removeEventListener('player-interaction', interactionListenerId);
-  gameStore.removeEventListener('inventory-items:chest1', inventoryListenerId);
+  gameStore.removeEventListener(`inventory-items:${inventoryName}`, inventoryListenerId);
 });
 
 const closeFullscreen = () => {

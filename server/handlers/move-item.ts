@@ -14,8 +14,7 @@ interface MoveItemResponse {
   body?: any;
 }
 
-// Currently only supporting chest1 as a valid inventory
-const VALID_INVENTORIES = ['chest1'];
+const VALID_INVENTORIES = ['main', 'chest1'];
 
 export default async function handleMoveItem(state: ConnectionState, data: MoveItemMessage): Promise<MoveItemResponse> {
   if (!state.userId) {
@@ -25,37 +24,72 @@ export default async function handleMoveItem(state: ConnectionState, data: MoveI
     };
   }
 
-  try {
-    const { itemId, targetInventory } = data.body;
-    
-    // Validate that targetInventory is a valid inventory name
-    if (!VALID_INVENTORIES.includes(targetInventory)) {
-      return {
-        type: 'error',
-        body: 'Invalid target inventory'
-      };
-    }
+  const { itemId, targetInventoryId } = data.body;
 
+  if (!itemId) {
+    return {
+      type: 'error',
+      body: '`itemId` required'
+    };
+  }
+
+  if (!targetInventoryId) {
+    return {
+      type: 'error',
+      body: '`targetInventoryId` required'
+    };
+  }
+
+  const [targetInventoryUser, targetInventoryName] = targetInventoryId.split(':');
+  
+  // Validate that targetInventory is a valid inventory name
+  if (!VALID_INVENTORIES.includes(targetInventoryName)) {
+    return {
+      type: 'error',
+      body: `Invalid target inventory \`${targetInventoryName}\`, only valid options are ${VALID_INVENTORIES}`
+    };
+  }
+
+  try {
     // Check that the item exists
     const currentLocation = await locationForItemId(itemId);
     
     if (!currentLocation) {
       return {
         type: 'error',
-        body: 'Item not found'
+        body: `Item ${itemId} not found`
       };
     }
 
-    // Check that the item is in the user's main inventory
-    if (currentLocation !== `${state.userId}:main`) {
+    // Parse the current location to get the source inventory
+    const [sourceUserId, sourceInventory] = currentLocation.split(':');
+    
+    // Check that the item belongs to the current user
+    if (sourceUserId !== state.userId) {
       return {
         type: 'error',
-        body: 'Item not in your main inventory'
+        body: `Can't move item that you don't own. Item is in inventory ${currentLocation}`
+      };
+    }
+    
+    // Check that the source inventory is valid
+    if (!VALID_INVENTORIES.includes(sourceInventory)) {
+      return {
+        type: 'error',
+        body: `Source item is not in a valid inventory for moving. Item is in inventory ${currentLocation}`
+      };
+    }
+    
+    // Check that source and target are not the same
+    if (sourceInventory === targetInventory) {
+      return {
+        type: 'error',
+        body: 'Item is already in the given inventory'
       };
     }
 
-    // Move the item from the user's main inventory to the target inventory
-    const targetInventoryId = `${state.userId}:${targetInventory}`;
+    // Move the item from the source inventory to the target inventory
+    const targetInventoryId = `${state.userId}:${targetInventoryName}`;
     await moveItemLocation(itemId, currentLocation, targetInventoryId);
     
     return {
