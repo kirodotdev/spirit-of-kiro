@@ -58,31 +58,8 @@ watch(() => props.show, (newValue) => {
         </div>
       </div>
 
-      <div class="action-buttons">
-        <div class="button-group">
-          <div class="button-grid">
-            <button class="action-btn" @click="handleAction('connect')">🔌 Connect</button>
-            <button class="action-btn" @click="handleAction('attach')">🔗 Attach</button>
-            <button class="action-btn" @click="handleAction('screw')">🔩 Screw</button>
-            <button class="action-btn" @click="handleAction('glue')">💧 Glue</button>
-            <button class="action-btn" @click="handleAction('weld')">⚡ Weld</button>
-          </div>
-        </div>
-
-        <div class="button-group">
-          <div class="button-grid">
-            <button class="action-btn" @click="handleAction('polish')">✨ Polish</button>
-            <button class="action-btn" @click="handleAction('roughen')">🌵 Roughen</button>
-            <button class="action-btn" @click="handleAction('heat')">🔥 Heat</button>
-            <button class="action-btn" @click="handleAction('cool')">❄️ Cool</button>
-            <button class="action-btn" @click="handleAction('paint')">🎨 Paint</button>
-            <button class="action-btn" @click="handleAction('strip')">🧹 Strip</button>
-            <button class="action-btn" @click="handleAction('bend')">↪️ Bend</button>
-            <button class="action-btn" @click="handleAction('straighten')">⬆️ Straighten</button>
-            <button class="action-btn" @click="handleAction('sharpen')">⚔️ Sharpen</button>
-            <button class="action-btn" @click="handleAction('dull')">🔨 Dull</button>
-          </div>
-        </div>
+      <div class="tools-area">
+        
       </div>
     </div>
   </div>

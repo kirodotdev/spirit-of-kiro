@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import garbageImage from '../assets/garbage.png';
+import chestImage from '../assets/chest.png';
 import { useGameStore } from '../stores/game';
-import { ref, onMounted, onUnmounted } from 'vue';
-import { storeToRefs } from 'pinia'
 
-const props = defineProps<{
+defineProps<{
   row: number;
   col: number;
   tileSize: number;
@@ -15,34 +13,12 @@ const props = defineProps<{
 }>();
 
 const gameStore = useGameStore();
-const { heldItemId } = storeToRefs(gameStore);
-let interactionListenerId: string;
 
-// Function to handle player interaction with the garbage can
 const interaction = () => {
-  if (!props.playerIsNear) {
-    return;
-  }
-
-  if (!heldItemId.value) {
-    // Nothing held
-    return;
-  }
-
-  // Emit intent-to-discard-item event with the held item ID
-  gameStore.emitEvent('intent-to-discard-item', {
-    id: heldItemId.value
-  });
+  console.log('Chest interaction');
 };
 
-onMounted(() => {
-  interactionListenerId = gameStore.addEventListener('player-interaction', interaction);
-});
-
-onUnmounted(() => {
-  // Clean up event listener
-  gameStore.removeEventListener(interactionListenerId);
-});
+defineExpose({ interaction });
 </script>
 
 <template>
@@ -56,14 +32,14 @@ onUnmounted(() => {
   }">
     <div v-if="playerIsNear" class="interact-prompt">E</div>
     <img 
-      :src="garbageImage" 
+      :src="chestImage" 
       :width="width * tileSize" 
       :style="{
         position: 'absolute',
-        top: `-${tileSize * 1}px`
+        top: `-${tileSize * .5}px`
       }"
-      :class="['garbage', { 'garbage-active': playerIsNear }]"
-      alt="Garbage"
+      :class="['chest', { 'chest-active': playerIsNear }]"
+      alt="Chest"
     />
     <!-- Height visualization line (only visible in debug mode) -->
     <div v-if="gameStore.debug" class="height-line" :style="{
@@ -79,20 +55,21 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-.garbage {
+.chest {
   filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5));
   object-fit: contain;
   transition: filter 0.3s ease;
 }
 
-.garbage-active {
+.chest-active {
   filter: drop-shadow(0 0 15px white);
 }
 
 .interact-prompt {
   position: absolute;
-  top: calc(-.3 * v-bind(tileSize) * 1px);
-  left: calc(2 * v-bind(tileSize) * 1px);
+  top: calc(-1.1 * v-bind(tileSize) * 1px);
+  left: 50%;
+  transform: translateX(-50%);
   font-size: calc(0.5 * v-bind(tileSize) * 1px);
   font-weight: bold;
   color: white;

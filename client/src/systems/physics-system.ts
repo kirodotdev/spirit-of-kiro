@@ -43,7 +43,6 @@ export class PhysicsSystem {
   }
 
   start() {
-    console.log('starting');
     if (this.animationFrameId !== null) {
       return; // Already running
     }
@@ -54,7 +53,6 @@ export class PhysicsSystem {
   }
 
   stop() {
-    console.log('stopping');
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;

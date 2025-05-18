@@ -3,7 +3,7 @@ import Dispenser from '../components/Dispenser.vue'
 import Banner from '../components/Banner.vue'
 import Workbench from '../components/Workbench.vue'
 import Wall from '../components/Wall.vue'
-import Shelf from '../components/Shelf.vue'
+import Chest from '../components/Chest.vue'
 import PullLever from '../components/PullLever.vue'
 import Garbage from '../components/Garbage.vue'
 import { PhysicsType } from './physics'
@@ -200,13 +200,13 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
 
   // Interactive objects
   gameStore.addObject({
-    id: 'shelf1',
-    type: Shelf,
+    id: 'chest1',
+    type: Chest,
     row: 10.5,
-    col: 3.5,
-    width: 2.5,
-    depth: 1,
-    height: 3,
+    col: 2.25,
+    width: 2,
+    depth: 1.5,
+    height: 3.5, // Helps prevent items getting stuck on top of chest
     physics: {
       active: false,
       angle: 0,
