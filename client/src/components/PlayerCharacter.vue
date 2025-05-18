@@ -5,7 +5,8 @@ import GameItem from './GameItem.vue';
 import ghostNorth from '../assets/ghost/north.png';
 import ghostSouth from '../assets/ghost/south.png';
 import ghostSouthwest from '../assets/ghost/southwest.png';
-import { storeToRefs } from 'pinia'
+import { storeToRefs } from 'pinia';
+import { getRarityClass } from '../utils/items';
 
 interface Props {
   id: string;
@@ -37,17 +38,10 @@ const clearPressedKeys = () => {
   pressedKeys.value.clear();
 };
 
-// Determine CSS class based on item rarity
-const getRarityClass = computed(() => {
-  if (!heldItem.value) return 'item-common';
-  
-  // First value is a deref of the ref, the second is the actual item value
-  const value = heldItem.value.value; 
-  if (value > 1000) return 'item-legendary';
-  if (value > 500) return 'item-epic';
-  if (value > 250) return 'item-rare';
-  if (value > 100) return 'item-uncommon';
-  return 'item-common';
+// Use the shared utility function for rarity class
+const rarityClass = computed(() => {
+  if (!heldItem.value) return getRarityClass();
+  return getRarityClass(heldItem.value.value);
 });
 
 // Computed property for the held item
@@ -358,7 +352,7 @@ onBeforeUnmount(() => {
         height: `${tileSize}px`,
         top: `-${tileSize * 2}px`,
       }">
-      <div class="item-container" :class="getRarityClass">
+      <div class="item-container" :class="rarityClass">
         <img 
           :src="heldItem.imageUrl || '/src/assets/generic.png'" 
           :alt="heldItem.name"

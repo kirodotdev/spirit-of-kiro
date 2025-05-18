@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue';
+import { onMounted, onUnmounted, watch, ref } from 'vue';
 import { useGameStore } from '../stores/game';
+import { getRarityClass } from '../utils/items';
+import ItemPreview from './ItemPreview.vue';
 
 const gameStore = useGameStore();
 const props = defineProps<{
@@ -14,12 +16,23 @@ const emit = defineEmits<{
   (e: 'action', action: string, item?: any): void;
 }>();
 
+// State to track which item is being hovered
+const hoveredItem = ref<any>(null);
+
 const handleAction = (action: string) => {
   emit('action', action);
 };
 
 const handleItemClick = (item: any) => {
   emit('action', 'take', item);
+};
+
+const handleItemMouseEnter = (item: any) => {
+  hoveredItem.value = item;
+};
+
+const handleItemMouseLeave = () => {
+  hoveredItem.value = null;
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -55,15 +68,23 @@ watch(() => props.show, (newValue) => {
     <div class="chest-container" :style="{ backgroundImage: `url(${chestImage})` }">
       <button class="close-button" @click="$emit('close')">Back</button>
       
+      <!-- Item Preview Component -->
+      <ItemPreview :item="hoveredItem" />
+      
       <div class="inventory-area">
         <div class="inventory-grid">
           <div 
             class="inventory-slot" 
+            :class="{ 'has-item': item }" 
             v-for="(item, index) in items" 
             :key="item.id"
             @click="item && handleItemClick(item)"
+            @mouseenter="item && handleItemMouseEnter(item)"
+            @mouseleave="handleItemMouseLeave"
           >
-            <img v-if="item" :src="item.imageUrl" class="item-image" :alt="item.name" />
+            <div v-if="item" class="item-container" :class="getRarityClass(item.value)">
+              <img :src="item.imageUrl" class="item-image" :alt="item.name" />
+            </div>
           </div>
           <!-- Add empty slots to fill the grid if needed -->
           <div 
@@ -131,7 +152,7 @@ watch(() => props.show, (newValue) => {
 
 .inventory-area {
   position: absolute;
-  width: 60%;
+  width: 58%;
   height: 24%;
   top: 47%;
   display: flex;
@@ -159,10 +180,17 @@ watch(() => props.show, (newValue) => {
   justify-content: center;
   color: rgba(255, 255, 255, 0.5);
   font-size: 0.9em;
-  cursor: pointer;
   transition: border-color 0.3s, background-color 0.3s;
   position: relative;
-  overflow: hidden;
+}
+
+.inventory-slot.has-item {
+  border: none;
+}
+
+.inventory-slot.has-item:hover .item-container {
+  transform: scale(1.05);
+  cursor: pointer;
 }
 
 .inventory-slot:hover {
@@ -170,11 +198,7 @@ watch(() => props.show, (newValue) => {
   background-color: rgba(113, 67, 31, 0.2);
 }
 
-.item-image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
+/* Item styles moved to main.css */
 
 .item-name {
   font-size: 0.7em;

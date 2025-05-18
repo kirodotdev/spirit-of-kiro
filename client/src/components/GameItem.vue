@@ -2,6 +2,7 @@
 import { type PhysicsProperties } from '../utils/physics';
 import { onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from '../stores/game';
+import { getRarityClass } from '../utils/items';
 
 const store = useGameStore();
 
@@ -31,16 +32,10 @@ const item = store.itemsById.get(props.props.itemId);
 // Use the item's imageUrl if available, otherwise use generic.png
 const icon = computed(() => item?.imageUrl || '/src/assets/generic.png');
 
-// Determine CSS class based on item value
-const getRarityClass = computed(() => {
-  if (!item || item.value === undefined) return 'item-common';
-  
-  const value = item.value;
-  if (value > 1000) return 'item-legendary';
-  if (value > 500) return 'item-epic';
-  if (value > 250) return 'item-rare';
-  if (value > 100) return 'item-uncommon';
-  return 'item-common';
+// Use the shared utility function for rarity class
+const rarityClass = computed(() => {
+  if (!item || item.value === undefined) return getRarityClass();
+  return getRarityClass(item.value);
 });
 
 // Calculate shadow opacity based on item height
@@ -147,7 +142,7 @@ onUnmounted(() => {
         zIndex: -1
       }"
     ></div>
-    <div class="item-container" :class="[{ 'item-near': playerIsNear }, getRarityClass]">
+    <div class="item-container" :class="[{ 'item-near': playerIsNear }, rarityClass]">
       <div v-if="playerIsNear" class="interact-prompt">E</div>
       <img :src="icon" alt="Item" class="item-image" />
     </div>
