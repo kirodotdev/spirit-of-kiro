@@ -28,6 +28,11 @@ The client is a Vue.js 3 application built with TypeScript and Vite.
 - **Reactive state management** - Using Pinia and Vue's reactivity system
 - **Event-driven communication** - WebSocket events drive game state changes
 
+`/client/src/stores/game.ts` - Is the client's Pinia store through which all game methods
+and reactive variables are exposed. All of the systems in the game utilize these
+reactive variables and expose methods into this store. Components utilize the same reactive
+variables, and call methods from this store.
+
 ## Server (`/server`)
 The server is a Bun-based WebSocket server written in TypeScript.
 

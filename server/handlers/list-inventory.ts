@@ -25,7 +25,7 @@ export default async function handleListInventory(state: ConnectionState, data: 
   if (!data.body.inventoryId.startsWith(state.userId)) {
     return {
       type: 'error',
-      body: 'Cannot access inventory'
+      body: `Cannot access inventory ${data.body.inventoryId}`
     };
   }
 

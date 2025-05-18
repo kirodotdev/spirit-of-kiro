@@ -156,6 +156,24 @@ export class SocketSystem {
 
     this.ws.value.send(JSON.stringify(message))
   }
+
+  moveItem(itemId: string, sourceInventoryId: string, targetInventoryId: string) {
+    if (!this.ws.value || !this.isAuthenticated.value) {
+      console.error('Cannot move item: not connected or not authenticated')
+      return
+    }
+
+    const message = {
+      type: 'move-item',
+      body: {
+        itemId: itemId,
+        sourceInventoryId: sourceInventoryId,
+        targetInventoryId: targetInventoryId
+      }
+    }
+
+    this.ws.value.send(JSON.stringify(message))
+  }
   
   /**
    * Schedule a reconnection attempt with exponential backoff

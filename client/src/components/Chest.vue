@@ -17,31 +17,43 @@ const props = defineProps<{
 
 const gameStore = useGameStore();
 const showFullscreen = ref(false);
+const localInventory = ref<any[]>([]);
 
 function handlePlayerInteraction() {
   if (!props.playerIsNear) {
     return;
   }
   showFullscreen.value = true;
+  
+  // Refresh chest inventory when opened
+  gameStore.listInventory(`${gameStore.userId}:chest1`);
+}
+
+// Handle inventory list response from server
+function handleInventoryList(data: any) {
+  if (data && Array.isArray(data)) {
+    localInventory.value = data;
+  }
 }
 
 let interactionListenerId: string;
+let inventoryListenerId: string;
 
 onMounted(() => {
   interactionListenerId = gameStore.addEventListener('player-interaction', handlePlayerInteraction);
+  inventoryListenerId = gameStore.addEventListener('inventory-items:chest1', handleInventoryList);
+  
+  // Fetch chest inventory when component mounts
+  gameStore.listInventory(`${gameStore.userId}:chest1`);
 });
 
 onUnmounted(() => {
   gameStore.removeEventListener('player-interaction', interactionListenerId);
+  gameStore.removeEventListener('inventory-items:chest1', inventoryListenerId);
 });
 
 const closeFullscreen = () => {
   showFullscreen.value = false;
-};
-
-const handleAction = (action: string) => {
-  console.log(`Chest action: ${action}`);
-  // Handle specific chest actions here
 };
 </script>
 
@@ -82,8 +94,8 @@ const handleAction = (action: string) => {
     <ChestFullscreen
       :show="showFullscreen"
       :chest-image="chestOpenImage"
+      :items="localInventory"
       @close="closeFullscreen"
-      @action="handleAction"
     />
   </div>
 </template>

@@ -6,15 +6,20 @@ const gameStore = useGameStore();
 const props = defineProps<{
   show: boolean;
   chestImage: string;
+  items?: any[];
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'action', action: string): void;
+  (e: 'action', action: string, item?: any): void;
 }>();
 
 const handleAction = (action: string) => {
   emit('action', action);
+};
+
+const handleItemClick = (item: any) => {
+  emit('action', 'take', item);
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -52,7 +57,21 @@ watch(() => props.show, (newValue) => {
       
       <div class="inventory-area">
         <div class="inventory-grid">
-          <div class="inventory-slot" v-for="n in 21" :key="n"></div>
+          <div 
+            class="inventory-slot" 
+            v-for="(item, index) in items" 
+            :key="item.id"
+            @click="item && handleItemClick(item)"
+          >
+            <img v-if="item" :src="item.imageUrl" class="item-image" :alt="item.name" />
+            <div v-if="item" class="item-name">{{ item.name }}</div>
+          </div>
+          <!-- Add empty slots to fill the grid if needed -->
+          <div 
+            class="inventory-slot" 
+            v-for="n in Math.max(0, 21 - (items ? items.length : 0))" 
+            :key='n'
+          ></div>
         </div>
       </div>
     </div>
@@ -136,16 +155,37 @@ watch(() => props.show, (newValue) => {
   border: 3px dashed rgb(113, 67, 31);
   border-radius: 6px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   color: rgba(255, 255, 255, 0.5);
   font-size: 0.9em;
   cursor: pointer;
   transition: border-color 0.3s, background-color 0.3s;
+  position: relative;
+  overflow: hidden;
 }
 
 .inventory-slot:hover {
   border-color: rgb(173, 127, 91);
   background-color: rgba(113, 67, 31, 0.2);
+}
+
+.item-image {
+  max-width: 80%;
+  max-height: 60%;
+  object-fit: contain;
+}
+
+.item-name {
+  font-size: 0.7em;
+  color: white;
+  text-align: center;
+  margin-top: 4px;
+  text-shadow: 1px 1px 2px black;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 90%;
 }
 </style>
