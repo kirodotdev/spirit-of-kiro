@@ -162,109 +162,9 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-.item-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.item-near {
-  
-}
-
-.item-image {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  border-radius: 10px;
-  transition: transform 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
-  border: 2px solid #333;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
 .item-near .item-image {
   transform: scale(1.1);
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
-}
-
-.item-name {
-  position: absolute;
-  bottom: -24px;
-  left: 0;
-  width: 100%;
-  color: white;
-  font-size: 12px;
-  text-align: center;
-  padding: 4px;
-  word-break: break-word;
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
-}
-
-/* Apply different colors based on item rarity */
-.item-common .item-name {
-  color: #ffffff;
-}
-
-.item-uncommon .item-name {
-  color: #4caf50;
-}
-
-.item-rare .item-name {
-  color: #2196f3;
-}
-
-.item-epic .item-name {
-  color: #9c27b0;
-  text-shadow: 0 0 4px rgba(156, 39, 176, 0.6);
-}
-
-.item-legendary .item-name {
-  color: #ff9800;
-  text-shadow: 0 0 6px rgba(255, 152, 0, 0.8);
-  animation: pulse-glow 2s infinite;
-}
-
-/* Apply rarity-based styling to item images */
-.item-common .item-image {
-  border-color: #333;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.item-uncommon .item-image {
-  border-color: #4caf50;
-  box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
-}
-
-.item-rare .item-image {
-  border-color: #2196f3;
-  box-shadow: 0 0 10px rgba(33, 150, 243, 0.3);
-}
-
-.item-epic .item-image {
-  border-color: #9c27b0;
-  box-shadow: 0 0 10px rgba(156, 39, 176, 0.3);
-}
-
-.item-legendary .item-image {
-  border-color: #ff9800;
-  box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
-  animation: image-pulse 2s infinite;
-}
-
-@keyframes pulse-glow {
-  0% { text-shadow: 0 0 4px rgba(255, 152, 0, 0.6); }
-  50% { text-shadow: 0 0 10px rgba(255, 152, 0, 0.9); }
-  100% { text-shadow: 0 0 4px rgba(255, 152, 0, 0.6); }
-}
-
-@keyframes image-pulse {
-  0% { box-shadow: 0 0 10px rgba(255, 152, 0, 0.3); }
-  50% { box-shadow: 0 0 20px rgba(255, 152, 0, 0.6); }
-  100% { box-shadow: 0 0 10px rgba(255, 152, 0, 0.3); }
 }
 
 .debug-vector {
@@ -296,6 +196,4 @@ onUnmounted(() => {
   padding: 5px 10px;
   border-radius: 4px;
 }
-
-
 </style>
