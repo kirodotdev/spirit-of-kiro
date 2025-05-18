@@ -83,13 +83,13 @@ export class PhysicsSystem {
       }
 
       // First check if the object is stuck and fix it if needed
-      obj.physics = detectAndFixStuckObjects({
+      /*obj.physics = detectAndFixStuckObjects({
         row: obj.row,
         col: obj.col,
         width: obj.width || 1,
         depth: obj.depth || 1,
         physics: obj.physics
-      });
+      });*/
 
       // Update position based on physics
       const { row, col, physics } = updatePhysicsPosition(

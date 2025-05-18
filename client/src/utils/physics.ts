@@ -51,7 +51,7 @@ export function updatePhysicsPosition(
   physics: PhysicsProperties, 
   deltaTime: number
 ): { row: number, col: number, physics: PhysicsProperties } {
-  if (!physics.active || physics.velocity <= 0) {
+  if (!physics.active) {
     return { row, col, physics };
   }
 
@@ -335,10 +335,10 @@ export function handleWallCollision(
         newPhysics.angle = newAngleData.angle;
         newPhysics.velocity = newAngleData.magnitude;
       }
+
+      newPhysics.active = true;
     }
   }
-
-  newPhysics.active = true;
   
   return { row: newRow, col: newCol, physics: newPhysics };
 }
