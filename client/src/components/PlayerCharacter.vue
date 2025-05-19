@@ -124,6 +124,45 @@ const handleItemDiscarded = (data: any) => {
   }
 };
 
+// Handle drop item event
+const handleDropItem = (data: any) => {
+  if (!heldItemId.value) return;
+  
+  // Check if the item ID in the event matches the held item
+  if (data.itemId && data.itemId !== heldItemId.value) return;
+  
+  const item = heldItem.value;
+  if (!item) return;
+
+  // Add the item back to the game world at the player's position
+  // with minimal velocity and physics settings
+  gameStore.addObject({
+    id: heldItemId.value,
+    type: GameItem,
+    row: props.row,
+    col: props.col,
+    width: 1,
+    depth: 1,
+    props: {
+      itemId: heldItemId.value,
+      pickedUp: true
+    },
+    physics: {
+      active: true,
+      angle: angle.value,
+      velocity: 2, // Minimal velocity
+      friction: 3,
+      height: 1, // Lower height
+      verticalVelocity: 0,
+      bounceStrength: 0.2,
+      mass: 1.0
+    }
+  });
+  
+  // Clear the held item
+  heldItemId.value = null;
+};
+
 // Throw the currently held item
 const throwHeldItem = () => {
   if (!heldItemId.value) return;
@@ -276,6 +315,7 @@ const updateMovement = () => {
 
 let itemPickupListenerId: string;
 let itemDiscardedListenerId: string;
+let dropItemListenerId: string;
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
@@ -287,6 +327,9 @@ onMounted(() => {
   
   // Listen for item discarded events
   itemDiscardedListenerId = gameStore.addEventListener('item-discarded', handleItemDiscarded);
+  
+  // Listen for drop item events
+  dropItemListenerId = gameStore.addEventListener('drop-item', handleDropItem);
 });
 
 onUnmounted(() => {
@@ -298,6 +341,7 @@ onUnmounted(() => {
   // Remove event listeners
   gameStore.removeEventListener('item-pickup', itemPickupListenerId);
   gameStore.removeEventListener('item-discarded', itemDiscardedListenerId);
+  gameStore.removeEventListener('drop-item', dropItemListenerId);
 });
 
 onBeforeUnmount(() => {
@@ -413,8 +457,7 @@ watch(() => heldItemId.value, (newValue) => {
   transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0));
 }
 
-@keyframes ghost-bobbin
-g {
+@keyframes ghost-bobbing {
   0% { transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0)) translateY(0); }
   50% { transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0)) translateY(-8px); }
   100% { transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0)) translateY(0); }

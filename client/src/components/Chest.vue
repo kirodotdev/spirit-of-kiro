@@ -4,6 +4,7 @@ import chestOpenImage from '../assets/chest-open.png';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import ChestFullscreen from './ChestFullscreen.vue';
+import { getRarityClass } from '../utils/items';
 
 const props = defineProps<{
   row: number;
@@ -18,6 +19,39 @@ const props = defineProps<{
 const gameStore = useGameStore();
 const showFullscreen = ref(false);
 const localInventory = ref<any[]>([]);
+
+// Add maxCapacity constant
+const maxCapacity = 21;
+
+// Create computed property for usedCapacity
+const usedCapacity = computed(() => {
+  return localInventory.value.length;
+});
+
+// Computed property to determine the color of each dot based on item rarity
+const capacityDots = computed(() => {
+  const dots = [];
+  
+  // Fill dots with items that exist in inventory
+  for (let i = 0; i < Math.min(localInventory.value.length, maxCapacity); i++) {
+    const item = localInventory.value[i];
+    const rarityClass = getRarityClass(item.value);
+    dots.push({
+      filled: true,
+      rarityClass
+    });
+  }
+  
+  // Fill remaining dots as empty
+  for (let i = localInventory.value.length; i < maxCapacity; i++) {
+    dots.push({
+      filled: false,
+      rarityClass: 'empty'
+    });
+  }
+  
+  return dots;
+});
 
 const inventoryName = "chest1";
 const linkedInventory = computed(() => {
@@ -36,7 +70,15 @@ function handlePlayerInteraction() {
   
   // Check if player is holding an item
   if (gameStore.heldItemId) {
-    // Move the held item to the chest inventory
+    // Check if the chest is full before adding the item
+    if (usedCapacity.value >= maxCapacity) {
+      // Chest is full, emit drop-item event and open chest without adding item
+      gameStore.emitEvent('drop-item', { itemId: gameStore.heldItemId });
+      showFullscreen.value = true;
+      return;
+    }
+    
+    // Chest has space, move the held item to the chest inventory
     gameStore.moveItem(
       gameStore.heldItemId,
       linkedInventory.value
@@ -56,12 +98,26 @@ function handleInventoryList(data: any) {
 
 // Handle item-moved event
 function handleItemMoved(data: any) {
-  if (data && data.targetInventoryId === linkedInventory.value) {
+  if (!data) {
+    return;
+  }
+   
+  if (data.targetInventoryId === linkedInventory.value) {
     // Refresh the inventory when an item is moved to this chest
     gameStore.listInventory(linkedInventory.value);
 
     // Open the chest
     showFullscreen.value = true;
+    return;
+  }
+
+  if (data.itemId) {
+    // Check if the itemId exists in the local inventory
+    const itemExists = localInventory.value.some(item => item.id === data.itemId);
+    if (itemExists) {
+      // Refresh the inventory when the item is found in local inventory
+      gameStore.listInventory(linkedInventory.value);
+    }
   }
 }
 
@@ -101,6 +157,7 @@ const closeFullscreen = () => {
       border: gameStore.debug ? '1px solid red': 'none'
     }">
       <div v-if="playerIsNear" class="interact-prompt">E</div>
+      
       <img 
         :src="chestImage" 
         :width="width * tileSize" 
@@ -111,6 +168,16 @@ const closeFullscreen = () => {
         :class="['chest', { 'chest-active': playerIsNear }]"
         alt="Chest"
       />
+
+      <!-- Capacity display as grid of dots -->
+      <div v-if="playerIsNear" class="capacity-grid">
+        <div 
+          v-for="(dot, index) in capacityDots" 
+          :key="index" 
+          class="capacity-dot"
+          :class="[dot.rarityClass]"
+        ></div>
+      </div>
       <!-- Height visualization line (only visible in debug mode) -->
       <div v-if="gameStore.debug" class="height-line" :style="{
         position: 'absolute',
@@ -158,6 +225,51 @@ const closeFullscreen = () => {
   border-radius: calc(0.08 * v-bind(tileSize) * 1px);
   z-index: 1;
   line-height: 1;
+}
+
+.capacity-grid {
+  position: absolute;
+  top: 0;
+  left: 46.5%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: calc(0.05 * v-bind(tileSize) * 1px);
+  width: calc(0.7 * v-bind(tileSize) * 1px);
+}
+
+.capacity-dot {
+  width: calc(0.08 * v-bind(tileSize) * 1px);
+  height: calc(0.08 * v-bind(tileSize) * 1px);
+  border-radius: 50%;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Dot colors based on item rarity */
+.capacity-dot.empty {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.capacity-dot.item-common {
+  background-color: #ffffff;
+}
+
+.capacity-dot.item-uncommon {
+  background-color: #4caf50;
+}
+
+.capacity-dot.item-rare {
+  background-color: #2196f3;
+}
+
+.capacity-dot.item-epic {
+  background-color: #9c27b0;
+}
+
+.capacity-dot.item-legendary {
+  background-color: #ff9800;
+  box-shadow: 0 0 4px rgba(255, 152, 0, 0.8);
 }
 
 @keyframes pulse {

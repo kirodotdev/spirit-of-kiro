@@ -26,6 +26,9 @@ const handleAction = (action: string) => {
 const handleItemClick = (item: any) => {
   const targetInventory = `${gameStore.userId}:main`;
 
+  // Clear the hovered item preview immediately when an item is clicked
+  hoveredItem.value = null;
+
   // Set up a one-time listener for the 'item-moved' event
   const listenerId = gameStore.addEventListener('item-moved', (data) => {
     // Check if this is the item we just moved
