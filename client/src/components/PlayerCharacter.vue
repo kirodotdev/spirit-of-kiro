@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, onBeforeUnmount, computed } from 'vue';
+import { ref, onMounted, onUnmounted, onBeforeUnmount, computed, watch } from 'vue';
 import { type PhysicsProperties } from '../utils/physics';
 import GameItem from './GameItem.vue';
 import ghostNorth from '../assets/ghost/north.png';
@@ -113,12 +113,6 @@ const handleItemPickup = (data: any) => {
 
   console.log(`Pickup item ${data.id}`);
   heldItemId.value = data.id;
-  
-  // Emit hint event when item is picked up with HTML formatting
-  gameStore.emitEvent('hint', {
-    message: "<b>T</b> - Throw<br><b>I</b> - Inspect",
-    duration: 0 // 0 means it stays until cleared
-  });
 };
 
 // Handle item discarded event
@@ -127,8 +121,6 @@ const handleItemDiscarded = (data: any) => {
   // If the discarded item is the one we're holding, clear it
   if (heldItemId.value === data.itemId) {
     heldItemId.value = null;
-    // Clear the hint when item is discarded
-    gameStore.emitEvent('clear-hint');
   }
 };
 
@@ -171,9 +163,6 @@ const throwHeldItem = () => {
   
   // Clear the held item
   heldItemId.value = null;
-  
-  // Clear the hint when item is thrown
-  gameStore.emitEvent('clear-hint');
 };
 
 // Computed property for current sprite
@@ -315,6 +304,19 @@ onBeforeUnmount(() => {
   clearPressedKeys();
 });
 
+// Watch for changes to heldItemId
+watch(() => heldItemId.value, (newValue) => {
+  if (newValue) {
+    // Player is now holding an item, show the hint
+    gameStore.emitEvent('hint', {
+      message: "<b>T</b> - Throw<br><b>I</b> - Inspect",
+      duration: 0 // 0 means it stays until cleared
+    });
+  } else {
+    // Player is no longer holding an item, clear the hint
+    gameStore.emitEvent('clear-hint');
+  }
+}, { immediate: true });
 </script>
 
 <template>
@@ -411,7 +413,8 @@ onBeforeUnmount(() => {
   transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0));
 }
 
-@keyframes ghost-bobbing {
+@keyframes ghost-bobbin
+g {
   0% { transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0)) translateY(0); }
   50% { transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0)) translateY(-8px); }
   100% { transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0)) translateY(0); }
