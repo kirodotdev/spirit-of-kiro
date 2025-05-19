@@ -4,6 +4,13 @@ import { getRarityClass } from '../utils/items';
 
 const props = defineProps<{
   item: any | null;
+  // Position configuration props
+  position?: string;
+  top?: string;
+  right?: string;
+  bottom?: string;
+  left?: string;
+  transform?: string;
 }>();
 
 // Computed properties for the preview
@@ -19,6 +26,18 @@ const rarityClass = computed(() => {
 const rarityText = computed(() => {
   if (!rarityClass.value) return 'Common';
   return rarityClass.value.replace('item-', '').charAt(0).toUpperCase() + rarityClass.value.replace('item-', '').slice(1);
+});
+
+// Compute the positioning style based on props without defaults
+const positionStyle = computed(() => {
+  return {
+    position: props.position,
+    top: props.top,
+    right: props.right,
+    bottom: props.bottom,
+    left: props.left,
+    transform: props.transform
+  };
 });
 
 // Format outcome text for display
@@ -46,7 +65,7 @@ function getOutcomeClass(outcome: string): string {
 </script>
 
 <template>
-  <div v-if="item" class="item-preview" :class="rarityClass">
+  <div v-if="item" class="item-preview" :class="rarityClass" :style="positionStyle">
     <div class="preview-header">
       <h3>{{ item.name || 'Unknown Item' }}</h3>
     </div>
@@ -92,10 +111,7 @@ function getOutcomeClass(outcome: string): string {
 
 <style scoped>
 .item-preview {
-  position: absolute;
-  bottom: 55%;
-  left: 50%;
-  transform: translateX(-50%);
+  /* Position is now controlled by the positionStyle computed property */
   background-color: #1a1a1a;
   border-radius: 8px;
   width: 80%;

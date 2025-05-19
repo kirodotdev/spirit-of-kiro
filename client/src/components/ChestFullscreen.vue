@@ -101,7 +101,13 @@ watch(() => props.show, (newValue) => {
       <button class="close-button" @click="$emit('close')">Back</button>
       
       <!-- Item Preview Component -->
-      <ItemPreview :item="hoveredItem" />
+      <ItemPreview 
+        :item="hoveredItem"
+        position="absolute"
+        bottom="55%"
+        left="50%"
+        transform="translateX(-50%)"
+      />
       
       <div class="inventory-area">
         <div class="inventory-grid">

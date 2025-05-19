@@ -168,7 +168,13 @@ watch(() => props.show, (newValue) => {
       <button class="close-button" @click="$emit('close')">Back</button>
       
       <!-- Item Preview Component -->
-      <ItemPreview :item="hoveredItem" />
+      <ItemPreview 
+        :item="hoveredItem"
+        position="absolute"
+        bottom="25%"
+        left="50%"
+        transform="translateX(-50%)"
+      />
       
       <div class="tool-area" 
            @dragover="handleDragOver($event, 'tools')"
@@ -320,7 +326,7 @@ watch(() => props.show, (newValue) => {
   position: absolute;
   width: 60%;
   height: 11%;
-  bottom: 40%;
+  bottom: 35%;
   display: flex;
   justify-content: center;
   align-items: center;
