@@ -1,5 +1,6 @@
 import { type Ref, computed } from 'vue'
 import { useGameStore } from '../stores/game';
+import type { SocketSystem } from './socket-system';
 
 export interface Item {
   id: string
@@ -62,7 +63,7 @@ export class ItemSystem {
    * Handles inventory items received from socket events
    * @param data The inventory items data from the socket
    */
-  private handleInventoryItems(data?: any) {    
+  private handleInventoryItems(data?: any, eventType?: string) {    
     // Add each item to the collection
     data.forEach((item: Item) => {
       this.addItem(item)
@@ -72,7 +73,7 @@ export class ItemSystem {
   /**
    * Adds item when an item is pulled
    */
-  private handlePulledItem(data?: any) {    
+  private handlePulledItem(data?: any, eventType?: string) {    
     this.addItem(data.item)
   }
   

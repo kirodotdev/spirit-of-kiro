@@ -8,7 +8,8 @@ const gameStore = useGameStore();
 const props = defineProps<{
   show: boolean;
   workbenchImage: string;
-  items?: any[];
+  toolsItems?: any[];
+  workingItems?: any[];
 }>();
 
 const emit = defineEmits<{
@@ -19,16 +20,42 @@ const emit = defineEmits<{
 // State to track which item is being hovered
 const hoveredItem = ref<any>(null);
 
-// State to track selected items for the working grid
-const selectedWorkingItems = ref<any[]>([]);
+// State to track the currently dragged item
+const draggedItem = ref<any>(null);
 
-// Computed property to check if the items array is empty
+// State to track the current drop target area
+const dropTarget = ref<'tools' | 'working' | null>(null);
+
+// Computed property to check if the tools items array is empty
 const isToolGridEmpty = computed(() => {
-  return !props.items || props.items.length === 0;
+  return !props.toolsItems || props.toolsItems.length === 0;
 });
 
 const handleItemClick = (item: any) => {
-  emit('action', 'select-item', item);
+  const targetInventory = `${gameStore.userId}:main`;
+
+  // Clear the hovered item preview immediately when an item is clicked
+  hoveredItem.value = null;
+
+  // Set up a one-time listener for the 'item-moved' event
+  const listenerId = gameStore.addEventListener('item-moved', (data) => {
+    // Check if this is the item we just moved
+    if (data && data.itemId === item.id && data.targetInventoryId === targetInventory) {
+      // Remove the listener since we only need it once
+      gameStore.removeEventListener('item-moved', listenerId);
+      
+      // Close the workbench fullscreen view
+      emit('close');
+      
+      // Put the item in the player's hands
+      gameStore.emitEvent('item-pickup', {
+        id: data.itemId
+      });
+    }
+  });
+
+  // Move the item from workbench to main inventory
+  gameStore.moveItem(item.id, targetInventory);
 };
 
 const handleItemMouseEnter = (item: any) => {
@@ -37,6 +64,74 @@ const handleItemMouseEnter = (item: any) => {
 
 const handleItemMouseLeave = () => {
   hoveredItem.value = null;
+};
+
+// Drag and drop handlers
+const handleDragStart = (event: DragEvent, item: any, sourceArea: 'tools' | 'working') => {
+  if (!item) return;
+  
+  // Store the dragged item and its source area
+  draggedItem.value = { ...item, sourceArea };
+  
+  // Set the drag effect and data
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', item.id);
+  }
+  
+  // Hide the preview during drag
+  hoveredItem.value = null;
+};
+
+const handleDragOver = (event: DragEvent, targetArea: 'tools' | 'working') => {
+  // Prevent default to allow drop
+  event.preventDefault();
+  
+  // Set the drop effect
+  if (event.dataTransfer) {
+    event.dataTransfer.dropEffect = 'move';
+  }
+  
+  // Update the drop target for visual feedback
+  dropTarget.value = targetArea;
+};
+
+const handleDragEnter = (event: DragEvent, targetArea: 'tools' | 'working') => {
+  // Prevent default to allow drop
+  event.preventDefault();
+  
+  // Update the drop target for visual feedback
+  dropTarget.value = targetArea;
+};
+
+const handleDragLeave = () => {
+  // Clear the drop target when leaving a drop zone
+  dropTarget.value = null;
+};
+
+const handleDrop = (event: DragEvent, targetArea: 'tools' | 'working') => {
+  // Prevent default browser behavior
+  event.preventDefault();
+  
+  // Clear the drop target
+  dropTarget.value = null;
+  
+  // If no item is being dragged or the source and target areas are the same, do nothing
+  if (!draggedItem.value || draggedItem.value.sourceArea === targetArea) {
+    draggedItem.value = null;
+    return;
+  }
+  
+  // Determine the target inventory ID based on the drop area
+  const targetInventoryId = targetArea === 'tools' 
+    ? `${gameStore.userId}:workbench-tools` 
+    : `${gameStore.userId}:workbench-working`;
+  
+  // Move the item to the target inventory
+  gameStore.moveItem(draggedItem.value.id, targetInventoryId);
+  
+  // Reset the dragged item
+  draggedItem.value = null;
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -75,16 +170,23 @@ watch(() => props.show, (newValue) => {
       <!-- Item Preview Component -->
       <ItemPreview :item="hoveredItem" />
       
-      <div class="tool-area">
+      <div class="tool-area" 
+           @dragover="handleDragOver($event, 'tools')"
+           @dragenter="handleDragEnter($event, 'tools')"
+           @dragleave="handleDragLeave"
+           @drop="handleDrop($event, 'tools')"
+           :class="{ 'drop-target': dropTarget === 'tools' }">
         <div class="tool-grid">
           <div 
             class="inventory-slot" 
             :class="{ 'has-item': item }" 
-            v-for="item in items" 
-            :key="item.id"
+            v-for="(item, index) in toolsItems" 
+            :key="item ? item.id : 'tool-'+index"
             @click="item && handleItemClick(item)"
             @mouseenter="item && handleItemMouseEnter(item)"
             @mouseleave="handleItemMouseLeave"
+            draggable="item ? true : false"
+            @dragstart="item && handleDragStart($event, item, 'tools')"
           >
             <div v-if="item" class="item-container" :class="getRarityClass(item.value)">
               <img :src="item.imageUrl" class="item-image" :alt="item.name" />
@@ -93,7 +195,7 @@ watch(() => props.show, (newValue) => {
           <!-- Add empty slots to fill the grid if needed -->
           <div 
             class="inventory-slot" 
-            v-for="n in Math.max(0, 32 - (items ? items.length : 0))" 
+            v-for="n in Math.max(0, 32 - (toolsItems ? toolsItems.length : 0))" 
             :key="'empty-'+n"
           ></div>
           
@@ -105,16 +207,23 @@ watch(() => props.show, (newValue) => {
       </div>
       
       <!-- Working Area -->
-      <div class="working-area">
+      <div class="working-area"
+           @dragover="handleDragOver($event, 'working')"
+           @dragenter="handleDragEnter($event, 'working')"
+           @dragleave="handleDragLeave"
+           @drop="handleDrop($event, 'working')"
+           :class="{ 'drop-target': dropTarget === 'working' }">
         <div class="working-grid">
           <div 
             class="inventory-slot working-slot" 
             :class="{ 'has-item': item }" 
-            v-for="(item, index) in selectedWorkingItems" 
+            v-for="(item, index) in workingItems" 
             :key="item ? item.id : 'working-'+index"
             @click="item && handleItemClick(item)"
             @mouseenter="item && handleItemMouseEnter(item)"
             @mouseleave="handleItemMouseLeave"
+            :draggable="item ? true : false"
+            @dragstart="item && handleDragStart($event, item, 'working')"
           >
             <div v-if="item" class="item-container" :class="getRarityClass(item.value)">
               <img :src="item.imageUrl" class="item-image" :alt="item.name" />
@@ -123,7 +232,7 @@ watch(() => props.show, (newValue) => {
           <!-- Add empty slots to fill the grid if needed -->
           <div 
             class="inventory-slot working-slot" 
-            v-for="n in Math.max(0, 5 - (selectedWorkingItems.length || 0))" 
+            v-for="n in Math.max(0, 5 - (workingItems ? workingItems.length : 0))" 
             :key="'empty-working-'+n"
           ></div>
         </div>
@@ -210,8 +319,8 @@ watch(() => props.show, (newValue) => {
 .working-area {
   position: absolute;
   width: 60%;
-  height: 12%;
-  bottom: 35%;
+  height: 11%;
+  bottom: 40%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -229,6 +338,7 @@ watch(() => props.show, (newValue) => {
 
 .inventory-slot {
   background: transparent;
+  border: 3px dashed rgb(113, 67, 31);
   border-radius: 6px;
   display: flex;
   flex-direction: column;
@@ -241,7 +351,22 @@ watch(() => props.show, (newValue) => {
 }
 
 .working-slot {
-  border: 3px dashed rgb(113, 67, 31);
+  /* Working slots already have the dashed border from .inventory-slot */
+  cursor: grab;
+}
+
+.drop-target {
+  outline: 2px solid rgba(255, 215, 0, 0.7);
+  background-color: rgba(255, 215, 0, 0.1);
+  border-radius: 8px;
+}
+
+.inventory-slot[draggable=true] {
+  cursor: grab;
+}
+
+.inventory-slot[draggable=true]:active {
+  cursor: grabbing;
 }
 
 .inventory-slot.has-item {

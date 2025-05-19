@@ -5,6 +5,7 @@ import { defineStore } from 'pinia'
 
 import { GameObjectSystem, type GameObject } from '../systems/game-object-system'
 import { ItemSystem, type Item } from '../systems/item-system'
+import { InventorySystem } from '../systems/inventory-system'
 
 export const useGameStore = defineStore('game', () => {
   // Reactive state variables that are used by front facing
@@ -17,6 +18,7 @@ export const useGameStore = defineStore('game', () => {
   const items = ref<Item[]>([])
   const tileSize = ref(50)
   const heldItemId = ref<string | null>(null)
+  const inventories = ref<Map<string, Map<string, Item>>>(new Map())
 
   // Flags
   const debug = ref(false)
@@ -29,12 +31,19 @@ export const useGameStore = defineStore('game', () => {
   const socketSystem = new SocketSystem(ws, wsConnected, isAuthenticated);
   const gameObjectSystem = new GameObjectSystem(objects);
   const itemSystem = new ItemSystem(items, socketSystem);
+  const inventorySystem = new InventorySystem(inventories, socketSystem, userId);
 
+  // Set userId from localStorage if available
+  if (localStorage.getItem('userId')) {
+    userId.value = localStorage.getItem('userId')
+  }
+  
   return {
     // State
     ws,
     wsConnected,
     isAuthenticated,
+    userId,
     objects,
     items,
     itemsById: itemSystem.itemsById,
@@ -43,6 +52,7 @@ export const useGameStore = defineStore('game', () => {
     interactionLocked,
     hasActivePhysics,
     heldItemId,
+    inventories,
 
     // Socket actions
     initWebSocket: socketSystem.initWebSocket.bind(socketSystem),
@@ -66,5 +76,11 @@ export const useGameStore = defineStore('game', () => {
     clearObjects: gameObjectSystem.clearObjects.bind(gameObjectSystem),
     updateObjectPhysics: gameObjectSystem.updateObjectPhysics.bind(gameObjectSystem),
     removeObject: gameObjectSystem.removeObject.bind(gameObjectSystem),
+    
+    // Inventory system actions
+    useInventory: inventorySystem.useInventory.bind(inventorySystem),
+    moveItemToInventory: inventorySystem.moveItemToInventory.bind(inventorySystem),
+    getInventoryItems: inventorySystem.getInventoryItems.bind(inventorySystem),
+    refreshInventory: inventorySystem.refreshInventory.bind(inventorySystem),
   }
 })

@@ -126,7 +126,7 @@ function resetLever() {
 }
 
 // Handle inventory list response from server
-function handleInventoryList(data: any) {
+function handleInventoryList(data: any, eventType?: string) {
   if (data && Array.isArray(data)) {
     localInventory.value = data;
   }

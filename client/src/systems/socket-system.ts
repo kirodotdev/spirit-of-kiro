@@ -155,14 +155,14 @@ export class SocketSystem {
     // First, trigger exact match listeners
     const exactEventMap = this.eventListeners.get(eventType)
     if (exactEventMap) {
-      exactEventMap.forEach(callback => callback(data))
+      exactEventMap.forEach(callback => callback(data, eventType))
     }
     
     // Then, check for wildcard patterns that match this event
     this.eventListeners.forEach((listenerMap, pattern) => {
       // Skip the exact match we already processed
       if (pattern !== eventType && this.matchesEventPattern(eventType, pattern)) {
-        listenerMap.forEach(callback => callback(data))
+        listenerMap.forEach(callback => callback(data, eventType))
       }
     })
   }

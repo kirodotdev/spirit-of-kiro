@@ -14,7 +14,7 @@ interface MoveItemResponse {
   body?: any;
 }
 
-const VALID_INVENTORIES = ['main', 'chest1'];
+const VALID_INVENTORIES = ['main', 'chest1', 'workbench-working', 'workbench-tools'];
 
 export default async function handleMoveItem(state: ConnectionState, data: MoveItemMessage): Promise<MoveItemResponse> {
   if (!state.userId) {
