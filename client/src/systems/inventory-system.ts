@@ -1,19 +1,21 @@
-import { type Ref } from 'vue'
+import { type Ref, computed } from 'vue'
 import type { Item } from './item-system'
 import type { SocketSystem } from './socket-system'
 
 export class InventorySystem {
-  private inventories: Ref<Map<string, Map<string, Item>>>
+  private inventories: Ref<Map<string, string[]>>
+  private inventoryForItem: Map<string, string>
   private socketSystem: SocketSystem
   private eventListenerIds: string[] = []
   private userId: Ref<string | null>
 
   constructor(
-    inventories: Ref<Map<string, Map<string, Item>>>,
+    inventories: Ref<Map<string, string[]>>,
     socketSystem: SocketSystem,
     userId: Ref<string | null>
   ) {
     this.inventories = inventories;
+    this.inventoryForItem = new Map<string, string>();
     this.socketSystem = socketSystem
     this.userId = userId
 
@@ -23,19 +25,21 @@ export class InventorySystem {
   }
 
   /**
-   * Get a reactive reference to items in a specific inventory
+   * Get a reactive reference to item IDs in a specific inventory
    * @param inventoryName The name of the inventory to access
-   * @returns A computed reference containing the items in the specified inventory
+   * @returns A computed property that always returns the current value of the inventory
    */
   useInventory(inventoryName: string) {
     if (!this.inventories.value.has(inventoryName)) {
-      this.inventories.value.set(inventoryName, new Map());
+      this.inventories.value.set(inventoryName, []);
     }
 
     // Now request this inventory from the server
-    this.socketSystem.listInventory(`${this.userId}:${inventoryName}`);
+    this.socketSystem.listInventory(`${this.userId.value}:${inventoryName}`);
 
-    return this.inventories.value.get(inventoryName);
+    // Return a computed property that always returns the current value of the inventory
+    // or an empty array if the inventory doesn't exist
+    return computed(() => this.inventories.value.get(inventoryName) || []);
   }
 
   /**
@@ -54,16 +58,25 @@ export class InventorySystem {
   }
 
   /**
-   * Get all items in a specific inventory
-   * @param inventoryName The name of the inventory to get items from
-   * @returns An array of items in the specified inventory
+   * Get all item IDs in a specific inventory
+   * @param inventoryName The name of the inventory to get item IDs from
+   * @returns An array of item IDs in the specified inventory
    */
-  getInventoryItems(inventoryName: string): Item[] {
+  getInventoryItems(inventoryName: string): string[] {
     const inventory = this.inventories.value.get(inventoryName)
     if (!inventory) {
       return []
     }
-    return Array.from(inventory.values())
+    return [...inventory]
+  }
+
+  /**
+   * Get the inventory name for a given item ID
+   * @param itemId The ID of the item to look up
+   * @returns The inventory name where the item is located, or null if not found
+   */
+  getItemInventory(itemId: string): string | null {
+    return this.inventoryForItem.get(itemId) || null;
   }
 
   /**
@@ -99,16 +112,26 @@ export class InventorySystem {
     // Create a new Map to maintain reactivity
     const newInventories = new Map(this.inventories.value)
 
-    // Create a new inventory Map
-    const inventoryMap = new Map<string, Item>()
-
-    // Add new items
-    data.forEach(item => {
-      inventoryMap.set(item.id, item)
+    // Sort items by createdAt date if available, otherwise keep original order
+    const sortedItems = [...data].sort((a, b) => {
+      // Since createdAt is not in the Item interface, we need to check if it exists
+      // TypeScript will allow this with the 'any' type from the data parameter
+      if (a.createdAt && b.createdAt) {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      }
+      return 0
     })
 
+    // Extract only the item IDs in sorted order
+    const itemIds = sortedItems.map(item => item.id)
+
     // Set the new inventory in the inventories Map
-    newInventories.set(inventoryName, inventoryMap)
+    newInventories.set(inventoryName, itemIds)
+
+    // Update the inventoryForItem map
+    itemIds.forEach(itemId => {
+      this.inventoryForItem.set(itemId, inventoryName);
+    });
 
     // Update the ref
     this.inventories.value = newInventories
@@ -118,43 +141,52 @@ export class InventorySystem {
    * Handle item moved events
    * @param data The item moved event data
    */
-  private handleItemMoved(data: { itemId: string, sourceInventoryId: string, targetInventoryId: string, item: Item }, eventType?: string) {
-    if (!data || !data.itemId || !data.sourceInventoryId || !data.targetInventoryId || !data.item) {
-      console.error('Invalid item-moved event data:', data)
-      return
-    }
-
-    // Extract inventory names from IDs (format: "userId:inventoryName")
-    const sourceInventoryName = data.sourceInventoryId.split(':')[1]
+  private handleItemMoved(data: { itemId: string, targetInventoryId: string, item: Item }) {
+    // Extract target inventory name from ID (format: "userId:inventoryName")
     const targetInventoryName = data.targetInventoryId.split(':')[1]
 
-    if (!sourceInventoryName || !targetInventoryName) {
-      console.error('Invalid inventory IDs in item-moved event:', data)
+    if (!targetInventoryName) {
+      console.error('Invalid target inventory ID in item-moved event:', data)
       return
     }
+
+    // Look up the source inventory from the inventoryForItem map
+    const sourceInventoryName = this.inventoryForItem.get(data.itemId)
 
     // Create a new Map to maintain reactivity
     const newInventories = new Map(this.inventories.value)
 
-    // Remove item from source inventory
-    if (newInventories.has(sourceInventoryName)) {
-      const sourceInventory = new Map(newInventories.get(sourceInventoryName))
-      sourceInventory.delete(data.itemId)
-      newInventories.set(sourceInventoryName, sourceInventory)
+    // Remove item from source inventory if we know where it was
+    if (sourceInventoryName && newInventories.has(sourceInventoryName)) {
+      const sourceInventory = [...newInventories.get(sourceInventoryName) || []]
+      const itemIndex = sourceInventory.indexOf(data.itemId)
+      if (itemIndex !== -1) {
+        sourceInventory.splice(itemIndex, 1)
+        newInventories.set(sourceInventoryName, sourceInventory)
+
+        // Remove from inventoryForItem map
+        this.inventoryForItem.delete(data.itemId)
+      }
     }
 
     // Add item to target inventory
-    let targetInventory: Map<string, Item>
+    let targetInventory: string[]
     if (!newInventories.has(targetInventoryName)) {
-      targetInventory = new Map()
+      targetInventory = []
       newInventories.set(targetInventoryName, targetInventory)
     } else {
-      targetInventory = new Map(newInventories.get(targetInventoryName))
-      newInventories.set(targetInventoryName, targetInventory)
+      targetInventory = [...newInventories.get(targetInventoryName) || []]
     }
 
-    // Add the item to the target inventory
-    targetInventory.set(data.itemId, data.item)
+    // Add the item ID to the target inventory
+    // Since we can't properly sort by createdAt without accessing the item store,
+    // we'll just add the item ID to the end of the array for now
+    targetInventory.push(data.itemId)
+
+    newInventories.set(targetInventoryName, targetInventory)
+
+    // Update the inventoryForItem map
+    this.inventoryForItem.set(data.itemId, targetInventoryName)
 
     // Update the ref
     this.inventories.value = newInventories
@@ -174,5 +206,8 @@ export class InventorySystem {
 
     // Clear inventories
     this.inventories.value = new Map()
+
+    // Clear inventoryForItem map
+    this.inventoryForItem.clear()
   }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch, ref } from 'vue';
+import { onMounted, onUnmounted, watch, ref, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import { getRarityClass } from '../utils/items';
 import ItemPreview from './ItemPreview.vue';
@@ -8,31 +8,40 @@ const gameStore = useGameStore();
 const props = defineProps<{
   show: boolean;
   chestImage: string;
-  items?: any[];
+  items: string[];
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'action', action: string, item?: any): void;
+  (e: 'action', action: string, itemId?: string): void;
 }>();
 
 // State to track which item is being hovered
-const hoveredItem = ref<any>(null);
+const hoveredItemId = ref<string | null>(null);
 
-const handleAction = (action: string) => {
-  emit('action', action);
-};
+// Map the item IDs to actual item objects using gameStore.itemsById
+const mappedItems = computed(() => {
+  return props.items
+    .map(id => gameStore.itemsById.get(id))
+    .filter(item => item !== undefined);
+});
 
-const handleItemClick = (item: any) => {
+// Get the currently hovered item object
+const hoveredItem = computed(() => {
+  if (!hoveredItemId.value) return null;
+  return gameStore.itemsById.get(hoveredItemId.value) || null;
+});
+
+const handleItemClick = (itemId: string) => {
   const targetInventory = `${gameStore.userId}:main`;
 
   // Clear the hovered item preview immediately when an item is clicked
-  hoveredItem.value = null;
+  hoveredItemId.value = null;
 
   // Set up a one-time listener for the 'item-moved' event
   const listenerId = gameStore.addEventListener('item-moved', (data) => {
     // Check if this is the item we just moved
-    if (data && data.itemId === item.id && data.targetInventoryId === targetInventory) {
+    if (data && data.itemId === itemId && data.targetInventoryId === targetInventory) {
       // Remove the listener since we only need it once
       gameStore.removeEventListener('item-moved', listenerId);
       
@@ -47,15 +56,15 @@ const handleItemClick = (item: any) => {
   });
 
   // Move the item from chest to main inventory
-  gameStore.moveItem(item.id, targetInventory);
+  gameStore.moveItem(itemId, targetInventory);
 };
 
-const handleItemMouseEnter = (item: any) => {
-  hoveredItem.value = item;
+const handleItemMouseEnter = (itemId: string) => {
+  hoveredItemId.value = itemId;
 };
 
 const handleItemMouseLeave = () => {
-  hoveredItem.value = null;
+  hoveredItemId.value = null;
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
@@ -99,10 +108,10 @@ watch(() => props.show, (newValue) => {
           <div 
             class="inventory-slot" 
             :class="{ 'has-item': item }" 
-            v-for="(item, index) in items" 
+            v-for="item in mappedItems" 
             :key="item.id"
-            @click="item && handleItemClick(item)"
-            @mouseenter="item && handleItemMouseEnter(item)"
+            @click="item && handleItemClick(item.id)"
+            @mouseenter="item && handleItemMouseEnter(item.id)"
             @mouseleave="handleItemMouseLeave"
           >
             <div v-if="item" class="item-container" :class="getRarityClass(item.value)">
@@ -112,7 +121,7 @@ watch(() => props.show, (newValue) => {
           <!-- Add empty slots to fill the grid if needed -->
           <div 
             class="inventory-slot" 
-            v-for="n in Math.max(0, 21 - (items ? items.length : 0))" 
+            v-for="n in Math.max(0, 21 - mappedItems.length)" 
             :key='n'
           ></div>
         </div>

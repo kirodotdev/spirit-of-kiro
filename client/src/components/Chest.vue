@@ -18,23 +18,26 @@ const props = defineProps<{
 
 const gameStore = useGameStore();
 const showFullscreen = ref(false);
-const localInventory = ref<any[]>([]);
+
+const inventoryName = "chest1";
+const inventory = gameStore.useInventory(inventoryName);
 
 // Add maxCapacity constant
 const maxCapacity = 21;
 
 // Create computed property for usedCapacity
 const usedCapacity = computed(() => {
-  return localInventory.value.length;
+  return inventory.value.length;
 });
 
 // Computed property to determine the color of each dot based on item rarity
 const capacityDots = computed(() => {
   const dots = [];
+  const items = inventory.value.map(id => gameStore.itemsById.get(id)).filter(Boolean);
   
   // Fill dots with items that exist in inventory
-  for (let i = 0; i < Math.min(localInventory.value.length, maxCapacity); i++) {
-    const item = localInventory.value[i];
+  for (let i = 0; i < Math.min(items.length, maxCapacity); i++) {
+    const item = items[i];
     const rarityClass = getRarityClass(item.value);
     dots.push({
       filled: true,
@@ -43,7 +46,7 @@ const capacityDots = computed(() => {
   }
   
   // Fill remaining dots as empty
-  for (let i = localInventory.value.length; i < maxCapacity; i++) {
+  for (let i = items.length; i < maxCapacity; i++) {
     dots.push({
       filled: false,
       rarityClass: 'empty'
@@ -53,10 +56,9 @@ const capacityDots = computed(() => {
   return dots;
 });
 
-const inventoryName = "chest1";
 const linkedInventory = computed(() => {
   return `${gameStore.userId}:${inventoryName}`
-})
+});
 
 function handlePlayerInteraction() {
   if (!props.playerIsNear) {
@@ -89,54 +91,27 @@ function handlePlayerInteraction() {
   }
 }
 
-// Handle inventory list response from server
-function handleInventoryList(data: any) {
-  if (data && Array.isArray(data)) {
-    localInventory.value = data;
-  }
-}
-
-// Handle item-moved event
 function handleItemMoved(data: any) {
   if (!data) {
     return;
   }
    
   if (data.targetInventoryId === linkedInventory.value) {
-    // Refresh the inventory when an item is moved to this chest
-    gameStore.listInventory(linkedInventory.value);
-
-    // Open the chest
+    // Open the chest when an item is moved to it
     showFullscreen.value = true;
-    return;
-  }
-
-  if (data.itemId) {
-    // Check if the itemId exists in the local inventory
-    const itemExists = localInventory.value.some(item => item.id === data.itemId);
-    if (itemExists) {
-      // Refresh the inventory when the item is found in local inventory
-      gameStore.listInventory(linkedInventory.value);
-    }
   }
 }
 
 let interactionListenerId: string;
-let inventoryListenerId: string;
 let itemMovedListenerId: string;
 
 onMounted(() => {
   interactionListenerId = gameStore.addEventListener('player-interaction', handlePlayerInteraction);
-  inventoryListenerId = gameStore.addEventListener(`inventory-items:${inventoryName}`, handleInventoryList);
   itemMovedListenerId = gameStore.addEventListener('item-moved', handleItemMoved);
-  
-  // Fetch chest inventory when component mounts
-  gameStore.listInventory(linkedInventory.value);
 });
 
 onUnmounted(() => {
   gameStore.removeEventListener('player-interaction', interactionListenerId);
-  gameStore.removeEventListener(`inventory-items:${inventoryName}`, inventoryListenerId);
   gameStore.removeEventListener('item-moved', itemMovedListenerId);
 });
 
@@ -193,7 +168,7 @@ const closeFullscreen = () => {
     <ChestFullscreen
       :show="showFullscreen"
       :chest-image="chestOpenImage"
-      :items="localInventory"
+      :items="inventory"
       @close="closeFullscreen"
     />
   </div>
