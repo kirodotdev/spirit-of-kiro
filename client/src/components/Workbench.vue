@@ -19,21 +19,30 @@ const props = defineProps<{
 const gameStore = useGameStore();
 const showFullscreen = ref(false);
 
-// Add refs for both inventories
-const workingInventory = ref<any[]>([]);
-const toolsInventory = ref<any[]>([]);
+// Define inventory names
+const workingInventoryName = "workbench-working";
+const toolsInventoryName = "workbench-tools";
+
+// Use the inventory system to get reactive references to the inventories
+const workingInventoryIds = gameStore.useInventory(workingInventoryName);
+const toolsInventoryIds = gameStore.useInventory(toolsInventoryName);
 
 // Add maxCapacity constants for both inventories
 const workingMaxCapacity = 5;
 const toolsMaxCapacity = 32;
 
+// Create computed properties for the actual inventory items
+const workingInventory = computed(() => {
+  return workingInventoryIds.value.map(id => gameStore.itemsById.get(id)).filter(Boolean);
+});
+
+const toolsInventory = computed(() => {
+  return toolsInventoryIds.value.map(id => gameStore.itemsById.get(id)).filter(Boolean);
+});
+
 // Create computed properties for capacity
 const workingUsedCapacity = computed(() => {
   return workingInventory.value.length;
-});
-
-const toolsUsedCapacity = computed(() => {
-  return toolsInventory.value.length;
 });
 
 // Computed property for working inventory capacity dots
@@ -86,19 +95,6 @@ const toolsCapacityDots = computed(() => {
   return dots;
 });
 
-// Define inventory names
-const workingInventoryName = "workbench-working";
-const toolsInventoryName = "workbench-tools";
-
-// Create computed properties for linked inventories
-const linkedWorkingInventory = computed(() => {
-  return `${gameStore.userId}:${workingInventoryName}`;
-});
-
-const linkedToolsInventory = computed(() => {
-  return `${gameStore.userId}:${toolsInventoryName}`;
-});
-
 function handlePlayerInteraction() {
   if (!props.playerIsNear) {
     return;
@@ -119,90 +115,23 @@ function handlePlayerInteraction() {
       return;
     }
     
-    // Working inventory has space, move the held item to the working inventory
-    gameStore.moveItem(
-      gameStore.heldItemId,
-      linkedWorkingInventory.value
-    );
+    // Working inventory has space, move the held item to the working inventory using the inventory system
+    gameStore.moveItemToInventory(gameStore.heldItemId, workingInventoryName);
     
     // Remove the held item
     gameStore.heldItemId = null;
-  }
-}
-
-// Handle inventory list response from server for working inventory
-function handleWorkingInventoryList(data: any) {
-  if (data && Array.isArray(data)) {
-    workingInventory.value = data;
-  }
-}
-
-// Handle inventory list response from server for tools inventory
-function handleToolsInventoryList(data: any) {
-  if (data && Array.isArray(data)) {
-    toolsInventory.value = data;
-  }
-}
-
-// Handle item-moved event
-function handleItemMoved(data: any) {
-  if (!data) {
-    return;
-  }
-   
-  if (data.targetInventoryId === linkedWorkingInventory.value) {
-    // Refresh the inventory when an item is moved to the working inventory
-    gameStore.listInventory(linkedWorkingInventory.value);
-
-    // Open the workbench
     showFullscreen.value = true;
-    return;
-  }
-
-  if (data.targetInventoryId === linkedToolsInventory.value) {
-    // Refresh the inventory when an item is moved to the tools inventory
-    gameStore.listInventory(linkedToolsInventory.value);
-    return;
-  }
-
-  if (data.itemId) {
-    // Check if the itemId exists in either local inventory
-    const itemExistsInWorking = workingInventory.value.some(item => item.id === data.itemId);
-    const itemExistsInTools = toolsInventory.value.some(item => item.id === data.itemId);
-    
-    if (itemExistsInWorking) {
-      // Refresh the working inventory when the item is found in it
-      gameStore.listInventory(linkedWorkingInventory.value);
-    }
-    
-    if (itemExistsInTools) {
-      // Refresh the tools inventory when the item is found in it
-      gameStore.listInventory(linkedToolsInventory.value);
-    }
   }
 }
 
 let interactionListenerId: string;
-let workingInventoryListenerId: string;
-let toolsInventoryListenerId: string;
-let itemMovedListenerId: string;
 
 onMounted(() => {
   interactionListenerId = gameStore.addEventListener('player-interaction', handlePlayerInteraction);
-  workingInventoryListenerId = gameStore.addEventListener(`inventory-items:${workingInventoryName}`, handleWorkingInventoryList);
-  toolsInventoryListenerId = gameStore.addEventListener(`inventory-items:${toolsInventoryName}`, handleToolsInventoryList);
-  itemMovedListenerId = gameStore.addEventListener('item-moved', handleItemMoved);
-  
-  // Fetch both inventories when component mounts
-  gameStore.listInventory(linkedWorkingInventory.value);
-  gameStore.listInventory(linkedToolsInventory.value);
 });
 
 onUnmounted(() => {
   gameStore.removeEventListener('player-interaction', interactionListenerId);
-  gameStore.removeEventListener(`inventory-items:${workingInventoryName}`, workingInventoryListenerId);
-  gameStore.removeEventListener(`inventory-items:${toolsInventoryName}`, toolsInventoryListenerId);
-  gameStore.removeEventListener('item-moved', itemMovedListenerId);
 });
 
 const closeFullscreen = () => {
@@ -307,20 +236,21 @@ const closeFullscreen = () => {
 }
 
 .working-grid {
-  top: 0;
-  left: 30%;
+  top: 60%;
+  left: 50%;
   transform: translateX(-50%);
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: 1fr;
-  width: calc(0.5 * v-bind(tileSize) * 1px);
+  width: calc(1.5 * v-bind(tileSize) * 1px);
 }
 
 .tools-grid {
-  top: 0;
-  right: 10%;
+  top: 8%;
+  left: 14%;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(4, 1fr);
-  width: calc(0.8 * v-bind(tileSize) * 1px);
+  width: calc(1.9 * v-bind(tileSize) * 1px);
+  row-gap: calc(.2 * v-bind(tileSize) * 1px);
 }
 
 .capacity-dot {
@@ -328,6 +258,11 @@ const closeFullscreen = () => {
   height: calc(0.08 * v-bind(tileSize) * 1px);
   border-radius: 50%;
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+.working-grid .capacity-dot {
+  width: calc(0.13 * v-bind(tileSize) * 1px);
+  height: calc(0.13 * v-bind(tileSize) * 1px);
 }
 
 /* Dot colors based on item rarity */

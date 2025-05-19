@@ -99,8 +99,6 @@ export class InventorySystem {
    * @param eventType The event type string
    */
   private handleInventoryItems(data: any, eventType?: string) {
-    console.log('handling inventory', data);
-
     // Extract inventory name from event type (format: "inventory-items:inventoryName")
     const inventoryName = eventType ? eventType.split(':')[1] : data.type?.split(':')[1]
 

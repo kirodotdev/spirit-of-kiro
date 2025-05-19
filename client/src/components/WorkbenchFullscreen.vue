@@ -297,7 +297,7 @@ watch(() => props.show, (newValue) => {
 
 .tool-area {
   position: absolute;
-  width: 60%;
+  width: 61%;
   height: 32%;
   top: 10.5%;
   display: flex;
@@ -310,7 +310,7 @@ watch(() => props.show, (newValue) => {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(4, 1fr);
-  gap: 10px;
+  gap: 12px;
   width: 100%;
   height: 100%;
 }
@@ -343,7 +343,7 @@ watch(() => props.show, (newValue) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: normal;
   color: rgba(255, 255, 255, 0.5);
   font-size: 0.9em;
   transition: border-color 0.3s, background-color 0.3s;
