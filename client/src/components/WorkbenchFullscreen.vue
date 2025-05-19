@@ -185,7 +185,7 @@ watch(() => props.show, (newValue) => {
             @click="item && handleItemClick(item)"
             @mouseenter="item && handleItemMouseEnter(item)"
             @mouseleave="handleItemMouseLeave"
-            draggable="item ? true : false"
+            :draggable="!!item"
             @dragstart="item && handleDragStart($event, item, 'tools')"
           >
             <div v-if="item" class="item-container" :class="getRarityClass(item.value)">
@@ -222,7 +222,7 @@ watch(() => props.show, (newValue) => {
             @click="item && handleItemClick(item)"
             @mouseenter="item && handleItemMouseEnter(item)"
             @mouseleave="handleItemMouseLeave"
-            :draggable="item ? true : false"
+            :draggable="!!item"
             @dragstart="item && handleDragStart($event, item, 'working')"
           >
             <div v-if="item" class="item-container" :class="getRarityClass(item.value)">
@@ -298,7 +298,7 @@ watch(() => props.show, (newValue) => {
 .tool-area {
   position: absolute;
   width: 61%;
-  height: 32%;
+  height: 31.5%;
   top: 10.5%;
   display: flex;
   justify-content: center;
@@ -310,7 +310,7 @@ watch(() => props.show, (newValue) => {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(4, 1fr);
-  gap: 12px;
+  gap: 5px;
   width: 100%;
   height: 100%;
 }
@@ -350,6 +350,10 @@ watch(() => props.show, (newValue) => {
   position: relative;
 }
 
+.tool-grid .inventory-slot {
+  border: none;
+}
+
 .working-slot {
   /* Working slots already have the dashed border from .inventory-slot */
   cursor: grab;
@@ -371,6 +375,8 @@ watch(() => props.show, (newValue) => {
 
 .inventory-slot.has-item {
   border: none;
+  overflow: hidden;
+  border-radius: 6px;
 }
 
 .inventory-slot.has-item:hover .item-container {
@@ -381,6 +387,23 @@ watch(() => props.show, (newValue) => {
 .inventory-slot:hover {
   border-color: rgb(173, 127, 91);
   background-color: rgba(113, 67, 31, 0.2);
+}
+
+.item-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.item-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .empty-grid-prompt {
