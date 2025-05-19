@@ -28,7 +28,7 @@ export const useGameStore = defineStore('game', () => {
   new PhysicsSystem(objects, hasActivePhysics);
   const socketSystem = new SocketSystem(ws, wsConnected, isAuthenticated);
   const gameObjectSystem = new GameObjectSystem(objects);
-  const itemSystem = new ItemSystem(items);
+  const itemSystem = new ItemSystem(items, socketSystem);
 
   return {
     // State

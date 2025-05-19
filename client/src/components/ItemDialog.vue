@@ -49,14 +49,6 @@ function getOutcomeClass(outcome: string): string {
 function closeDialog() {
   visible.value = false;
   store.interactionLocked = false;
-  
-  // Complete the pickup process when dialog is closed
-  if (currentItem.value) {
-    store.removeObject(currentItem.value.gameObjectId);
-    store.emitEvent('item-pickup', {
-      id: currentItem.value.id
-    });
-  }
 }
 
 // Function to handle keydown events

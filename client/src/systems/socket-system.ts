@@ -12,6 +12,9 @@ export class SocketSystem {
   private baseReconnectDelay: number = 1000 // 1 second
   private maxReconnectDelay: number = 30000 // 30 seconds
   private reconnectTimeoutId: number | null = null
+  
+  // Wildcard character for event pattern matching
+  private readonly wildcardChar: string = '*'
 
   constructor(
     ws: Ref<WebSocket | null>,
@@ -72,6 +75,14 @@ export class SocketSystem {
     }
   }
 
+  /**
+   * Adds an event listener for the specified event type.
+   * Supports wildcard patterns like "inventory-items:*" for subscribing to multiple events.
+   * 
+   * @param eventType - The event type to listen for, can include wildcards
+   * @param callback - The callback function to execute when the event is emitted
+   * @returns A unique listener ID that can be used to remove the listener
+   */
   addEventListener(eventType: string, callback: (data?: any) => void): string {
     const listenerId = crypto.randomUUID()
     
@@ -105,11 +116,55 @@ export class SocketSystem {
     }
   }
 
-  emitEvent(eventType: string, data?: any) {
-    const eventMap = this.eventListeners.get(eventType)
-    if (eventMap) {
-      eventMap.forEach(callback => callback(data))
+  /**
+   * Checks if an event matches a pattern that may include wildcards.
+   * For example, "inventory-items:123" matches the pattern "inventory-items:*"
+   * 
+   * @param eventType - The actual event type being emitted
+   * @param pattern - The pattern to match against, may include wildcards
+   * @returns True if the event matches the pattern
+   */
+  private matchesEventPattern(eventType: string, pattern: string): boolean {
+    // If the pattern is exactly the event type, it's a direct match
+    if (pattern === eventType) {
+      return true
     }
+    
+    // If the pattern doesn't contain a wildcard, it can't be a match at this point
+    if (!pattern.includes(this.wildcardChar)) {
+      return false
+    }
+    
+    // Convert the pattern to a regex by escaping special characters and replacing * with .*
+    const regexPattern = pattern
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&') // Escape special regex chars except *
+      .replace(/\*/g, '.*'); // Replace * with .*
+    
+    const regex = new RegExp(`^${regexPattern}$`);
+    return regex.test(eventType);
+  }
+
+  /**
+   * Emits an event to all registered listeners for the event type.
+   * Also triggers any wildcard listeners that match the event type.
+   * 
+   * @param eventType - The type of event to emit
+   * @param data - Optional data to pass to the event listeners
+   */
+  emitEvent(eventType: string, data?: any) {
+    // First, trigger exact match listeners
+    const exactEventMap = this.eventListeners.get(eventType)
+    if (exactEventMap) {
+      exactEventMap.forEach(callback => callback(data))
+    }
+    
+    // Then, check for wildcard patterns that match this event
+    this.eventListeners.forEach((listenerMap, pattern) => {
+      // Skip the exact match we already processed
+      if (pattern !== eventType && this.matchesEventPattern(eventType, pattern)) {
+        listenerMap.forEach(callback => callback(data))
+      }
+    })
   }
 
   pullItem() {

@@ -24,7 +24,27 @@ const handleAction = (action: string) => {
 };
 
 const handleItemClick = (item: any) => {
-  emit('action', 'take', item);
+  const targetInventory = `${gameStore.userId}:main`;
+
+  // Set up a one-time listener for the 'item-moved' event
+  const listenerId = gameStore.addEventListener('item-moved', (data) => {
+    // Check if this is the item we just moved
+    if (data && data.itemId === item.id && data.targetInventoryId === targetInventory) {
+      // Remove the listener since we only need it once
+      gameStore.removeEventListener('item-moved', listenerId);
+      
+      // Close the chest fullscreen view
+      emit('close');
+      
+      // Put the item in the player's hands
+      gameStore.emitEvent('item-pickup', {
+        id: data.itemId
+      })
+    }
+  });
+
+  // Move the item from chest to main inventory
+  gameStore.moveItem(item.id, targetInventory);
 };
 
 const handleItemMouseEnter = (item: any) => {

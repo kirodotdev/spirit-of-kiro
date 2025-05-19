@@ -38,13 +38,9 @@ function spawnItemGameObject(data: any) {
   }
 
   // First, add the received item to the game store
-  if (data && data.item) {
-    // Add the received item to the game store
-    const item = data.item;
-    gameStore.addItem(item);
-    
+  if (data && data.item) {    
     // Extract the itemId from the event data
-    const itemId = item.id;
+    const itemId = data.item.id;
     
     // Position it slightly offset from the dispenser
     const itemRow = props.row + props.depth + 2;

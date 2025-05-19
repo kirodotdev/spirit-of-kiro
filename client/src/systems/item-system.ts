@@ -1,4 +1,5 @@
 import { type Ref, computed } from 'vue'
+import { useGameStore } from '../stores/game';
 
 export interface Item {
   id: string
@@ -14,6 +15,9 @@ export interface Item {
 
 export class ItemSystem {
   private items: Ref<Item[]>
+  private socketSystem;
+  private eventListenerIds: string[] = [];
+  
   public itemsById = computed(() => {
     const map = new Map<string, Item>()
     this.items.value.forEach(item => {
@@ -22,8 +26,13 @@ export class ItemSystem {
     return map
   })
 
-  constructor(items: Ref<Item[]>) {
+  constructor(items: Ref<Item[]>, socketSystem: SocketSystem) {
     this.items = items
+    this.socketSystem = socketSystem;
+    
+    // Subscribe to inventory-items:* events
+    this.eventListenerIds.push(this.socketSystem.addEventListener('inventory-items:*', this.handleInventoryItems.bind(this)))
+    this.eventListenerIds.push(this.socketSystem.addEventListener('pulled-item', this.handlePulledItem.bind(this)))
   }
 
   addItem(item: Item) {
@@ -47,5 +56,34 @@ export class ItemSystem {
 
   clearItems() {
     this.items.value = []
+  }
+  
+  /**
+   * Handles inventory items received from socket events
+   * @param data The inventory items data from the socket
+   */
+  private handleInventoryItems(data?: any) {    
+    // Add each item to the collection
+    data.forEach((item: Item) => {
+      this.addItem(item)
+    })
+  }
+
+  /**
+   * Adds item when an item is pulled
+   */
+  private handlePulledItem(data?: any) {    
+    this.addItem(data.item)
+  }
+  
+  /**
+   * Clean up resources when the component is unmounted
+   */
+  cleanup() {
+    // Remove event listener if it exists
+    this.eventListenerIds.forEach((id) => {
+      this.socketSystem.removeEventListener(id)
+    })
+    this.eventListenerIds = [];
   }
 }
