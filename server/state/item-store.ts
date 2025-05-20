@@ -196,3 +196,15 @@ export async function moveItemLocation(itemId: string, oldLocation: string, newL
   await docClient.send(command);
   return true;
 }
+
+export async function getItemById(itemId: string): Promise<ItemResponse | null> {
+  const command = new GetCommand({
+    TableName: TABLE_NAME,
+    Key: {
+      id: itemId
+    }
+  });
+
+  const result = await docClient.send(command);
+  return result.Item as ItemResponse || null;
+}

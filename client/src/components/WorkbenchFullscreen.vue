@@ -29,6 +29,12 @@ const dropTarget = ref<'tools' | 'working' | null>(null);
 // State to track the currently selected tool item
 const selectedToolItem = ref<any>(null);
 
+// State to track the currently selected skill for casting
+const selectedSkill = ref<any>(null);
+
+// State to track mouse position for skill casting
+const mousePosition = ref({ x: 0, y: 0 });
+
 // Computed property to check if the tools items array is empty
 const isToolGridEmpty = computed(() => {
   return !props.toolsItems || props.toolsItems.length === 0;
@@ -51,12 +57,22 @@ const handleItemClick = (item: any, sourceArea: 'tools' | 'working') => {
     if (selectedToolItem.value === item) {
       // If already selected, deselect it
       selectedToolItem.value = null;
+      // Also clear any selected skill
+      selectedSkill.value = null;
     } else {
       // Otherwise select the new tool
       selectedToolItem.value = item;
+      // Clear any selected skill when changing tools
+      selectedSkill.value = null;
     }
   } else {
-    // For working items, move to inventory as before
+    // If a skill is selected, cast it on the working item
+    if (selectedSkill.value) {
+      handleCastSkill(item);
+      return;
+    }
+    
+    // Otherwise, move to inventory as before
     const targetInventory = `${gameStore.userId}:main`;
     
     // Set up a one-time listener for the 'item-moved' event
@@ -83,11 +99,39 @@ const handleItemClick = (item: any, sourceArea: 'tools' | 'working') => {
 
 // Handle skill button click
 const handleSkillClick = (skill: any) => {
-  // Emit an action event with the skill and selected tool
-  emit('action', 'use-skill', { 
-    tool: selectedToolItem.value,
-    skill: skill
-  });
+  // If a skill is already selected, deselect it
+  if (selectedSkill.value === skill) {
+    selectedSkill.value = null;
+    return;
+  }
+  
+  // Select the skill for casting
+  selectedSkill.value = skill;
+};
+
+// Handle casting a selected skill on a working item
+const handleCastSkill = (targetItem: any) => {
+  if (!selectedSkill.value || !selectedToolItem.value) return;
+  
+  // Get the index of the skill in the tool's skills array
+  const toolSkillIndex = selectedToolItem.value.skills.findIndex(
+    (s: any) => s === selectedSkill.value
+  );
+  
+  if (toolSkillIndex === -1) {
+    console.error('Selected skill not found in tool skills');
+    return;
+  }
+  
+  // Use the skill on the target item
+  gameStore.useSkill(
+    selectedToolItem.value.id,
+    toolSkillIndex,
+    [targetItem.id]
+  );
+  
+  // Clear the selected skill after casting
+  selectedSkill.value = null;
 };
 
 const handleItemMouseEnter = (item: any) => {
@@ -184,17 +228,35 @@ function getOutcomeClass(outcome: string): string {
 
 
 const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Escape' && props.show) {
-    emit('close');
+  if (e.key === 'Escape') {
+    if (selectedSkill.value) {
+      // First cancel any selected skill
+      selectedSkill.value = null;
+    } else if (props.show) {
+      // Then close the workbench if no skill is selected
+      emit('close');
+    }
+  }
+};
+
+// Track mouse position for skill casting
+const handleMouseMove = (e: MouseEvent) => {
+  if (selectedSkill.value) {
+    mousePosition.value = {
+      x: e.clientX,
+      y: e.clientY
+    };
   }
 };
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown);
+  window.addEventListener('mousemove', handleMouseMove);
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener('mousemove', handleMouseMove);
   // Ensure interaction is unlocked when component unmounts
   if (props.show) {
     gameStore.interactionLocked = false;
@@ -268,7 +330,8 @@ watch(() => props.show, (newValue) => {
             v-for="(skill, index) in selectedToolSkills" 
             :key="index"
             class="skill-button"
-            :class="getOutcomeClass(skill.outcomes && skill.outcomes.length > 0 ? skill.outcomes[0] : '')"
+            :class="[getOutcomeClass(skill.outcomes && skill.outcomes.length > 0 ? skill.outcomes[0] : ''), 
+                    { 'skill-selected': selectedSkill === skill }]"
             @click="handleSkillClick(skill)"
           >
             <div class="skill-button-content">
@@ -316,6 +379,16 @@ watch(() => props.show, (newValue) => {
         </div>
       </div>
 
+    </div>
+    
+    <!-- Skill cursor that follows the mouse when a skill is selected -->
+    <div v-if="selectedSkill" 
+         class="skill-cursor"
+         :style="{ left: `${mousePosition.x}px`, top: `${mousePosition.y}px` }">
+      <div class="skill-cursor-icon">
+        <img :src="selectedToolItem?.imageUrl" class="tool-icon-image" :alt="selectedToolItem?.name" />
+      </div>
+      <div class="skill-cursor-name">{{ selectedSkill.name }}</div>
     </div>
   </div>
 </template>
@@ -618,5 +691,42 @@ watch(() => props.show, (newValue) => {
 
 .skill-button.outcome-custom {
   background-color: rgba(96, 125, 139, 0.8);
+}
+
+/* Selected skill styling */
+.skill-button.skill-selected {
+  transform: translateY(-2px);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+/* Skill cursor styling */
+.skill-cursor {
+  position: fixed;
+  pointer-events: none; /* Allow clicking through the cursor */
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  transform: translate(-50%, -50%); /* Center on cursor */
+  background-color: rgba(0, 0, 0, 0.7);
+  border-radius: 12px;
+  padding: 5px 10px;
+  border: 2px solid rgba(255, 215, 0, 0.8);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.skill-cursor-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-right: 8px;
+}
+
+.skill-cursor-name {
+  color: white;
+  font-size: 0.9em;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
 }
 </style>

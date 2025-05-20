@@ -32,11 +32,6 @@ export const useGameStore = defineStore('game', () => {
   const gameObjectSystem = new GameObjectSystem(objects);
   const itemSystem = new ItemSystem(items, socketSystem);
   const inventorySystem = new InventorySystem(inventories, socketSystem, userId);
-
-  // Set userId from localStorage if available
-  if (localStorage.getItem('userId')) {
-    userId.value = localStorage.getItem('userId')
-  }
   
   return {
     // State
@@ -63,6 +58,7 @@ export const useGameStore = defineStore('game', () => {
     listInventory: socketSystem.listInventory.bind(socketSystem),
     discardItem: socketSystem.discardItem.bind(socketSystem),
     moveItem: socketSystem.moveItem.bind(socketSystem),
+    useSkill: socketSystem.useSkill.bind(socketSystem),
     reconnect: socketSystem.reconnect.bind(socketSystem),
     cleanup: socketSystem.cleanup.bind(socketSystem),
 

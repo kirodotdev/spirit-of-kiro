@@ -65,20 +65,50 @@ export const generateItems = async function (itemCount: number): Promise<any> {
   return JSON.parse(resultContent);
 };
 
+// The only properties that the LLM should be seeing.
+function filterItemProperties(item) {
+  return {
+    name: item.name,
+    weight: item.weight,
+    value: item.value,
+    description: item.description,
+    color: item.color,
+    icon: item.icon,
+    materials: item.materials,
+    damage: item.damage,
+    skills: item.skills
+  }
+}
+
 // Use one item's skill one or more other items.
 export const useSkill = async function (toolItem: any, skillIndex: any, targetItems: any): Promise<any> {
   const prompt = {
     system: [
       {
         "text": `
-            You are going to simulate the results of using a crafting skill on one or more
-            items. The tool item is the source of the skill. Consider the tool item's
-            condition when simulating success or failure of the skill.
+            You are a master crafter who enjoys working on challenging tasks.
+            You are going to simulate the results of using
+            a crafting skill on one or more items. The tool item is the source of the
+            skill. Consider the tool item's condition when simulating success or
+            failure of the skill.
 
-            The skill may transform the tool item as well as the target item(s)
-            You will simulate the outcome of the skill.
-            Return your response with all the same properties as the original items
-            in JSON format between two <RESULT> tags.
+            The skill may transform the tool item as well as the target item(s).
+            You will simulate the outcome of the skill in a quirky but realistic manner,
+            as if you are the reasonable DM of a casual Dungeons and Dragons game among friends.
+            You may change the value of item properties, but you must maintain all the
+            same item keys.
+            
+            Your responses must be in JSON format between two <RESULT> tags,
+            with the following fields:
+
+            story: A tiny story about the skill being used on any targets, and the outcome
+            tool: The tool item, including any changes to the tool
+            outputItems[]: The targeted item list is transformed by the tool. Potential outcomes
+               are: a target item is changed by the skill, a target item is disassembled or
+               broken into multiple pieces by the skill, a target item is joined to another target
+               item by the skill, a target item is completely destroyed in the process of being 
+               consumed by the tool. The output items list should accurately reflect the results
+               of the skill use and the story.
           `
       },
       {
@@ -92,12 +122,16 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
         role: 'user',
         content: [
           {
-            text: `Tool Item: ${JSON.stringify(toolItem)} Tool Skill Index: ${skillIndex} Target Item(s): ${JSON.stringify(targetItems)} `
+            text: `Tool Item: ${JSON.stringify(filterItemProperties(toolItem))}
+                   Tool Skill Index: ${skillIndex}
+                   Target Item(s): ${JSON.stringify(targetItems.map(filterItemProperties))} `
           }
         ]
       }
     ]
   };
+
+  console.log('prompt', prompt);
 
   const result = await invoke(prompt);
   if (!result) return null;

@@ -59,4 +59,13 @@ export interface MoveItemMessage {
     };
 }
 
-export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | EquipItemMessage | MoveItemMessage;
+export interface UseSkillMessage {
+    type: 'use-skill';
+    body: {
+        toolId: string;
+        toolSkillIndex: number;
+        targetIds: string[];
+    };
+}
+
+export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | EquipItemMessage | MoveItemMessage | UseSkillMessage;
