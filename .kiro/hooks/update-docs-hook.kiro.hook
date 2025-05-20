@@ -1,0 +1,21 @@
+{
+  "name": "Update Documentation on Code Changes",
+  "description": "Monitors source code files and prompts for documentation updates in README.md or the docs folder when changes are detected",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "**/*.ts",
+      "**/*.vue",
+      "**/*.js",
+      "**/README.md",
+      "**/package.json",
+      "docker-compose.yml",
+      "launch.ts"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "I noticed changes to source code files in the AI Scrapyard project. Please review these changes (and the entire file) and update the relevant documentation in either:\n1. The main README.md file\n2. Any documentation files in component directories\n3. The item-images/README.md or server/README.md files\n\nConsider:\n- Adding or updating feature descriptions\n- Updating installation or usage instructions if APIs changed\n- Documenting new components, systems, or utilities\n- Ensuring code examples in documentation match current implementation\n- Updating architecture diagrams or explanations if the structure changed\n- Add example request / response bodies if you observe it in the code. Avoid extrapolation though. \n\nPlease make targeted updates to keep documentation in sync with the codebase."
+  }
+}
