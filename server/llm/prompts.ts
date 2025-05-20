@@ -35,8 +35,7 @@ export const generateItems = async function (itemCount: number): Promise<any> {
             skills[] - length 1 to 3 depending on item usefulness
               "name": Verb-like action performed by this item on another item, capitalized (e.g., "Absorb", "Deploy", "Smash")
               "description": Corny, adventurous, describes how the verb is performed on it's target
-              "targets": One of the following:
-                 "self", "other", "join two"
+              "targets": Number of targets. Either 0 (target's self), 1 (target's one other item), or 2 (joins two other items)
                   
           `
       },
