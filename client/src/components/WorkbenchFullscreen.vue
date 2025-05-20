@@ -14,7 +14,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'action', action: string, item?: any): void;
 }>();
 
 // State to track which item is being hovered
@@ -45,9 +44,7 @@ const showSkillsDropdown = ref(false);
 const skillsDropdownPosition = ref({ x: 0, y: 0 });
 
 // Computed property to check if the tools items array is empty
-const isToolGridEmpty = computed(() => {
-  return !props.toolsItems || props.toolsItems.length === 0;
-});
+const isToolGridEmpty = computed(() => !props.toolsItems?.length);
 
 // Computed property to get skills from the selected tool item
 const selectedToolSkills = computed(() => {
@@ -56,6 +53,18 @@ const selectedToolSkills = computed(() => {
   }
   return selectedToolItem.value.skills;
 });
+
+// Position the skills dropdown based on the event target
+const positionSkillsDropdown = (event: MouseEvent) => {
+  const target = event.currentTarget as HTMLElement;
+  if (target) {
+    const rect = target.getBoundingClientRect();
+    skillsDropdownPosition.value = {
+      x: rect.left + rect.width / 2,
+      y: rect.bottom + 10
+    };
+  }
+};
 
 const handleItemClick = (item: any, sourceArea: 'tools' | 'working', event?: MouseEvent) => {
   // Clear the hovered item preview immediately when an item is clicked
@@ -68,15 +77,7 @@ const handleItemClick = (item: any, sourceArea: 'tools' | 'working', event?: Mou
       showSkillsDropdown.value = !showSkillsDropdown.value;
       
       if (showSkillsDropdown.value && event) {
-        // Position the dropdown near the clicked tool
-        const target = event.currentTarget as HTMLElement;
-        if (target) {
-          const rect = target.getBoundingClientRect();
-          skillsDropdownPosition.value = {
-            x: rect.left + rect.width / 2,
-            y: rect.bottom + 10
-          };
-        }
+        positionSkillsDropdown(event);
       }
     } else {
       // Select the new tool and show its skills
@@ -87,15 +88,7 @@ const handleItemClick = (item: any, sourceArea: 'tools' | 'working', event?: Mou
       showSkillsDropdown.value = true;
       
       if (event) {
-        // Position the dropdown near the clicked tool
-        const target = event.currentTarget as HTMLElement;
-        if (target) {
-          const rect = target.getBoundingClientRect();
-          skillsDropdownPosition.value = {
-            x: rect.left + rect.width / 2,
-            y: rect.bottom + 10
-          };
-        }
+        positionSkillsDropdown(event);
       }
     }
   } else {
@@ -230,22 +223,14 @@ const handleDragStart = (event: DragEvent, item: any, sourceArea: 'tools' | 'wor
   hoveredItem.value = null;
 };
 
-const handleDragOver = (event: DragEvent, targetArea: 'tools' | 'working') => {
+const handleDragEvent = (event: DragEvent, targetArea: 'tools' | 'working') => {
   // Prevent default to allow drop
   event.preventDefault();
   
-  // Set the drop effect
-  if (event.dataTransfer) {
+  // Set the drop effect if this is a dragover event
+  if (event.type === 'dragover' && event.dataTransfer) {
     event.dataTransfer.dropEffect = 'move';
   }
-  
-  // Update the drop target for visual feedback
-  dropTarget.value = targetArea;
-};
-
-const handleDragEnter = (event: DragEvent, targetArea: 'tools' | 'working') => {
-  // Prevent default to allow drop
-  event.preventDefault();
   
   // Update the drop target for visual feedback
   dropTarget.value = targetArea;
@@ -381,8 +366,8 @@ watch(() => props.show, (newValue) => {
       />
       
       <div class="tool-area" 
-           @dragover="handleDragOver($event, 'tools')"
-           @dragenter="handleDragEnter($event, 'tools')"
+           @dragover="handleDragEvent($event, 'tools')"
+           @dragenter="handleDragEvent($event, 'tools')"
            @dragleave="handleDragLeave"
            @drop="handleDrop($event, 'tools')"
            :class="{ 'drop-target': dropTarget === 'tools' }">
@@ -445,8 +430,8 @@ watch(() => props.show, (newValue) => {
       
       <!-- Working Area -->
       <div class="working-area"
-           @dragover="handleDragOver($event, 'working')"
-           @dragenter="handleDragEnter($event, 'working')"
+           @dragover="handleDragEvent($event, 'working')"
+           @dragenter="handleDragEvent($event, 'working')"
            @dragleave="handleDragLeave"
            @drop="handleDrop($event, 'working')"
            :class="{ 'drop-target': dropTarget === 'working' }">
@@ -674,8 +659,6 @@ watch(() => props.show, (newValue) => {
 
 /* Selected tool styling */
 .inventory-slot.selected {
-  /*outline: 3px solid rgba(255, 215, 0, 0.8);
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);*/
   z-index: 15;
 }
 
@@ -776,12 +759,7 @@ watch(() => props.show, (newValue) => {
   line-height: 1.3;
 }
 
-/* Selected skill styling */
-.skill-button.skill-selected {
-  transform: translateY(-2px);
-  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-  border: 2px solid rgba(255, 255, 255, 0.8);
-}
+/* Skill cursor styling */
 
 /* Skill cursor styling */
 .skill-cursor {
