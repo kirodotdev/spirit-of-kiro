@@ -65,46 +65,39 @@ export const generateItems = async function (itemCount: number): Promise<any> {
   return JSON.parse(resultContent);
 };
 
-// Disassemble an item into some components.
-export const disassembleItem = async function (persona: any, item: any): Promise<any> {
-  const prompt = `\n\nHuman:
+// Use one item's skill one or more other items.
+export const useSkill = async function (toolItem: any, skillIndex: any, targetItems: any): Promise<any> {
+  const prompt = {
+    system: [
+      {
+        "text": `
+            You are going to simulate the results of using a crafting skill on one or more
+            items. The tool item is the source of the skill. Consider the tool item's
+            condition when simulating success or failure of the skill.
 
-    I am a scrapyard mechanic. The following document describes my skills, available tools:
-
-    ${JSON.stringify(persona)}
-
-    I plan to disassemble the following item in order to salvage it's components:
-
-    ${JSON.stringify(item)}
-
-    Write a list of parts in this item.
-    Write a list of steps for disassembling the item.
-    Then output in JSON format between two <RESULT> tags, with the following fields:
-
-    story - A short paragraph about how I disassemble the item. Consider my skills and available tools.
-            Think step by step about how to disassemble the item. If my tools don't allow me to disassemble
-            the item then I will fail to disassemble. I may also fail or break parts if my skills are bad,
-            or I do not have the appropriate tool.
-    persona-improvements
-    persona-improvements[].skill - A skill to approve
-    persona-improvements[].improvement - Number between 1 and 100 representing how much success was had using the skill
-    items - A list of components I have salvaged from the item. Attempt to break the item into up to five parts.
-            Parts I am unable to remove should stay on the original item.
-    items[].name - Name for the component. Microscopic components should be described in atomic or subatomic terms.
-    items[].description - A description of the condition of the component, including details of damage.
-                          Do not mention value or my skills. Prefer to refer to the item using "an" instead of "the"
-    items[].weight - weight of item
-    items[].value - integer
-    items[].icon - single word name for this
-    items[].color - human readable
-    items[].materials - array of material types
-    items[].damage - short description of any damage to the component
-    items[].equipmentSlots[] - An array of equipment slots this item can be equipped to, including effects when equipped.
-                               Each entry should be an object with "slot" and "effects" properties. Valid slots are "head"
-                               "hands", "body", "feet", and "toolbelt". Effects should be interesting, slightly corny statements
-                               about how the character looks, feels, or behaves when equipped.
-
-    Assistant:\n`;
+            The skill may transform the tool item as well as the target item(s)
+            You will simulate the outcome of the skill.
+            Return your response with all the same properties as the original items
+            in JSON format between two <RESULT> tags.
+          `
+      },
+      {
+        "cachePoint": {
+          "type": "default"
+        }
+      }
+    ],
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            text: `Tool Item: ${JSON.stringify(toolItem)} Tool Skill Index: ${skillIndex} Target Item(s): ${JSON.stringify(targetItems)} `
+          }
+        ]
+      }
+    ]
+  };
 
   const result = await invoke(prompt);
   if (!result) return null;
