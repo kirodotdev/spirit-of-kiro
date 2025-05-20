@@ -87,30 +87,53 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
     system: [
       {
         "text": `
-            You are a master crafter who enjoys working on challenging tasks.
-            You are going to simulate the results of using
-            a crafting skill on one or more items. The tool item is the source of the
-            skill. Consider the tool item's condition when simulating success or
-            failure of the skill.
+            You are the reasonable DM of a casual dungeons and dragons game among friends.
+            You are simulating the results of using a crafting skill.
 
-            The skill may transform the tool item as well as the target item(s).
-            You will simulate the outcome of the skill in a quirky but realistic manner,
-            as if you are the reasonable DM of a casual Dungeons and Dragons game among friends.
-            You may change the value of item properties, but you must maintain all the
-            same item keys. ID's are immutable.
+            The tool item is the source of the skill. Consider the skill and the tool item's
+            condition. Then think about what type of changes the skill could produce.
+            The skill may produce changes to the tool item (such as durability loss)
+            as well as changes to any given target items.
+
+            Skills may be destructive or deconstructive. In this case they may destroy tools
+            or target items to create new items, for example a destructive "Smash" skill may
+            break an item into new pieces that represent broken parts of the item. A deconstructive
+            skill like "Unscrew" skill might cleanly detach a component. A deconstructive
+            skill like "Cut" might cut off part of an item. Prioritize removing entire named
+            components of the target item, for example if smashing a "clock" it might produce
+            "bent hands", "clock springs", and "clock face".
+
+            Skills may join one item to another item, for example a "Glue" skill or "Screw"
+            skill may attach two items to each other, yielding a single new item. Attempt
+            to produce a coherent new item. For example it attaching a "spring" to a "board"
+            that might produce a "mouse trap".
+
+            Skills may change the properties of tools or target items, for example "Drill"
+            might add a hole to an item, "Paint" might change its color,
+            "Enchant" might infused it with magic.
+
+            Skills may reveal new items, for example an "Open" skill might reveal a new item
+            that was inside of an existing item, or a "Find" or "Identify" skill might
+            discover some new aspect of a target object.
+
+            You may change the values of any item property (except ID) if that seems realistic,
+            but you must keep the same item keys. ID's are immutable and may not be reused for
+            new items. New items get their own special ID "new-item".
             
-            Your responses must be in JSON format between two <RESULT> tags,
-            with the following fields:
+            You may think out loud, but responses must be in JSON format between
+            two <RESULT> tags, with the following fields:
 
             story: A tiny story about the skill being used on any targets, and the outcome
             tool: The tool item, including any changes to the tool
-            outputItems[]: The targeted item list is transformed by the tool. Potential outcomes
+            outputItems[]: The targeted item list is transformed into the outputItems list.
+          `
+
+          /* Potential outcomes
                are: a target item is changed by the skill, a target item is disassembled or
-               broken into multiple pieces by the skill, a target item is joined to another target
+               broken into multiple unique new descriptive components, a target item is joined to another target
                item by the skill, a target item is completely destroyed in the process of being 
                consumed by the tool. The output items list should accurately reflect the results
-               of the skill use and the story.
-          `
+               of the skill use and the story.*/
       },
       {
         "cachePoint": {
@@ -132,9 +155,10 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
     ]
   };
 
-  console.log('prompt', prompt);
+  
 
   const result = await invoke(prompt);
+  console.log('result', result);
   if (!result) return null;
 
   const resultMatch = result.match(/<RESULT>([\s\S]*?)<\/RESULT>/);

@@ -38,6 +38,12 @@ const selectedSkill = ref<any>(null);
 // State to track mouse position for skill casting
 const mousePosition = ref({ x: 0, y: 0 });
 
+// State to track if skills dropdown is visible
+const showSkillsDropdown = ref(false);
+
+// State to track the position of the skills dropdown
+const skillsDropdownPosition = ref({ x: 0, y: 0 });
+
 // Computed property to check if the tools items array is empty
 const isToolGridEmpty = computed(() => {
   return !props.toolsItems || props.toolsItems.length === 0;
@@ -51,22 +57,46 @@ const selectedToolSkills = computed(() => {
   return selectedToolItem.value.skills;
 });
 
-const handleItemClick = (item: any, sourceArea: 'tools' | 'working') => {
+const handleItemClick = (item: any, sourceArea: 'tools' | 'working', event?: MouseEvent) => {
   // Clear the hovered item preview immediately when an item is clicked
   hoveredItem.value = null;
   
   if (sourceArea === 'tools') {
-    // If clicking on a tool item, select/deselect it
+    // If clicking on a tool item, show/hide skills dropdown
     if (selectedToolItem.value === item) {
-      // If already selected, deselect it
-      selectedToolItem.value = null;
-      // Also clear any selected skill
-      selectedSkill.value = null;
+      // Toggle dropdown visibility
+      showSkillsDropdown.value = !showSkillsDropdown.value;
+      
+      if (showSkillsDropdown.value && event) {
+        // Position the dropdown near the clicked tool
+        const target = event.currentTarget as HTMLElement;
+        if (target) {
+          const rect = target.getBoundingClientRect();
+          skillsDropdownPosition.value = {
+            x: rect.left + rect.width / 2,
+            y: rect.bottom + 10
+          };
+        }
+      }
     } else {
-      // Otherwise select the new tool
+      // Select the new tool and show its skills
       selectedToolItem.value = item;
       // Clear any selected skill when changing tools
       selectedSkill.value = null;
+      // Show the dropdown
+      showSkillsDropdown.value = true;
+      
+      if (event) {
+        // Position the dropdown near the clicked tool
+        const target = event.currentTarget as HTMLElement;
+        if (target) {
+          const rect = target.getBoundingClientRect();
+          skillsDropdownPosition.value = {
+            x: rect.left + rect.width / 2,
+            y: rect.bottom + 10
+          };
+        }
+      }
     }
   } else {
     // If a skill is selected, cast it on the working item
@@ -101,7 +131,7 @@ const handleItemClick = (item: any, sourceArea: 'tools' | 'working') => {
 };
 
 // Handle skill button click
-const handleSkillClick = (skill: any) => {
+const handleSkillClick = (skill: any, event: MouseEvent) => {
   // If a skill is already selected, deselect it
   if (selectedSkill.value === skill) {
     selectedSkill.value = null;
@@ -110,6 +140,15 @@ const handleSkillClick = (skill: any) => {
   
   // Select the skill for casting
   selectedSkill.value = skill;
+  
+  // Update the mouse position when a skill is clicked
+  mousePosition.value = {
+    x: event.clientX,
+    y: event.clientY
+  };
+  
+  // Hide the dropdown after selecting a skill
+  showSkillsDropdown.value = false;
 };
 
 // Handle casting a selected skill on a working item
@@ -242,30 +281,16 @@ const handleDrop = (event: DragEvent, targetArea: 'tools' | 'working') => {
   draggedItem.value = null;
 };
 
-// Function to get outcome class for skill buttons
-function getOutcomeClass(outcome: string): string {
-  const knownOutcomes = [
-    'split target',
-    'destroy self',
-    'transform self',
-    'consume target',
-    'transform target'
-  ];
-  
-  return knownOutcomes.includes(outcome?.toLowerCase() || '') 
-    ? `outcome-${outcome.toLowerCase().replace(' ', '-')}` 
-    : 'outcome-custom';
-}
-
-
-
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Escape') {
     if (selectedSkill.value) {
       // First cancel any selected skill
       selectedSkill.value = null;
+    } else if (showSkillsDropdown.value) {
+      // Close the skills dropdown if it's open
+      showSkillsDropdown.value = false;
     } else if (props.show) {
-      // Then close the workbench if no skill is selected
+      // Then close the workbench if no skill is selected and dropdown is closed
       emit('close');
     }
   }
@@ -281,14 +306,46 @@ const handleMouseMove = (e: MouseEvent) => {
   }
 };
 
+// Close skills dropdown when clicking outside
+const handleClickOutside = (e: MouseEvent) => {
+  if (showSkillsDropdown.value) {
+    // Check if click is outside the dropdown and not on the selected tool
+    const dropdown = document.querySelector('.skills-dropdown');
+    const toolItems = document.querySelectorAll('.inventory-slot.selected');
+    
+    let clickedOnTool = false;
+    toolItems.forEach(tool => {
+      if (tool.contains(e.target as Node)) {
+        clickedOnTool = true;
+      }
+    });
+    
+    if (dropdown && !dropdown.contains(e.target as Node) && !clickedOnTool) {
+      showSkillsDropdown.value = false;
+    }
+  }
+};
+
+// Handle right-click to cancel selected skill
+const handleContextMenu = (e: MouseEvent) => {
+  if (selectedSkill.value) {
+    e.preventDefault(); // Prevent the default context menu
+    selectedSkill.value = null;
+  }
+};
+
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown);
   window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('click', handleClickOutside);
+  window.addEventListener('contextmenu', handleContextMenu);
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown);
   window.removeEventListener('mousemove', handleMouseMove);
+  window.removeEventListener('click', handleClickOutside);
+  window.removeEventListener('contextmenu', handleContextMenu);
   // Ensure interaction is unlocked when component unmounts
   if (props.show) {
     gameStore.interactionLocked = false;
@@ -335,7 +392,7 @@ watch(() => props.show, (newValue) => {
             :class="{ 'has-item': item, 'selected': selectedToolItem === item }" 
             v-for="(item, index) in toolsItems" 
             :key="item ? item.id : 'tool-'+index"
-            @click="item && handleItemClick(item, 'tools')"
+            @click="item && handleItemClick(item, 'tools', $event)"
             @mouseenter="item && handleItemMouseEnter($event, item)"
             @mouseleave="handleItemMouseLeave"
             :draggable="!!item"
@@ -359,16 +416,19 @@ watch(() => props.show, (newValue) => {
         </div>
       </div>
       
-      <!-- Skills Area - Show when a tool is selected -->
-      <div v-if="selectedToolItem && selectedToolSkills.length > 0" class="skills-area">
+      <!-- Skills Dropdown - Show when a tool is selected and dropdown is toggled -->
+      <div v-if="showSkillsDropdown && selectedToolItem && selectedToolSkills.length > 0" 
+           class="skills-dropdown"
+           :style="{
+             left: `${skillsDropdownPosition.x}px`,
+             top: `${skillsDropdownPosition.y}px`
+           }">
         <div class="skills-container">
           <button 
             v-for="(skill, index) in selectedToolSkills" 
             :key="index"
             class="skill-button"
-            :class="[getOutcomeClass(skill.outcomes && skill.outcomes.length > 0 ? skill.outcomes[0] : ''), 
-                    { 'skill-selected': selectedSkill === skill }]"
-            @click="handleSkillClick(skill)"
+            @click="handleSkillClick(skill, $event)"
           >
             <div class="skill-button-content">
               <div class="skill-icon">
@@ -614,32 +674,44 @@ watch(() => props.show, (newValue) => {
 
 /* Selected tool styling */
 .inventory-slot.selected {
-  outline: 3px solid rgba(255, 215, 0, 0.8);
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  /*outline: 3px solid rgba(255, 215, 0, 0.8);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);*/
   z-index: 15;
 }
 
-/* Skills area styling */
-.skills-area {
-  position: absolute;
-  width: 80%;
-  top: 48%;
+/* Skills dropdown styling */
+.skills-dropdown {
+  position: fixed;
+  transform: translateX(-50%); /* Center horizontally relative to position */
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 20;
+  z-index: 100;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+
+.skills-dropdown:before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid rgba(0, 0, 0, 0.7);
 }
 
 .skills-container {
   display: flex;
-  flex-direction: row;
-  gap: 10px;
-  width: 100%;
-  max-height: 200px;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 300px;
+  max-height: 300px;
   overflow-y: auto;
-  padding: 5px;
-  background-color: rgba(0, 0, 0, 0.3);
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.7);
   border-radius: 8px;
+  border: 1px solid rgba(113, 67, 31, 0.8);
 }
 
 .skill-button {
@@ -704,31 +776,6 @@ watch(() => props.show, (newValue) => {
   line-height: 1.3;
 }
 
-/* Skill button outcome styling */
-.skill-button.outcome-split-target {
-  background-color: rgba(33, 150, 243, 0.8);
-}
-
-.skill-button.outcome-destroy-self {
-  background-color: rgba(244, 67, 54, 0.8);
-}
-
-.skill-button.outcome-transform-self {
-  background-color: rgba(156, 39, 176, 0.8);
-}
-
-.skill-button.outcome-consume-target {
-  background-color: rgba(255, 152, 0, 0.8);
-}
-
-.skill-button.outcome-transform-target {
-  background-color: rgba(76, 175, 80, 0.8);
-}
-
-.skill-button.outcome-custom {
-  background-color: rgba(96, 125, 139, 0.8);
-}
-
 /* Selected skill styling */
 .skill-button.skill-selected {
   transform: translateY(-2px);
@@ -747,8 +794,6 @@ watch(() => props.show, (newValue) => {
   background-color: rgba(0, 0, 0, 0.7);
   border-radius: 12px;
   padding: 5px 10px;
-  border: 2px solid rgba(255, 215, 0, 0.8);
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
 }
 
 .skill-cursor-icon {
