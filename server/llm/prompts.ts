@@ -68,6 +68,7 @@ export const generateItems = async function (itemCount: number): Promise<any> {
 // The only properties that the LLM should be seeing.
 function filterItemProperties(item) {
   return {
+    id: item.id,
     name: item.name,
     weight: item.weight,
     value: item.value,
@@ -96,7 +97,7 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
             You will simulate the outcome of the skill in a quirky but realistic manner,
             as if you are the reasonable DM of a casual Dungeons and Dragons game among friends.
             You may change the value of item properties, but you must maintain all the
-            same item keys.
+            same item keys. ID's are immutable.
             
             Your responses must be in JSON format between two <RESULT> tags,
             with the following fields:

@@ -20,6 +20,9 @@ const emit = defineEmits<{
 // State to track which item is being hovered
 const hoveredItem = ref<any>(null);
 
+// State to track the position of the hovered item
+const hoveredItemPosition = ref({ x: 0, y: 0 });
+
 // State to track the currently dragged item
 const draggedItem = ref<any>(null);
 
@@ -134,8 +137,37 @@ const handleCastSkill = (targetItem: any) => {
   selectedSkill.value = null;
 };
 
-const handleItemMouseEnter = (item: any) => {
+const handleItemMouseEnter = (event: MouseEvent, item: any) => {
   hoveredItem.value = item;
+  
+  // Capture the position of the hovered item
+  const target = event.currentTarget as HTMLElement;
+  if (target) {
+    const rect = target.getBoundingClientRect();
+    const tooltipWidth = 600; // Approximate width of tooltip
+
+    hoveredItemPosition.value = {
+      x: rect.left - (tooltipWidth / 2) - 10, // Centered under the item
+      y: rect.bottom + 10 // Align with the bottom of the item
+    };
+    
+    // Check if tooltip would go off-screen to the right
+    if (hoveredItemPosition.value.x + tooltipWidth > window.innerWidth) {
+      hoveredItemPosition.value.x = window.innerWidth - tooltipWidth - 10;
+    }
+
+    // Check if tooltip would go off-screen to the left
+    if (hoveredItemPosition.value.x < 0) {
+      hoveredItemPosition.value.x = 10;
+    }
+    
+    // Check if tooltip would go off-screen at the bottom
+    const tooltipHeight = 400; // Approximate height of tooltip
+    if (hoveredItemPosition.value.y + tooltipHeight > window.innerHeight) {
+      // Adjust y position to keep tooltip on screen
+      hoveredItemPosition.value.y = rect.top - tooltipHeight - 10;
+    }
+  }
 };
 
 const handleItemMouseLeave = () => {
@@ -280,11 +312,15 @@ watch(() => props.show, (newValue) => {
       
       <!-- Item Preview Component -->
       <ItemPreview 
+        v-if="hoveredItem"
         :item="hoveredItem"
-        position="absolute"
-        bottom="25%"
-        left="50%"
-        transform="translateX(-50%)"
+        position="fixed"
+        :style="{
+          left: hoveredItemPosition.x + 'px',
+          top: hoveredItemPosition.y + 'px',
+          maxHeight: '80vh',
+          overflowY: 'auto'
+        }"
       />
       
       <div class="tool-area" 
@@ -300,7 +336,7 @@ watch(() => props.show, (newValue) => {
             v-for="(item, index) in toolsItems" 
             :key="item ? item.id : 'tool-'+index"
             @click="item && handleItemClick(item, 'tools')"
-            @mouseenter="item && handleItemMouseEnter(item)"
+            @mouseenter="item && handleItemMouseEnter($event, item)"
             @mouseleave="handleItemMouseLeave"
             :draggable="!!item"
             @dragstart="item && handleDragStart($event, item, 'tools')"
@@ -361,7 +397,7 @@ watch(() => props.show, (newValue) => {
             v-for="(item, index) in workingItems" 
             :key="item ? item.id : 'working-'+index"
             @click="item && handleItemClick(item, 'working')"
-            @mouseenter="item && handleItemMouseEnter(item)"
+            @mouseenter="item && handleItemMouseEnter($event, item)"
             @mouseleave="handleItemMouseLeave"
             :draggable="!!item"
             @dragstart="item && handleDragStart($event, item, 'working')"
