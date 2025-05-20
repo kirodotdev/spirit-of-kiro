@@ -11,13 +11,17 @@ const isLoading = ref(true);
 const resultData = ref<any>(null);
 
 function closeDialog() {
+  // Prevent closing the dialog while loading
+  if (isLoading.value) {
+    return;
+  }
   visible.value = false;
   store.interactionLocked = false;
 }
 
 // Function to handle keydown events
 function handleKeyDown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && visible.value) {
+  if (event.key === 'Escape' && visible.value && !isLoading.value) {
     closeDialog();
   }
 }
@@ -61,7 +65,7 @@ onUnmounted(() => {
     <div class="skill-result-dialog">
       <div class="dialog-header">
         <h2>Skill Result</h2>
-        <button class="close-button" @click="closeDialog">×</button>
+        <button class="close-button" :disabled="isLoading" @click="closeDialog">×</button>
       </div>
       
       <!-- Loading state -->
@@ -149,6 +153,11 @@ onUnmounted(() => {
 
 .close-button:hover {
   color: white;
+}
+
+.close-button:disabled {
+  color: #555;
+  cursor: not-allowed;
 }
 
 .dialog-content {

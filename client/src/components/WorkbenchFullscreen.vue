@@ -228,6 +228,12 @@ const handleDragStart = (event: DragEvent, item: any, sourceArea: 'tools' | 'wor
   
   // Hide the preview during drag
   hoveredItem.value = null;
+  
+  // Close the skills dropdown when starting to drag
+  showSkillsDropdown.value = false;
+  
+  // Clear any selected skill
+  selectedSkill.value = null;
 };
 
 const handleDragEvent = (event: DragEvent, targetArea: 'tools' | 'working') => {

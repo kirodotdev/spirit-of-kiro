@@ -126,14 +126,8 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
             story: A tiny story about the skill being used on any targets, and the outcome
             tool: The tool item, including any changes to the tool
             outputItems[]: The targeted item list is transformed into the outputItems list.
+            removedItemIds[]: List the ID's of items that were removed or replaced by new items.
           `
-
-          /* Potential outcomes
-               are: a target item is changed by the skill, a target item is disassembled or
-               broken into multiple unique new descriptive components, a target item is joined to another target
-               item by the skill, a target item is completely destroyed in the process of being 
-               consumed by the tool. The output items list should accurately reflect the results
-               of the skill use and the story.*/
       },
       {
         "cachePoint": {
