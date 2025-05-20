@@ -398,7 +398,7 @@ watch(() => props.show, (newValue) => {
   position: absolute;
   width: 60%;
   height: 11%;
-  bottom: 30%;
+  bottom: 29%;
   display: flex;
   justify-content: center;
   align-items: center;

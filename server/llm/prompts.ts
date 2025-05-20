@@ -29,16 +29,14 @@ export const generateItems = async function (itemCount: number): Promise<any> {
             value: A positive integer, representing its in-world value.
             description: 2–3 flavorful sentences about the item's current state and past usage
             color: human readable
-            icon: short three word description of material, adjective, and item
+            icon: short description of item appearance
             materials: array of material types (e.g., ["Ceramic", "Metal"])
             damage: A short description of damaged or missing parts
-            skills[] - length 2-3
-              "name": Verb-like action performed by this item, capitalized (e.g., "Absorb", "Deploy", "Smash")
-              "description": Corny, adventurous, describes how the verb is performed
-              "outcomes"[]: One or more results of the skill, based on verb and description. Enum:
-                "split target" mutually exclusive with "transform target"
-                "destroy self" mutually exclusive with "transform self"
-                "consume target" mutually exclusive with "transform target"
+            skills[] - length 1 to 3 depending on item usefulness
+              "name": Verb-like action performed by this item on another item, capitalized (e.g., "Absorb", "Deploy", "Smash")
+              "description": Corny, adventurous, describes how the verb is performed on it's target
+              "targets": One of the following:
+                 "self", "other", "join two"
                   
           `
       },
