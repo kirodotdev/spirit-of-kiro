@@ -15,6 +15,7 @@
     <ItemDialog />
     <SellDialog />
     <DiscardDialog />
+    <SkillResultDialog />
   </div>
 </template>
 
@@ -27,6 +28,7 @@ import HintDisplay from '../components/HintDisplay.vue'
 import ItemDialog from '../components/ItemDialog.vue'
 import SellDialog from '../components/SellDialog.vue'
 import DiscardDialog from '../components/DiscardDialog.vue'
+import SkillResultDialog from '../components/SkillResultDialog.vue'
 import { setupGameObjects } from '../utils/init-world'
 import { storeToRefs } from 'pinia'
 

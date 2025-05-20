@@ -158,6 +158,13 @@ const handleCastSkill = (targetItem: any) => {
     return;
   }
   
+  // Emit the skill-invoked event before using the skill
+  gameStore.emitEvent('skill-invoked', {
+    skill: selectedSkill.value,
+    tool: selectedToolItem.value,
+    target: targetItem
+  });
+  
   // Use the skill on the target item
   gameStore.useSkill(
     selectedToolItem.value.id,
