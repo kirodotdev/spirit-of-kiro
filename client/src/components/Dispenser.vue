@@ -21,9 +21,45 @@ const isPulling = ref(false);
 const isShaking = ref(false);
 const gameStore = useGameStore();
 
+// Progress bar variables
+const showProgressBar = ref(false);
+const progress = ref(0);
+let progressInterval: number | null = null;
+
+// Function to animate the progress over 20 seconds
+function startProgressAnimation() {
+  // Reset progress
+  progress.value = 0;
+  showProgressBar.value = true;
+  
+  // Clear any existing interval
+  if (progressInterval) {
+    clearInterval(progressInterval);
+  }
+  
+  // Set up the interval to update progress
+  // 20 seconds = 20000ms
+  // We'll update every 100ms, so 20000/100 = 200 steps
+  // Each step increases progress by 0.5%
+  progressInterval = setInterval(() => {
+    progress.value += 0.5;
+    
+    // If we've reached 100%, clear the interval
+    if (progress.value >= 100) {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+        progressInterval = null;
+      }
+    }
+  }, 100);
+}
+
 function handleLeverPulled() {
   // Start shaking when lever is pulled
   isShaking.value = true;
+  
+  // Start the progress animation
+  startProgressAnimation();
 }
 
 function spawnItemGameObject(data: any) {
@@ -75,6 +111,15 @@ function spawnItemGameObject(data: any) {
   
   // Stop the shake animation after the item is spawned
   isShaking.value = false;
+  
+  // Hide the progress bar when the item is spawned
+  showProgressBar.value = false;
+  
+  // Clear any existing interval
+  if (progressInterval) {
+    clearInterval(progressInterval);
+    progressInterval = null;
+  }
 }
 
 let leverPulledListenerId: string;
@@ -88,6 +133,12 @@ onMounted(() => {
 onUnmounted(() => {
   gameStore.removeEventListener('lever-pulled', leverPulledListenerId);
   gameStore.removeEventListener('pulled-item', pulledItemListenerId);
+  
+  // Clean up interval if component is unmounted
+  if (progressInterval) {
+    clearInterval(progressInterval);
+    progressInterval = null;
+  }
 });
 </script>
 
@@ -110,6 +161,18 @@ onUnmounted(() => {
         left: `${-tileSize * .4}px`
       }"
     />
+    <!-- Progress bar -->
+    <div v-if="showProgressBar" class="progress-bar-container" :style="{
+      position: 'absolute',
+      top: `${-tileSize * 1.2}px`,
+      left: `${tileSize * .1}px`,
+      width: `${width * tileSize * .9}px`,
+      zIndex: 10
+    }">
+      <div class="progress-bar-background">
+        <div class="progress-bar-fill" :style="{ width: `${progress}%` }"></div>
+      </div>
+    </div>
     <img 
       :src="dispenserImage" 
       :width="width * tileSize" 
@@ -150,5 +213,28 @@ onUnmounted(() => {
   0%, 100% { transform: rotate(0deg); }
   10%, 30%, 50%, 70%, 90% { transform: rotate(-2deg); }
   20%, 40%, 60%, 80% { transform: rotate(2deg); }
+}
+
+/* Progress bar styles */
+.progress-bar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.progress-bar-background {
+  width: 100%;
+  height: 8px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: #4CAF50; /* Green color */
+  border-radius: 4px;
+  transition: width 0.1s linear;
 }
 </style>
