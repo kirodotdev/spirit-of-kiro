@@ -40,7 +40,7 @@ onMounted(() => {
   });
   
   // Listen for skill-result event to show result state
-  skillResultListenerId = store.addEventListener('skill-result', (data) => {
+  skillResultListenerId = store.addEventListener('skill-results', (data) => {
     console.log('skill-result data', data);
     resultData.value = data;
     isLoading.value = false;
@@ -52,7 +52,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   store.removeEventListener('skill-invoked', skillInvokedListenerId);
-  store.removeEventListener('skill-result', skillResultListenerId);
+  store.removeEventListener('skill-results', skillResultListenerId);
   window.removeEventListener('keydown', handleKeyDown);
   if (visible.value) {
     store.interactionLocked = false;

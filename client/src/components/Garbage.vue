@@ -41,7 +41,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   // Clean up event listener
-  gameStore.removeEventListener(interactionListenerId);
+  gameStore.removeEventListener('intent-to-discard-item', interactionListenerId);
 });
 </script>
 

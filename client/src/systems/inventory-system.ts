@@ -22,6 +22,7 @@ export class InventorySystem {
     // Subscribe to inventory events
     this.eventListenerIds.push(this.socketSystem.addEventListener('inventory-items:*', this.handleInventoryItems.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('item-moved', this.handleItemMoved.bind(this)))
+    this.eventListenerIds.push(this.socketSystem.addEventListener('skill-results', this.handleSkillResults.bind(this)))
   }
 
   /**
@@ -187,6 +188,48 @@ export class InventorySystem {
     this.inventoryForItem.set(data.itemId, targetInventoryName)
 
     // Update the ref
+    this.inventories.value = newInventories
+  }
+
+  /**
+   * Handle skill results events
+   * @param data The skill results data containing removedItemIds
+   */
+  private handleSkillResults(data: any) {
+    // Check if removedItemIds exists and is an array
+    if (!data.removedItemIds || !Array.isArray(data.removedItemIds)) {
+      return
+    }
+
+    // Create a new Map to maintain reactivity
+    const newInventories = new Map(this.inventories.value)
+
+    // For each removed item ID
+    data.removedItemIds.forEach((itemId: string) => {
+      // Find which inventory contains the item using the inventoryForItem map
+      const inventoryName = this.inventoryForItem.get(itemId)
+      
+      if (inventoryName && newInventories.has(inventoryName)) {
+        // Get the inventory array
+        const inventory = [...newInventories.get(inventoryName) || []]
+        
+        // Find the item in the inventory
+        const itemIndex = inventory.indexOf(itemId)
+        
+        if (itemIndex !== -1) {
+          // Remove the item from that inventory
+          inventory.splice(itemIndex, 1)
+          
+          // Update the inventory in the map
+          newInventories.set(inventoryName, inventory)
+        }
+        
+        // Remove the item from the inventoryForItem map
+        this.inventoryForItem.delete(itemId)
+      }
+    })
+
+    // Update the ref to maintain reactivity
     this.inventories.value = newInventories
   }
 

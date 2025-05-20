@@ -1,6 +1,7 @@
 import { ConnectionState } from '../types';
-import { getItemById, locationForItemId } from '../state/item-store';
+import { getItemById, locationForItemId, createItem, moveItemLocation, updateItem } from '../state/item-store';
 import { useSkill } from '../llm/prompts';
+import { ITEM_IMAGES_SERVICE_CONFIG } from '../config';
 
 interface UseSkillMessage {
   type: 'use-skill';
@@ -115,16 +116,77 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
     // Use the skill
     const result = await useSkill(toolItem, toolSkillIndex, targetItems);
 
-    // Result has the following format:
-    // story
-    // tool - The tool item, with updates that should be updated in the DB
-    // outputItems[] - If the item has an ID then that item should be updated in the DB
-    //                 If the item's id is "new-item" then we must insert a new item in the DB
-    // removedItemIds[] - Removed items that should be recycled back to the junk dimension
+    if (!result) {
+      return {
+        type: 'error',
+        body: 'Failed to use skill: No result from LLM'
+      };
+    }
 
+    // Process the updated tool item
+    const updatedTool = result.tool;
+    if (updatedTool && updatedTool.id === toolId) {
+      // Update the tool item in the database
+      await updateItem(toolId, updatedTool);
+    }
+
+    // Process output items
+    const processedItems = [];
+    if (result.outputItems && Array.isArray(result.outputItems)) {
+      for (const item of result.outputItems) {
+        if (item.id === 'new-item') {
+          // Create a new item
+          const id = crypto.randomUUID();
+          
+          // Try to fetch an image for the new item if it has an icon
+          if (item.icon) {
+            try {
+              const imageServiceUrl = `${ITEM_IMAGES_SERVICE_CONFIG.url}/image`;
+              const description = item.icon;
+              const response = await fetch(`${imageServiceUrl}?description=${encodeURIComponent(description)}`);
+
+              if (response.ok) {
+                const imageData = await response.json();
+                item.imageUrl = imageData.imageUrl;
+                console.log("Got item image for new item", imageData);
+              }
+            } catch (error) {
+              console.error('Error fetching image from item-images service:', error);
+              // Continue without image if fetching fails
+            }
+          }
+          
+          const savedItem = await createItem(id, state.userId, item);
+          processedItems.push(savedItem);
+        } else {
+          // Update existing item
+          const updatedItem = await updateItem(item.id, item);
+          processedItems.push(updatedItem);
+        }
+      }
+    }
+
+    // Process removed items
+    if (result.removedItemIds && Array.isArray(result.removedItemIds)) {
+      for (const itemId of result.removedItemIds) {
+        // Move the item to the discarded location
+        const itemLocation = await locationForItemId(itemId);
+        if (itemLocation) {
+          await moveItemLocation(itemId, itemLocation, 'discarded');
+        }
+      }
+    }
 
     // Return the results to the client
-    return {};
+    return {
+      type: 'skill-results',
+      body: {
+        story: result.story,
+        tool: updatedTool,
+        outputItems: processedItems,
+        removedItemIds: result.removedItemIds || []
+      }
+    };
   } catch (error) {
     console.error('Error using skill:', error);
     return {

@@ -34,6 +34,7 @@ export class ItemSystem {
     // Subscribe to inventory-items:* events
     this.eventListenerIds.push(this.socketSystem.addEventListener('inventory-items:*', this.handleInventoryItems.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('pulled-item', this.handlePulledItem.bind(this)))
+    this.eventListenerIds.push(this.socketSystem.addEventListener('skill-results', this.handleSkillResults.bind(this)))
   }
 
   addItem(item: Item) {
@@ -75,6 +76,37 @@ export class ItemSystem {
    */
   private handlePulledItem(data?: any, eventType?: string) {    
     this.addItem(data.item)
+  }
+
+  /**
+   * Handles skill results from the server
+   * @param data The skill results data containing story, tool, outputItems, and removedItemIds
+   */
+  private handleSkillResults(data?: any, eventType?: string) {
+    // Update the tool item if present
+    if (data.tool) {
+      this.addItem(data.tool)
+    }
+    
+    // Add all output items to the local item store
+    if (data.outputItems && Array.isArray(data.outputItems)) {
+      data.outputItems.forEach((item: Item) => {
+        this.addItem(item)
+      })
+    }
+    
+    // Remove all items with IDs in the removedItemIds array
+    // TODO: For now we will retain removed items so that they
+    // can still be shown in the skill results window as a removed item.
+    // In the future we should garbage collect these old items periodically
+    // so that they don't add up and consume lots of memory on the client side
+    // however retaining them until reload has minimal impact, while avoiding
+    // UI bugs for now.
+    /*if (data.removedItemIds && Array.isArray(data.removedItemIds)) {
+      data.removedItemIds.forEach((itemId: string) => {
+        this.removeItem(itemId)
+      })
+    }*/
   }
   
   /**
