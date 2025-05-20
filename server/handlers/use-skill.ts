@@ -114,11 +114,16 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
 
     // Use the skill
     const result = await useSkill(toolItem, toolSkillIndex, targetItems);
-    
-    // Log the result to the console
-    console.log('Skill use result:', result);
 
-    // Return the result
+    // Result has the following format:
+    // story
+    // tool - The tool item, with updates that should be updated in the DB
+    // outputItems[] - If the item has an ID then that item should be updated in the DB
+    //                 If the item's id is "new-item" then we must insert a new item in the DB
+    // removedItemIds[] - Removed items that should be recycled back to the junk dimension
+
+
+    // Return the results to the client
     return {};
   } catch (error) {
     console.error('Error using skill:', error);
