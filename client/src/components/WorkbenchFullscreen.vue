@@ -26,36 +26,68 @@ const draggedItem = ref<any>(null);
 // State to track the current drop target area
 const dropTarget = ref<'tools' | 'working' | null>(null);
 
+// State to track the currently selected tool item
+const selectedToolItem = ref<any>(null);
+
 // Computed property to check if the tools items array is empty
 const isToolGridEmpty = computed(() => {
   return !props.toolsItems || props.toolsItems.length === 0;
 });
 
-const handleItemClick = (item: any) => {
-  const targetInventory = `${gameStore.userId}:main`;
+// Computed property to get skills from the selected tool item
+const selectedToolSkills = computed(() => {
+  if (!selectedToolItem.value || !selectedToolItem.value.skills) {
+    return [];
+  }
+  return selectedToolItem.value.skills;
+});
 
+const handleItemClick = (item: any, sourceArea: 'tools' | 'working') => {
   // Clear the hovered item preview immediately when an item is clicked
   hoveredItem.value = null;
-
-  // Set up a one-time listener for the 'item-moved' event
-  const listenerId = gameStore.addEventListener('item-moved', (data) => {
-    // Check if this is the item we just moved
-    if (data && data.itemId === item.id && data.targetInventoryId === targetInventory) {
-      // Remove the listener since we only need it once
-      gameStore.removeEventListener('item-moved', listenerId);
-      
-      // Close the workbench fullscreen view
-      emit('close');
-      
-      // Put the item in the player's hands
-      gameStore.emitEvent('item-pickup', {
-        id: data.itemId
-      });
+  
+  if (sourceArea === 'tools') {
+    // If clicking on a tool item, select/deselect it
+    if (selectedToolItem.value === item) {
+      // If already selected, deselect it
+      selectedToolItem.value = null;
+    } else {
+      // Otherwise select the new tool
+      selectedToolItem.value = item;
     }
-  });
+  } else {
+    // For working items, move to inventory as before
+    const targetInventory = `${gameStore.userId}:main`;
+    
+    // Set up a one-time listener for the 'item-moved' event
+    const listenerId = gameStore.addEventListener('item-moved', (data) => {
+      // Check if this is the item we just moved
+      if (data && data.itemId === item.id && data.targetInventoryId === targetInventory) {
+        // Remove the listener since we only need it once
+        gameStore.removeEventListener('item-moved', listenerId);
+        
+        // Close the workbench fullscreen view
+        emit('close');
+        
+        // Put the item in the player's hands
+        gameStore.emitEvent('item-pickup', {
+          id: data.itemId
+        });
+      }
+    });
 
-  // Move the item from workbench to main inventory
-  gameStore.moveItem(item.id, targetInventory);
+    // Move the item from workbench to main inventory
+    gameStore.moveItem(item.id, targetInventory);
+  }
+};
+
+// Handle skill button click
+const handleSkillClick = (skill: any) => {
+  // Emit an action event with the skill and selected tool
+  emit('action', 'use-skill', { 
+    tool: selectedToolItem.value,
+    skill: skill
+  });
 };
 
 const handleItemMouseEnter = (item: any) => {
@@ -134,6 +166,23 @@ const handleDrop = (event: DragEvent, targetArea: 'tools' | 'working') => {
   draggedItem.value = null;
 };
 
+// Function to get outcome class for skill buttons
+function getOutcomeClass(outcome: string): string {
+  const knownOutcomes = [
+    'split target',
+    'destroy self',
+    'transform self',
+    'consume target',
+    'transform target'
+  ];
+  
+  return knownOutcomes.includes(outcome?.toLowerCase() || '') 
+    ? `outcome-${outcome.toLowerCase().replace(' ', '-')}` 
+    : 'outcome-custom';
+}
+
+
+
 const handleKeydown = (e: KeyboardEvent) => {
   if (e.key === 'Escape' && props.show) {
     emit('close');
@@ -185,10 +234,10 @@ watch(() => props.show, (newValue) => {
         <div class="tool-grid">
           <div 
             class="inventory-slot" 
-            :class="{ 'has-item': item }" 
+            :class="{ 'has-item': item, 'selected': selectedToolItem === item }" 
             v-for="(item, index) in toolsItems" 
             :key="item ? item.id : 'tool-'+index"
-            @click="item && handleItemClick(item)"
+            @click="item && handleItemClick(item, 'tools')"
             @mouseenter="item && handleItemMouseEnter(item)"
             @mouseleave="handleItemMouseLeave"
             :draggable="!!item"
@@ -212,6 +261,29 @@ watch(() => props.show, (newValue) => {
         </div>
       </div>
       
+      <!-- Skills Area - Show when a tool is selected -->
+      <div v-if="selectedToolItem && selectedToolSkills.length > 0" class="skills-area">
+        <div class="skills-container">
+          <button 
+            v-for="(skill, index) in selectedToolSkills" 
+            :key="index"
+            class="skill-button"
+            :class="getOutcomeClass(skill.outcomes && skill.outcomes.length > 0 ? skill.outcomes[0] : '')"
+            @click="handleSkillClick(skill)"
+          >
+            <div class="skill-button-content">
+              <div class="skill-icon">
+                <img :src="selectedToolItem.imageUrl" class="tool-icon-image" :alt="selectedToolItem.name" />
+              </div>
+              <div class="skill-text">
+                <div class="skill-name">{{ skill.name }}</div>
+                <div class="skill-description">{{ skill.description }}</div>
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+      
       <!-- Working Area -->
       <div class="working-area"
            @dragover="handleDragOver($event, 'working')"
@@ -225,7 +297,7 @@ watch(() => props.show, (newValue) => {
             :class="{ 'has-item': item }" 
             v-for="(item, index) in workingItems" 
             :key="item ? item.id : 'working-'+index"
-            @click="item && handleItemClick(item)"
+            @click="item && handleItemClick(item, 'working')"
             @mouseenter="item && handleItemMouseEnter(item)"
             @mouseleave="handleItemMouseLeave"
             :draggable="!!item"
@@ -326,7 +398,7 @@ watch(() => props.show, (newValue) => {
   position: absolute;
   width: 60%;
   height: 11%;
-  bottom: 35%;
+  bottom: 30%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -429,5 +501,122 @@ watch(() => props.show, (newValue) => {
   transform: translate(-50%, -50%);
   width: auto;
   height: auto;
+}
+
+/* Selected tool styling */
+.inventory-slot.selected {
+  outline: 3px solid rgba(255, 215, 0, 0.8);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  z-index: 15;
+}
+
+/* Skills area styling */
+.skills-area {
+  position: absolute;
+  width: 80%;
+  top: 48%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 20;
+}
+
+.skills-container {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 5px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.skill-button {
+  padding: 2px 5px;
+  border-radius: 6px;
+  border: none;
+  background-color: rgba(50, 50, 50, 0.8);
+  color: white;
+  font-size: 0.9em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  text-align: left;
+  width: 100%;
+  max-width: 280px;
+}
+
+.skill-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.skill-button-content {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.skill-icon {
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.tool-icon-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.skill-text {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.skill-name {
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 0.95em;
+}
+
+.skill-description {
+  font-size: 0.8em;
+  opacity: 0.9;
+  line-height: 1.3;
+}
+
+/* Skill button outcome styling */
+.skill-button.outcome-split-target {
+  background-color: rgba(33, 150, 243, 0.8);
+}
+
+.skill-button.outcome-destroy-self {
+  background-color: rgba(244, 67, 54, 0.8);
+}
+
+.skill-button.outcome-transform-self {
+  background-color: rgba(156, 39, 176, 0.8);
+}
+
+.skill-button.outcome-consume-target {
+  background-color: rgba(255, 152, 0, 0.8);
+}
+
+.skill-button.outcome-transform-target {
+  background-color: rgba(76, 175, 80, 0.8);
+}
+
+.skill-button.outcome-custom {
+  background-color: rgba(96, 125, 139, 0.8);
 }
 </style>
