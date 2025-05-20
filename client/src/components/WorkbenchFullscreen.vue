@@ -567,7 +567,7 @@ watch(() => props.show, (newValue) => {
   position: absolute;
   width: 60%;
   height: 11%;
-  bottom: 29%;
+  bottom: 35%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -693,7 +693,7 @@ watch(() => props.show, (newValue) => {
 .skills-dropdown:before {
   content: '';
   position: absolute;
-  top: -10px;
+  top: -9px;
   left: 50%;
   transform: translateX(-50%);
   border-left: 10px solid transparent;
