@@ -399,7 +399,7 @@ watch(() => heldItemId.value, (newValue) => {
         height: `${tileSize}px`,
         top: `-${tileSize * 2}px`,
       }">
-      <div class="item-container" :class="rarityClass">
+      <div class="item-container ghost-glow" :class="rarityClass">
         <img 
           :src="heldItem.imageUrl || '/src/assets/generic.png'" 
           :alt="heldItem.name"
@@ -451,6 +451,13 @@ watch(() => heldItemId.value, (newValue) => {
 
 .held-item-image {
   transform: scale(1.1);
+  animation: item-floating 1.2s ease-in-out infinite;
+}
+
+@keyframes item-floating {
+  0% { transform: scale(1.1) translateY(0); }
+  50% { transform: scale(1.1) translateY(-4px); }
+  100% { transform: scale(1.1) translateY(0); }
 }
 
 .ghost-container {
@@ -458,7 +465,8 @@ watch(() => heldItemId.value, (newValue) => {
   transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0));
 }
 
-.ghost-container.ghost-glow {
+.ghost-container.ghost-glow,
+.item-container.ghost-glow {
   filter: drop-shadow(0 0 15px white);
 }
 
