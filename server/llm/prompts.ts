@@ -81,8 +81,71 @@ function filterItemProperties(item) {
   }
 }
 
+// Maps original IDs to short letter IDs (a, b, c, etc.)
+// This is an optimization to save token in the LLM. No need to send
+// full GUID's through the LLM.
+function createIdMapping(toolItem: any, targetItems: any[]): { idToShortId: Record<string, string>, shortIdToId: Record<string, string> } {
+  const idToShortId: Record<string, string> = {};
+  const shortIdToId: Record<string, string> = {};
+
+  // Start with lowercase letters
+  const letters = 'abcdefghijklmnopqrstuvwxyz';
+  let letterIndex = 0;
+
+  // Map tool item ID first
+  if (toolItem && toolItem.id) {
+    const shortId = letters[letterIndex++];
+    idToShortId[toolItem.id] = shortId;
+    shortIdToId[shortId] = toolItem.id;
+  }
+
+  // Map target item IDs
+  if (targetItems && targetItems.length) {
+    for (const item of targetItems) {
+      if (item && item.id && !idToShortId[item.id]) {
+        const shortId = letters[letterIndex++];
+        idToShortId[item.id] = shortId;
+        shortIdToId[shortId] = item.id;
+      }
+    }
+  }
+
+  return { idToShortId, shortIdToId };
+}
+
+// Replace original IDs with short IDs in an item
+function replaceWithShortIds(item: any, idToShortId: Record<string, string>): any {
+  if (!item) return item;
+
+  const newItem = { ...item };
+  if (newItem.id && idToShortId[newItem.id]) {
+    newItem.id = idToShortId[newItem.id];
+  }
+
+  return newItem;
+}
+
+// Replace short IDs with original IDs in an item
+function replaceWithOriginalIds(item: any, shortIdToId: Record<string, string>): any {
+  if (!item) return item;
+
+  const newItem = { ...item };
+  if (newItem.id && shortIdToId[newItem.id]) {
+    newItem.id = shortIdToId[newItem.id];
+  }
+
+  return newItem;
+}
+
 // Use one item's skill one or more other items.
 export const useSkill = async function (toolItem: any, skillIndex: any, targetItems: any): Promise<any> {
+  // Create ID mappings for tool item and target items
+  const { idToShortId, shortIdToId } = createIdMapping(toolItem, targetItems);
+
+  // Create copies with short IDs
+  const shortIdToolItem = replaceWithShortIds(filterItemProperties(toolItem), idToShortId);
+  const shortIdTargetItems = targetItems.map(item => replaceWithShortIds(filterItemProperties(item), idToShortId));
+
   const prompt = {
     system: [
       {
@@ -154,25 +217,42 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
         role: 'user',
         content: [
           {
-            text: `Tool Item: ${JSON.stringify(filterItemProperties(toolItem))}
+            text: `Tool Item: ${JSON.stringify(shortIdToolItem)}
                    Tool Skill Index: ${skillIndex}
-                   Target Item(s): ${JSON.stringify(targetItems.map(filterItemProperties))} `
+                   Target Item(s): ${JSON.stringify(shortIdTargetItems)} `
           }
         ]
       }
     ]
   };
 
-  
-
   const result = await invoke(prompt);
-
-  console.log(result);
   if (!result) return null;
 
   const resultMatch = result.match(/<RESULT>([\s\S]*?)<\/RESULT>/);
   const resultContent = resultMatch ? resultMatch[1].trim() : result;
-  return JSON.parse(resultContent);
+
+  // Parse the JSON response
+  const parsedResult = JSON.parse(resultContent);
+
+  // Convert short IDs back to original IDs
+  if (parsedResult.tool) {
+    parsedResult.tool = replaceWithOriginalIds(parsedResult.tool, shortIdToId);
+  }
+
+  if (parsedResult.outputItems && Array.isArray(parsedResult.outputItems)) {
+    parsedResult.outputItems = parsedResult.outputItems.map(item =>
+      replaceWithOriginalIds(item, shortIdToId)
+    );
+  }
+
+  if (parsedResult.removedItemIds && Array.isArray(parsedResult.removedItemIds)) {
+    parsedResult.removedItemIds = parsedResult.removedItemIds.map(id =>
+      shortIdToId[id] || id
+    );
+  }
+
+  return parsedResult;
 };
 
 // Generate a description of a character based on equipped items
