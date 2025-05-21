@@ -2,9 +2,10 @@
 import { ref, onMounted, onUnmounted, onBeforeUnmount, computed, watch } from 'vue';
 import { type PhysicsProperties } from '../utils/physics';
 import GameItem from './GameItem.vue';
-import ghostNorth from '../assets/ghost/north.png';
-import ghostSouth from '../assets/ghost/south.png';
-import ghostSouthwest from '../assets/ghost/southwest.png';
+import ghostNorth from '../assets/kiro-ghost/north.png';
+import ghostEast from '../assets/kiro-ghost/east.png';
+import ghostSouth from '../assets/kiro-ghost/south.png';
+import ghostSouthwest from '../assets/kiro-ghost/southwest.png';
 import { storeToRefs } from 'pinia';
 import { getRarityClass } from '../utils/items';
 
@@ -208,7 +209,7 @@ const throwHeldItem = () => {
 const currentSprite = computed(() => {
   const a = angle.value;
   if (a == 0) {
-    return ghostSouthwest;  // West (mirrored)
+    return ghostEast;  // West (mirrored)
   } else if (a > 0 && a < 90) {
     return ghostSouthwest; // Southeast (mirrored)
   } else if (a == 90) {
@@ -216,7 +217,7 @@ const currentSprite = computed(() => {
   } else if (a >= 90 && a < 180) {
     return ghostSouthwest;
   } else if (a == 180) {
-    return ghostSouthwest;
+    return ghostEast;
   } else if (a > 180 && a < 270) {
     // As an optimization the northwest sprite is
     // a reused northeast sprite that will be mirrored
@@ -236,7 +237,7 @@ const transform = computed(() => {
     // This is the northwest sprite which is the same
     // sprite as the northeast sprite, but mirrored
     scaleX = -1;
-  } else if (angle.value == 0) {
+  } else if (angle.value == 180) {
     // For west direction, we're using east.png but flipping it horizontally
     scaleX = -1;
   } else if (angle.value > 0 && angle.value < 90) {
@@ -249,10 +250,10 @@ const transform = computed(() => {
 
   if (angle.value == 180) {
     // Left
-    rotation = 15;
+    //rotation = 15;
   } else if (angle.value == 0) {
     // Right
-    rotation = 15;
+    ///rotation = 15;
   } if (angle.value > 270 && angle.value < 360) {
     // Up right
     rotation = 35;
@@ -431,7 +432,7 @@ watch(() => heldItemId.value, (newValue) => {
         '--scale-x': transform.scaleX,
         '--rotation': `${transform.rotation}deg`,
       }"
-      class="ghost-container"
+      class="ghost-container ghost-glow"
       alt="Ghost character"
     />
   </div>
@@ -455,6 +456,10 @@ watch(() => heldItemId.value, (newValue) => {
 .ghost-container {
   animation: ghost-bobbing 1s ease-in-out infinite;
   transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0));
+}
+
+.ghost-container.ghost-glow {
+  filter: drop-shadow(0 0 15px white);
 }
 
 @keyframes ghost-bobbing {
