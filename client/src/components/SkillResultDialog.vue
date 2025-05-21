@@ -13,6 +13,16 @@ const hasStory = ref(false);
 const storyText = ref<string>('');
 const resultData = ref<any>(null);
 
+// State to track skill invocation details for the loading animation
+const skillInvocationData = ref<{
+  skill: any;
+  tool: any;
+  target: any;
+} | null>(null);
+
+// Animation state for the smashing animation - using fixed values now
+// (animation speed increase functionality removed)
+
 // State to track which item is being hovered
 const hoveredItemId = ref<string | null>(null);
 // State to track if the tool is being hovered
@@ -90,14 +100,29 @@ let skillInvokedListenerId: string;
 let skillStoryListenerId: string;
 let skillResultListenerId: string;
 
+// Set fixed animation durations
+function setAnimationDurations() {
+  // Set fixed CSS variables for animation duration
+  document.documentElement.style.setProperty('--smash-tool-duration', '3s');
+  document.documentElement.style.setProperty('--smash-target-duration', '3s');
+  document.documentElement.style.setProperty('--smash-skill-duration', '3s');
+  document.documentElement.style.setProperty('--pulse-glow-duration', '2s');
+}
+
 onMounted(() => {
   // Listen for skill-invoked event to show loading state
-  skillInvokedListenerId = store.addEventListener('skill-invoked', () => {
+  skillInvokedListenerId = store.addEventListener('skill-invoked', (data) => {
     visible.value = true;
     isLoading.value = true;
     hasStory.value = false;
     storyText.value = '';
     store.interactionLocked = true;
+    
+    // Store the skill invocation data for the loading animation
+    skillInvocationData.value = data;
+    
+    // Set fixed animation durations
+    setAnimationDurations();
   });
   
   // Listen for skill-use-story event to show story state
@@ -125,6 +150,15 @@ onUnmounted(() => {
   store.removeEventListener('skill-use-story', skillStoryListenerId);
   store.removeEventListener('skill-results', skillResultListenerId);
   window.removeEventListener('keydown', handleKeyDown);
+  
+  // No animation intervals to clear anymore
+  
+  // Reset CSS variables
+  document.documentElement.style.removeProperty('--smash-tool-duration');
+  document.documentElement.style.removeProperty('--smash-target-duration');
+  document.documentElement.style.removeProperty('--smash-skill-duration');
+  document.documentElement.style.removeProperty('--pulse-glow-duration');
+  
   if (visible.value) {
     store.interactionLocked = false;
   }
@@ -141,8 +175,35 @@ onUnmounted(() => {
       
       <!-- Loading state -->
       <div v-if="isLoading" class="dialog-content loading-content">
-        <div class="loading-spinner"></div>
-        <p>Processing skill...</p>
+        <div class="skill-fusion-container">
+          <!-- Tool item on the left -->
+          <div v-if="skillInvocationData?.tool" class="fusion-item tool-item">
+            <div class="item-wrapper" :class="getRarityClass(skillInvocationData.tool.value)">
+              <img :src="skillInvocationData.tool.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="skillInvocationData.tool.name" />
+            </div>
+            <div class="fusion-label">Tool</div>
+          </div>
+          
+          <!-- Skill name at the top -->
+          <div class="fusion-skill">
+            <div class="skill-name">{{ skillInvocationData?.skill?.name || 'Skill' }}</div>
+            <div class="fusion-label">Skill</div>
+          </div>
+          
+          <!-- Target item on the right -->
+          <div v-if="skillInvocationData?.target" class="fusion-item target-item">
+            <div class="item-wrapper" :class="getRarityClass(skillInvocationData.target.value)">
+              <img :src="skillInvocationData.target.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="skillInvocationData.target.name" />
+            </div>
+            <div class="fusion-label">Target</div>
+          </div>
+          
+          <!-- Central fusion point with soft glow effect -->
+          <div class="fusion-center">
+            <div class="glow-effect"></div>
+          </div>
+        </div>
+        <p class="processing-text">Combining elements...</p>
       </div>
       
       <!-- Story state -->
@@ -300,17 +361,139 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 200px;
+  min-height: 300px;
+  position: relative;
 }
 
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 5px solid rgba(255, 255, 255, 0.1);
+.skill-fusion-container {
+  position: relative;
+  width: 100%;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+:root {
+  --smash-tool-duration: 3s;
+  --smash-target-duration: 3s;
+  --smash-skill-duration: 3s;
+  --pulse-glow-duration: 2s;
+}
+
+.fusion-item {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+}
+
+.tool-item {
+  left: 25%;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: smash-from-left linear infinite;
+  animation-duration: var(--smash-tool-duration);
+}
+
+.target-item {
+  right: 25%;
+  top: 50%;
+  transform: translateY(-50%);
+  animation: smash-from-right linear infinite;
+  animation-duration: var(--smash-target-duration);
+}
+
+.fusion-skill {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(33, 150, 243, 0.2);
+  border: 2px solid #2196f3;
+  border-radius: 8px;
+  padding: 8px 15px;
+  color: #2196f3;
+  font-weight: bold;
+  animation: smash-from-top linear infinite;
+  animation-duration: var(--smash-skill-duration);
+  z-index: 2;
+}
+
+.fusion-label {
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: #aaa;
+  text-align: center;
+}
+
+.skill-name {
+  font-size: 1.2rem;
+  text-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
+}
+
+.fusion-center {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 70%, transparent 100%);
   border-radius: 50%;
-  border-top-color: #2196f3;
-  animation: spin 1s ease-in-out infinite;
-  margin-bottom: 20px;
+  z-index: 1;
+}
+
+.glow-effect {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 30%, rgba(255, 255, 255, 0.3) 60%, transparent 100%);
+  transform: scale(1);
+  opacity: 0.5;
+  animation: pulse-glow infinite;
+  animation-duration: var(--pulse-glow-duration);
+  animation-timing-function: ease-in-out;
+  animation-delay: calc(var(--smash-tool-duration) / 2 - var(--pulse-glow-duration) / 2);
+  box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.5);
+}
+
+.processing-text {
+  margin-top: 20px;
+  color: #ddd;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+@keyframes smash-from-left {
+  0% { transform: translate(-50%, -50%); }
+  45% { transform: translate(calc(50% - 60px), -50%); }
+  50% { transform: translate(calc(50% - 40px), -50%); opacity: 1; }
+  55% { transform: translate(50%, -50%); opacity: 0; }
+  100% { transform: translate(-50%, -50%); opacity: 0; }
+}
+
+@keyframes smash-from-right {
+  0% { transform: translate(50%, -50%); }
+  45% { transform: translate(calc(-50% + 60px), -50%); }
+  50% { transform: translate(calc(-50% + 40px), -50%); opacity: 1; }
+  55% { transform: translate(-50%, -50%); opacity: 0; }
+  100% { transform: translate(50%, -50%); opacity: 0; }
+}
+
+@keyframes smash-from-top {
+  0% { transform: translate(-50%, -50%); }
+  45% { transform: translate(-50%, -20%); }
+  50% { transform: translate(-50%, 0%); opacity: 1; }
+  55% { transform: translate(-50%, 10%); opacity: 0; }
+  100% { transform: translate(-50%, -50%); opacity: 0; }
+}
+
+@keyframes pulse-glow {
+  0% { transform: scale(0.8); opacity: 0.3; }
+  50% { transform: scale(1.5); opacity: 0.8; }
+  100% { transform: scale(0.8); opacity: 0.3; }
 }
 
 .small-spinner {

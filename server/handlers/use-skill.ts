@@ -208,6 +208,9 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
     // Process removed items
     if (result.removedItemIds && Array.isArray(result.removedItemIds)) {
       for (const itemId of result.removedItemIds) {
+        // Set the lastOwner field to the current user's ID
+        await updateItem(itemId, { lastOwner: state.userId });
+        
         // Move the item to the discarded location
         const itemLocation = await locationForItemId(itemId);
         if (itemLocation) {
