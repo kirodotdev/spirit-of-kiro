@@ -6,9 +6,11 @@ import { getRarityClass } from '../utils/items';
 
 const store = useGameStore();
 
-// State to track dialog visibility, loading state, and result data
+// State to track dialog visibility, loading state, story state, and result data
 const visible = ref(false);
 const isLoading = ref(true);
+const hasStory = ref(false);
+const storyText = ref<string>('');
 const resultData = ref<any>(null);
 
 // State to track which item is being hovered
@@ -85,6 +87,7 @@ function handleKeyDown(event: KeyboardEvent) {
 
 // Listen for skill events
 let skillInvokedListenerId: string;
+let skillStoryListenerId: string;
 let skillResultListenerId: string;
 
 onMounted(() => {
@@ -92,13 +95,24 @@ onMounted(() => {
   skillInvokedListenerId = store.addEventListener('skill-invoked', () => {
     visible.value = true;
     isLoading.value = true;
+    hasStory.value = false;
+    storyText.value = '';
     store.interactionLocked = true;
   });
   
-  // Listen for skill-result event to show result state
+  // Listen for skill-use-story event to show story state
+  skillStoryListenerId = store.addEventListener('skill-use-story', (data) => {
+    console.log('skill-use-story data', data);
+    storyText.value = data.story;
+    hasStory.value = true;
+    isLoading.value = false;
+  });
+  
+  // Listen for skill-results event to show result state
   skillResultListenerId = store.addEventListener('skill-results', (data) => {
     console.log('skill-result data', data);
     resultData.value = data;
+    hasStory.value = false;
     isLoading.value = false;
   });
   
@@ -108,6 +122,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   store.removeEventListener('skill-invoked', skillInvokedListenerId);
+  store.removeEventListener('skill-use-story', skillStoryListenerId);
   store.removeEventListener('skill-results', skillResultListenerId);
   window.removeEventListener('keydown', handleKeyDown);
   if (visible.value) {
@@ -120,7 +135,7 @@ onUnmounted(() => {
   <div v-if="visible" class="skill-result-overlay">
     <div class="skill-result-dialog">
       <div class="dialog-header">
-        <h2>Skill Result</h2>
+        <h2>Results</h2>
         <button class="close-button" :disabled="isLoading" @click="closeDialog">×</button>
       </div>
       
@@ -128,6 +143,15 @@ onUnmounted(() => {
       <div v-if="isLoading" class="dialog-content loading-content">
         <div class="loading-spinner"></div>
         <p>Processing skill...</p>
+      </div>
+      
+      <!-- Story state -->
+      <div v-else-if="hasStory" class="dialog-content story-content">
+        <p class="story-text">{{ storyText }}</p>
+        <div class="loading-footer">
+          <div class="small-spinner"></div>
+          <p>Gathering results...</p>
+        </div>
       </div>
       
       <!-- Result state -->
@@ -289,10 +313,37 @@ onUnmounted(() => {
   margin-bottom: 20px;
 }
 
+.small-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: #2196f3;
+  animation: spin 1s ease-in-out infinite;
+  margin-right: 10px;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* Story state styles */
+.story-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-height: 200px;
+}
+
+.loading-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  color: #aaa;
+  font-size: 0.9rem;
 }
 
 /* Result state styles */

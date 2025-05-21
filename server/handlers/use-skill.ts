@@ -2,6 +2,8 @@ import { ConnectionState } from '../types';
 import { getItemById, locationForItemId, createItem, moveItemLocation, updateItem } from '../state/item-store';
 import { useSkill } from '../llm/prompts';
 import { ITEM_IMAGES_SERVICE_CONFIG } from '../config';
+import { ServerWebSocket } from 'bun';
+import { formatMessage } from '../utils/message';
 
 interface UseSkillMessage {
   type: 'use-skill';
@@ -17,7 +19,7 @@ interface UseSkillResponse {
   body?: any;
 }
 
-export default async function handleUseSkill(state: ConnectionState, data: UseSkillMessage): Promise<UseSkillResponse> {
+export default async function handleUseSkill(state: ConnectionState, data: UseSkillMessage, ws: ServerWebSocket): Promise<UseSkillResponse> {
   if (!state.userId) {
     return {
       type: 'error',
@@ -121,6 +123,11 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
         type: 'error',
         body: 'Failed to use skill: No result from LLM'
       };
+    }
+    
+    // Send the story early via WebSocket
+    if (result.story) {
+      ws.send(formatMessage('skill-use-story', { story: result.story }));
     }
 
     // Process the updated tool item

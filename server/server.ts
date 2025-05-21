@@ -112,7 +112,7 @@ export default {
           ws.send(formatMessage(result.type, result.body));
           break;
         case 'use-skill':
-          result = await handleUseSkill(ws.data.state, data as UseSkillMessage);
+          result = await handleUseSkill(ws.data.state, data as UseSkillMessage, ws);
           ws.send(formatMessage(result.type, result.body));
           break;
         default:

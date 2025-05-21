@@ -131,7 +131,7 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
             Items must have the following format:            
               name: a descriptive name for the item, with fake brand names and model numbers where appropriate
               weight: Include unit (e.g., "2.5 kg")
-              value: A positive integer, representing its in-world value.
+              value: A positive integer. Successful crafting interactions increase value
               description: 2–3 flavorful sentences about the item's current state and past usage
               color: human readable
               icon: short description of item appearance
