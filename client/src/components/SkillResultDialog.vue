@@ -13,6 +13,8 @@ const resultData = ref<any>(null);
 
 // State to track which item is being hovered
 const hoveredItemId = ref<string | null>(null);
+// State to track if the tool is being hovered
+const isToolHovered = ref(false);
 
 // Get the workbench-results inventory using the useInventory composable
 const workbenchResultsIds = store.useInventory('workbench-results');
@@ -35,6 +37,9 @@ const workbenchResultItems = computed(() => {
 
 // Get the currently hovered item object
 const hoveredItem = computed(() => {
+  if (isToolHovered.value && resultData.value?.tool) {
+    return resultData.value.tool;
+  }
   if (!hoveredItemId.value) return null;
   return store.itemsById.get(hoveredItemId.value) || null;
 });
@@ -42,11 +47,22 @@ const hoveredItem = computed(() => {
 // Handle mouse enter event for items
 function handleItemMouseEnter(itemId: string) {
   hoveredItemId.value = itemId;
+  isToolHovered.value = false;
 }
 
 // Handle mouse leave event for items
 function handleItemMouseLeave() {
   hoveredItemId.value = null;
+}
+
+// Handle mouse enter event for tool
+function handleToolMouseEnter() {
+  isToolHovered.value = true;
+}
+
+// Handle mouse leave event for tool
+function handleToolMouseLeave() {
+  isToolHovered.value = false;
 }
 
 function closeDialog() {
@@ -116,8 +132,25 @@ onUnmounted(() => {
       
       <!-- Result state -->
       <div v-else class="dialog-content result-content">
+
         <!-- Story section -->
         <p class="story-text">{{ resultData?.story || 'Something unexpected happened...' }}</p>
+
+        <!-- Tool used section -->
+        <div v-if="resultData?.tool" class="tool-section">
+          <h3>Tool:</h3>
+          <div class="items-grid">
+            <div 
+              class="item-container"
+              @mouseenter="handleToolMouseEnter"
+              @mouseleave="handleToolMouseLeave"
+            >
+              <div class="item-wrapper" :class="getRarityClass(resultData.tool.value)">
+                <img :src="resultData.tool.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="resultData.tool.name" />
+              </div>
+            </div>
+          </div>
+        </div>
         
         <!-- Lost section - showing removed items -->
         <div v-if="removedItems.length > 0" class="lost-section">
@@ -139,15 +172,7 @@ onUnmounted(() => {
         
         <!-- Results section - showing workbench results inventory items -->
         <div v-if="workbenchResultItems.length > 0" class="results-section">
-          <h3>Results:</h3>
-          <div class="tool-used" v-if="resultData?.tool">
-            <div class="tool-icon-container">
-              <img :src="resultData.tool.imageUrl || '/src/assets/generic.png'" class="tool-icon" :alt="resultData.tool.name" />
-            </div>
-            <div class="tool-info">
-              <span class="tool-label">Tool used:</span> {{ resultData.tool.name }}
-            </div>
-          </div>
+          <h3>Gained:</h3>
           <div class="items-grid">
             <div 
               v-for="item in workbenchResultItems" 
@@ -370,6 +395,12 @@ onUnmounted(() => {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+}
+
+.tool-section h3 {
+  margin-bottom: 15px;
+  color: #2196f3;
+  font-size: 1.2rem;
 }
 
 .tool-used {

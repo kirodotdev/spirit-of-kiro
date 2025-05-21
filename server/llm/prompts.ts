@@ -117,7 +117,7 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
             discover some new aspect of a target object.
 
             You may change the values of any item property (except ID) if that seems realistic,
-            but you must keep the same item keys. ID's are immutable and may not be reused for
+            but ID's are immutable and may not be reused for
             new items. New items get their own special ID "new-item".
             
             You may think out loud, but responses must be in JSON format between
@@ -127,6 +127,20 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
             tool: The tool item, including any changes to the tool
             outputItems[]: The targeted item list is transformed into the outputItems list.
             removedItemIds[]: List the ID's of items that were removed or replaced by new items.
+
+            Items must have the following format:            
+              name: a descriptive name for the item, with fake brand names and model numbers where appropriate
+              weight: Include unit (e.g., "2.5 kg")
+              value: A positive integer, representing its in-world value.
+              description: 2–3 flavorful sentences about the item's current state and past usage
+              color: human readable
+              icon: short description of item appearance
+              materials: array of material types (e.g., ["Ceramic", "Metal"])
+              damage: A short description of damaged or missing parts
+              skills[] - length 1 to 3 depending on item state. Add skills to items if they have none
+                "name": Verb-like action performed by this item on another item, capitalized (e.g., "Absorb", "Deploy", "Smash")
+                "description": Corny, adventurous, describes how the verb is performed on it's target
+                "targets": Number of targets. Either 0 (target's self), 1 (target's one other item), or 2 (joins two other items)
           `
       },
       {
@@ -152,6 +166,8 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
   
 
   const result = await invoke(prompt);
+
+  console.log(result);
   if (!result) return null;
 
   const resultMatch = result.match(/<RESULT>([\s\S]*?)<\/RESULT>/);

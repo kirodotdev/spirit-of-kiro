@@ -237,9 +237,29 @@ export class InventorySystem {
       data.outputItems.forEach((item: any) => {
         const itemId = item.id
         if (itemId && !workbenchResults.includes(itemId)) {
+          // Check if the item is already in another inventory and remove it
+          const currentInventoryName = this.inventoryForItem.get(itemId)
+          if (currentInventoryName && newInventories.has(currentInventoryName)) {
+            // Get the current inventory array
+            const currentInventory = [...newInventories.get(currentInventoryName) || []]
+            
+            // Find and remove the item from its current inventory
+            const itemIndex = currentInventory.indexOf(itemId)
+            if (itemIndex !== -1) {
+              currentInventory.splice(itemIndex, 1)
+              
+              // Update the current inventory in the map
+              newInventories.set(currentInventoryName, currentInventory)
+            }
+            
+            // Remove the old mapping from inventoryForItem
+            this.inventoryForItem.delete(itemId)
+          }
+          
+          // Add the item to workbench-results
           workbenchResults.push(itemId)
 
-          // Update the inventoryForItem map
+          // Update the inventoryForItem map with the new location
           this.inventoryForItem.set(itemId, 'workbench-results')
         }
       })

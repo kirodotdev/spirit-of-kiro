@@ -186,6 +186,13 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
         } else {
           // Update existing item
           const updatedItem = await updateItem(item.id, item);
+          
+          // Move it to the workbench-results inventory
+          const itemLocation = await locationForItemId(item.id);
+          if (itemLocation && itemLocation !== `${state.userId}:workbench-results`) {
+            await moveItemLocation(item.id, itemLocation, `${state.userId}:workbench-results`);
+          }
+
           processedItems.push(updatedItem);
         }
       }
