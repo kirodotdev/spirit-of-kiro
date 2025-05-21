@@ -23,6 +23,7 @@ export class InventorySystem {
     this.eventListenerIds.push(this.socketSystem.addEventListener('inventory-items:*', this.handleInventoryItems.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('item-moved', this.handleItemMoved.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('skill-results', this.handleSkillResults.bind(this)))
+    this.eventListenerIds.push(this.socketSystem.addEventListener('clean-workbench-results', this.handleCleanWorkbenchResults.bind(this)))
   }
 
   /**
@@ -193,41 +194,59 @@ export class InventorySystem {
 
   /**
    * Handle skill results events
-   * @param data The skill results data containing removedItemIds
+   * @param data The skill results data containing removedItemIds and outputItems
    */
   private handleSkillResults(data: any) {
-    // Check if removedItemIds exists and is an array
-    if (!data.removedItemIds || !Array.isArray(data.removedItemIds)) {
-      return
-    }
-
     // Create a new Map to maintain reactivity
     const newInventories = new Map(this.inventories.value)
 
-    // For each removed item ID
-    data.removedItemIds.forEach((itemId: string) => {
-      // Find which inventory contains the item using the inventoryForItem map
-      const inventoryName = this.inventoryForItem.get(itemId)
-      
-      if (inventoryName && newInventories.has(inventoryName)) {
-        // Get the inventory array
-        const inventory = [...newInventories.get(inventoryName) || []]
-        
-        // Find the item in the inventory
-        const itemIndex = inventory.indexOf(itemId)
-        
-        if (itemIndex !== -1) {
-          // Remove the item from that inventory
-          inventory.splice(itemIndex, 1)
-          
-          // Update the inventory in the map
-          newInventories.set(inventoryName, inventory)
+    // Process removed items if they exist
+    if (data.removedItemIds && Array.isArray(data.removedItemIds)) {
+      // For each removed item ID
+      data.removedItemIds.forEach((itemId: string) => {
+        // Find which inventory contains the item using the inventoryForItem map
+        const inventoryName = this.inventoryForItem.get(itemId)
+
+        if (inventoryName && newInventories.has(inventoryName)) {
+          // Get the inventory array
+          const inventory = [...newInventories.get(inventoryName) || []]
+
+          // Find the item in the inventory
+          const itemIndex = inventory.indexOf(itemId)
+
+          if (itemIndex !== -1) {
+            // Remove the item from that inventory
+            inventory.splice(itemIndex, 1)
+
+            // Update the inventory in the map
+            newInventories.set(inventoryName, inventory)
+          }
+
+          // Remove the item from the inventoryForItem map
+          this.inventoryForItem.delete(itemId)
         }
-        
-        // Remove the item from the inventoryForItem map
-        this.inventoryForItem.delete(itemId)
-      }
-    })
+      })
+    }
+
+    // Process output items if they exist
+    if (data.outputItems && Array.isArray(data.outputItems)) {
+      // Get or create the workbench-results inventory
+      const workbenchResults = [...(newInventories.get('workbench-results') || [])]
+
+      // Add each output item ID to the workbench-results inventory
+      data.outputItems.forEach((item: any) => {
+        const itemId = item.id
+        if (itemId && !workbenchResults.includes(itemId)) {
+          workbenchResults.push(itemId)
+
+          // Update the inventoryForItem map
+          this.inventoryForItem.set(itemId, 'workbench-results')
+        }
+      })
+
+      // Update the workbench-results inventory in the map
+      newInventories.set('workbench-results', workbenchResults)
+    }
 
     // Update the ref to maintain reactivity
     this.inventories.value = newInventories

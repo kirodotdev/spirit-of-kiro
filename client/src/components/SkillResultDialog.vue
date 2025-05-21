@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import ItemPreview from './ItemPreview.vue';
+import { getRarityClass } from '../utils/items';
 
 const store = useGameStore();
 
@@ -10,11 +11,51 @@ const visible = ref(false);
 const isLoading = ref(true);
 const resultData = ref<any>(null);
 
+// State to track which item is being hovered
+const hoveredItemId = ref<string | null>(null);
+
+// Get the workbench-results inventory using the useInventory composable
+const workbenchResultsIds = store.useInventory('workbench-results');
+
+// Computed properties for removed and output items
+const removedItems = computed(() => {
+  if (!resultData.value?.removedItemIds || !resultData.value.removedItemIds.length) {
+    return [];
+  }
+  
+  return resultData.value.removedItemIds.map((itemId: string) => {
+    return store.itemsById.get(itemId);
+  }).filter(Boolean); // Filter out any undefined items
+});
+
+// Get the actual item objects from the workbench-results inventory IDs
+const workbenchResultItems = computed(() => {
+  return workbenchResultsIds.value.map(itemId => store.itemsById.get(itemId)).filter(Boolean);
+});
+
+// Get the currently hovered item object
+const hoveredItem = computed(() => {
+  if (!hoveredItemId.value) return null;
+  return store.itemsById.get(hoveredItemId.value) || null;
+});
+
+// Handle mouse enter event for items
+function handleItemMouseEnter(itemId: string) {
+  hoveredItemId.value = itemId;
+}
+
+// Handle mouse leave event for items
+function handleItemMouseLeave() {
+  hoveredItemId.value = null;
+}
+
 function closeDialog() {
   // Prevent closing the dialog while loading
   if (isLoading.value) {
     return;
   }
+  // Emit clean-workbench-results event before closing
+  store.emitEvent('clean-workbench-results');
   visible.value = false;
   store.interactionLocked = false;
 }
@@ -33,7 +74,6 @@ let skillResultListenerId: string;
 onMounted(() => {
   // Listen for skill-invoked event to show loading state
   skillInvokedListenerId = store.addEventListener('skill-invoked', () => {
-    console.log('skill-invoked');
     visible.value = true;
     isLoading.value = true;
     store.interactionLocked = true;
@@ -77,24 +117,64 @@ onUnmounted(() => {
       <!-- Result state -->
       <div v-else class="dialog-content result-content">
         <!-- Story section -->
-        <div class="story-section">
-          <h3>What happened:</h3>
-          <p class="story-text">{{ resultData?.story || 'Something unexpected happened...' }}</p>
-        </div>
+        <p class="story-text">{{ resultData?.story || 'Something unexpected happened...' }}</p>
         
-        <!-- Items section -->
-        <div v-if="resultData?.items && resultData.items.length > 0" class="items-section">
-          <h3>Items Obtained:</h3>
+        <!-- Lost section - showing removed items -->
+        <div v-if="removedItems.length > 0" class="lost-section">
+          <h3>Lost:</h3>
           <div class="items-grid">
-            <div v-for="(item, index) in resultData.items" :key="index" class="item-container">
-              <ItemPreview :item="item" />
+            <div 
+              v-for="item in removedItems" 
+              :key="item.id" 
+              class="item-container"
+              @mouseenter="handleItemMouseEnter(item.id)"
+              @mouseleave="handleItemMouseLeave"
+            >
+              <div class="item-wrapper" :class="getRarityClass(item.value)">
+                <img :src="item.imageUrl" class="item-image" :alt="item.name" />
+              </div>
             </div>
           </div>
         </div>
         
+        <!-- Results section - showing workbench results inventory items -->
+        <div v-if="workbenchResultItems.length > 0" class="results-section">
+          <h3>Results:</h3>
+          <div class="tool-used" v-if="resultData?.tool">
+            <div class="tool-icon-container">
+              <img :src="resultData.tool.imageUrl || '/src/assets/generic.png'" class="tool-icon" :alt="resultData.tool.name" />
+            </div>
+            <div class="tool-info">
+              <span class="tool-label">Tool used:</span> {{ resultData.tool.name }}
+            </div>
+          </div>
+          <div class="items-grid">
+            <div 
+              v-for="item in workbenchResultItems" 
+              :key="item.id" 
+              class="item-container"
+              @mouseenter="handleItemMouseEnter(item.id)"
+              @mouseleave="handleItemMouseLeave"
+            >
+              <div class="item-wrapper" :class="getRarityClass(item.value)">
+                <img :src="item.imageUrl" class="item-image" :alt="item.name" />
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Item Preview Component -->
+        <ItemPreview 
+          :item="hoveredItem"
+          position="absolute"
+          top="50%"
+          left="50%"
+          transform="translate(-50%, -50%)"
+        />
+        
         <!-- No items message -->
-        <div v-else-if="!isLoading" class="no-items">
-          <p>No items were obtained from this skill.</p>
+        <div v-if="!removedItems.length && !workbenchResultItems.length && !isLoading" class="no-items">
+          <p>No items were affected by this skill.</p>
         </div>
       </div>
     </div>
@@ -217,27 +297,118 @@ onUnmounted(() => {
   white-space: pre-line; /* Preserves line breaks in the story text */
 }
 
-.items-section h3 {
+.results-section h3 {
   margin-bottom: 15px;
   color: #4caf50;
   font-size: 1.2rem;
 }
 
+.lost-section h3 {
+  margin-bottom: 15px;
+  color: #ff5252;
+  font-size: 1.2rem;
+}
+
 .items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
 }
 
 .item-container {
   display: flex;
   justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s;
 }
 
-.item-container .item-preview {
-  position: relative !important;
-  width: 100%;
-  pointer-events: auto; /* Override the default pointer-events: none from ItemPreview */
+.item-container:hover {
+  transform: scale(1.05);
+}
+
+.item-wrapper {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 2px solid #333;
+  padding: 5px;
+  transition: all 0.2s;
+}
+
+.item-wrapper.item-common {
+  border-color: #ffffff;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+}
+
+.item-wrapper.item-uncommon {
+  border-color: #4caf50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+.item-wrapper.item-rare {
+  border-color: #2196f3;
+  box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);
+}
+
+.item-wrapper.item-epic {
+  border-color: #9c27b0;
+  box-shadow: 0 0 5px rgba(156, 39, 176, 0.3);
+}
+
+.item-wrapper.item-legendary {
+  border-color: #ff9800;
+  box-shadow: 0 0 5px rgba(255, 152, 0, 0.5);
+}
+
+.item-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.tool-used {
+  margin-top: 5px;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tool-icon-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 2px solid #2196f3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3px;
+  box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);
+}
+
+.tool-icon {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.tool-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.tool-label {
+  color: #2196f3;
+  font-weight: bold;
 }
 
 .no-items {

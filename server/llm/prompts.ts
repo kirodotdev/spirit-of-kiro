@@ -152,7 +152,6 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
   
 
   const result = await invoke(prompt);
-  console.log('result', result);
   if (!result) return null;
 
   const resultMatch = result.match(/<RESULT>([\s\S]*?)<\/RESULT>/);

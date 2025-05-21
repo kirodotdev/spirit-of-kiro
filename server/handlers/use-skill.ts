@@ -126,6 +126,30 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
     // Process the updated tool item
     const updatedTool = result.tool;
     if (updatedTool && updatedTool.id === toolId) {
+      // Check if the tool's icon has changed
+      if (updatedTool.icon && toolItem.icon !== updatedTool.icon) {
+        // Regenerate the image for the tool with the new icon
+        try {
+          const imageServiceUrl = `${ITEM_IMAGES_SERVICE_CONFIG.url}/image`;
+          const description = updatedTool.icon;
+          const response = await fetch(`${imageServiceUrl}?description=${encodeURIComponent(description)}`);
+
+          if (response.ok) {
+            const imageData = await response.json();
+            updatedTool.imageUrl = imageData.imageUrl;
+            console.log("Regenerated tool image due to icon change", imageData);
+          }
+        } catch (error) {
+          console.error('Error fetching updated image from item-images service:', error);
+          // Continue without updating the image if fetching fails
+        }
+      }
+
+      if (!updatedTool.imageUrl) {
+        // Fallback to keeping the same tool image
+        updatedTool.imageUrl = toolItem.imageUrl;
+      }
+
       // Update the tool item in the database
       await updateItem(toolId, updatedTool);
     }
@@ -137,7 +161,8 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
         if (item.id === 'new-item') {
           // Create a new item
           const id = crypto.randomUUID();
-          
+          item.id = id;
+
           // Try to fetch an image for the new item if it has an icon
           if (item.icon) {
             try {
@@ -155,8 +180,8 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
               // Continue without image if fetching fails
             }
           }
-          
-          const savedItem = await createItem(id, state.userId, item);
+
+          const savedItem = await createItem(id, state.userId, item, `workbench-results`);
           processedItems.push(savedItem);
         } else {
           // Update existing item

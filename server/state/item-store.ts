@@ -72,8 +72,9 @@ export async function locationForItemId(itemId: string): Promise<string | null> 
   return locationResult.Items?.[0]?.location || null;
 }
 
-export async function createItem(id: string, userId: string, itemData: any) {
-  const inventoryId = `${userId}:main`;
+export async function createItem(id: string, userId: string, itemData: any, inventory?: string) {
+  const inventoryName = inventory || 'main';
+  const inventoryId = `${userId}:${inventoryName}`;
 
   const command = new TransactWriteCommand({
     TransactItems: [
