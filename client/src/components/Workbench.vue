@@ -5,6 +5,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import WorkbenchFullscreen from './WorkbenchFullscreen.vue';
 import { getRarityClass } from '../utils/items';
+import GameItem from './GameItem.vue';
 
 const props = defineProps<{
   row: number;
@@ -124,14 +125,56 @@ function handlePlayerInteraction() {
   }
 }
 
+// Define constants for overflow item physics
+const OVERFLOW_IMPULSE = 5; // Lower impulse than throwing
+
+/**
+ * Handle workbench overflow item event
+ * Spawns an item below the workbench when triggered
+ */
+function handleWorkbenchOverflowItem(data: { itemId: string }) {
+  if (!data.itemId) return;
+  
+  const item = gameStore.itemsById.get(data.itemId);
+  if (!item) return;
+
+  // Add the item back to the game world at a position below the workbench
+  // with appropriate physics settings
+  gameStore.addObject({
+    id: data.itemId,
+    type: GameItem,
+    row: props.row + props.depth, // Position below the workbench
+    col: props.col + props.width / 2, // Center horizontally
+    width: 1,
+    depth: 1,
+    props: {
+      itemId: data.itemId,
+      pickedUp: true
+    },
+    physics: {
+      active: true,
+      angle: 90, // Drop downward
+      velocity: OVERFLOW_IMPULSE,
+      friction: 2,
+      height: 2, // Start a bit above ground
+      verticalVelocity: 0,
+      bounceStrength: 0.3,
+      mass: 1.0
+    }
+  });
+}
+
 let interactionListenerId: string;
+let overflowItemListenerId: string;
 
 onMounted(() => {
   interactionListenerId = gameStore.addEventListener('player-interaction', handlePlayerInteraction);
+  overflowItemListenerId = gameStore.addEventListener('workbench-overflow-item', handleWorkbenchOverflowItem);
 });
 
 onUnmounted(() => {
   gameStore.removeEventListener('player-interaction', interactionListenerId);
+  gameStore.removeEventListener('workbench-overflow-item', overflowItemListenerId);
 });
 
 const closeFullscreen = () => {

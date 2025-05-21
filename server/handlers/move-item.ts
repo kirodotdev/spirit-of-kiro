@@ -14,7 +14,8 @@ interface MoveItemResponse {
   body?: any;
 }
 
-const VALID_INVENTORIES = ['main', 'chest1', 'workbench-working', 'workbench-tools'];
+const VALID_DESTINATION_INVENTORIES = ['main', 'chest1', 'workbench-working', 'workbench-tools'];
+const VALID_SOURCE_INVENTORIES = ['main', 'chest1', 'workbench-working', 'workbench-tools', 'workbench-results'];
 
 export default async function handleMoveItem(state: ConnectionState, data: MoveItemMessage): Promise<MoveItemResponse> {
   if (!state.userId) {
@@ -43,7 +44,7 @@ export default async function handleMoveItem(state: ConnectionState, data: MoveI
   const [targetInventoryUser, targetInventoryName] = targetInventoryId.split(':');
   
   // Validate that targetInventory is a valid inventory name
-  if (!VALID_INVENTORIES.includes(targetInventoryName)) {
+  if (!VALID_DESTINATION_INVENTORIES.includes(targetInventoryName)) {
     return {
       type: 'error',
       body: `Invalid target inventory \`${targetInventoryName}\`, only valid options are ${VALID_INVENTORIES}`
@@ -73,7 +74,7 @@ export default async function handleMoveItem(state: ConnectionState, data: MoveI
     }
     
     // Check that the source inventory is valid
-    if (!VALID_INVENTORIES.includes(sourceInventoryName)) {
+    if (!VALID_SOURCE_INVENTORIES.includes(sourceInventoryName)) {
       return {
         type: 'error',
         body: `Source item is not in a valid inventory for moving. Item is in inventory ${currentLocation}`

@@ -253,6 +253,42 @@ export class InventorySystem {
   }
 
   /**
+   * Handle clean workbench results event
+   * Moves items from workbench-results to workbench-working (max 5 items)
+   * and any extra items to workbench-main or drops them if no space
+   */
+  private handleCleanWorkbenchResults() {
+    // Create a new Map to maintain reactivity
+    const newInventories = new Map(this.inventories.value);
+    
+    // Get the workbench-results inventory
+    const resultsInventory = [...(newInventories.get('workbench-results') || [])];
+    if (resultsInventory.length === 0) {
+      return; // Nothing to clean up
+    }
+    
+    // Get or create the workbench-working inventory
+    const workingInventory = [...(newInventories.get('workbench-working') || [])];
+    let remainingWorkingSpace = 5 - workingInventory.length;
+    
+    // Process each item in the results inventory
+    while (resultsInventory.length > 0) {
+      const itemId = resultsInventory.shift()!;
+      
+      // First try to move to workbench-working if it has less than 5 items
+      if (remainingWorkingSpace > 0) {
+        this.moveItemToInventory(itemId, 'workbench-working');
+        remainingWorkingSpace--;
+      }
+      // Otherwise move to main inventory and drop on the floor
+      else {
+        this.moveItemToInventory(itemId, 'main');
+        this.socketSystem.emitEvent('workbench-overflow-item', { itemId });
+      }
+    }
+  }
+
+  /**
    * Clean up resources when the component is unmounted
    */
   cleanup() {
