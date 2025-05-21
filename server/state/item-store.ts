@@ -213,41 +213,38 @@ export async function getItemById(itemId: string): Promise<ItemResponse | null> 
 export async function updateItem(itemId: string, itemData: any): Promise<ItemResponse> {
   // First get the existing item to preserve certain fields
   const existingItem = await getItemById(itemId);
-  
+
   if (!existingItem) {
     throw new Error(`Item with id ${itemId} not found`);
   }
-  
-  // Preserve these fields from the original item
-  const { id, userId, createdAt } = existingItem;
-  
+
   // Create update expression and attribute values
   const updateExpressions: string[] = [];
   const expressionAttributeNames: Record<string, string> = {};
   const expressionAttributeValues: Record<string, any> = {};
-  
+
   // Process each property in the itemData
   Object.entries(itemData).forEach(([key, value]) => {
     // Skip id, userId, and createdAt as we want to preserve these
     if (key === 'id' || key === 'userId' || key === 'createdAt') {
       return;
     }
-    
+
     const attributeName = `#${key}`;
     const attributeValue = `:${key}`;
-    
+
     updateExpressions.push(`${attributeName} = ${attributeValue}`);
     expressionAttributeNames[attributeName] = key;
     expressionAttributeValues[attributeValue] = value;
   });
-  
+
   // If there's nothing to update, return the existing item
   if (updateExpressions.length === 0) {
     return existingItem;
   }
-  
+
   const updateExpression = `SET ${updateExpressions.join(', ')}`;
-  
+
   const command = new UpdateCommand({
     TableName: TABLE_NAME,
     Key: { id: itemId },
@@ -256,9 +253,9 @@ export async function updateItem(itemId: string, itemData: any): Promise<ItemRes
     ExpressionAttributeValues: expressionAttributeValues,
     ReturnValues: 'ALL_NEW'
   });
-  
+
   const result = await docClient.send(command);
-  
+
   // Return the updated item
   return result.Attributes as ItemResponse;
 }

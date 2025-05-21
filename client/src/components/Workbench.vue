@@ -103,6 +103,7 @@ function handlePlayerInteraction() {
 
   if (!gameStore.heldItemId) {
     showFullscreen.value = true;
+    gameStore.emitEvent('clean-workbench-results');
     return;
   }
   
@@ -122,6 +123,7 @@ function handlePlayerInteraction() {
     // Remove the held item
     gameStore.heldItemId = null;
     showFullscreen.value = true;
+    gameStore.emitEvent('clean-workbench-results');
   }
 }
 

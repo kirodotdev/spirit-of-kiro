@@ -17,10 +17,18 @@ export default async function handlePullItem(state: ConnectionState, _data: Pull
   }
 
   try {
-    // Try to find a junk item up to 3 times
-    for (let i = 0; i < 3; i++) {
+    // Try to find a junk item up to 5 times (increased to account for potential skips)
+    for (let i = 0; i < 5; i++) {
       const junkItem = await findJunkItem();
       if (junkItem) {
+        // Check if this item was previously owned by the current user
+        // The more users a server has, and the more discarded items from different
+        // users, the less likely this will get
+        if (junkItem.lastOwner === state.userId) {
+          console.log(`Skipping item ${junkItem.id} as it was previously owned by user ${state.userId}`);
+          continue; // Skip this item and try to find another one
+        }
+        
         // Move item from junk to user's inventory
         await moveItemLocation(junkItem.id, 'discarded', `${state.userId}:main`);
         return {

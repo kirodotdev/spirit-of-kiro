@@ -1,4 +1,4 @@
-import { moveItemLocation, locationForItemId } from '../state/item-store';
+import { moveItemLocation, locationForItemId, getItemById, updateItem } from '../state/item-store';
 import { ConnectionState } from '../types';
 
 interface DiscardItemMessage {
@@ -38,6 +38,14 @@ export default async function handleDiscardItem(state: ConnectionState, data: Di
       };
     }
 
+    // Get the item and update it to set the lastOwner field
+    const item = await getItemById(data.body.itemId);
+    if (item) {
+      // Set the lastOwner field to the current user's ID
+      await updateItem(data.body.itemId, { lastOwner: state.userId });
+    }
+
+    // Move the item to the discarded location
     await moveItemLocation(data.body.itemId, currentLocation, 'discarded');
     return {
       type: 'item-discarded',

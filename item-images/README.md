@@ -7,12 +7,16 @@ so you don't necessarily need to build, deploy, and run this service yourself.
 
 The officially hosted version is available at: http://kiro-game-images-service-alb-559009974.us-west-2.elb.amazonaws.com/
 
+This service is used by the main game server to generate images for items pulled from dispensers or recycled from the garbage chute.
+
 ## Features
 
 - Generate images for items, based on a short description of them
 - Uses vector embeddings to keep track of all it's generated images, by description
 - Match incoming image requests to previously generated images using a vector database, as an optimization
 - Stores item images in S3, with a CloudFront distribution in front
+- Integrated with the main game server for item visualization
+- Used for both new items and recycled items from the garbage chute
 
 ## API Endpoints
 

@@ -7,6 +7,18 @@ AI engineering in general.
 This game has a sample branch that is deliberately left unfinished, with a few bugs. Read the
 [CHALLENGE.md](CHALLENGE.md) file to learn more about these tasks.
 
+## Key Features
+
+- Physics-based movement and collision system
+- Real-time WebSocket communication between client and server
+- AI-powered item generation with unique descriptions and images
+- Interactive game objects (dispensers, workbenches, garbage chutes)
+- Inventory and equipment management
+- Item recycling system with ownership history tracking
+- Discarded items can be found by other players (but not by their previous owner)
+- Item recycling system with ownership history tracking
+- Discarded items can be found by other players (but not by their previous owner)
+
 ### Setup and Dependencies
 
 To get started:
