@@ -1,5 +1,5 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, GetCommand, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { DYNAMODB_CONFIG } from '../config';
 
 const client = new DynamoDBClient(DYNAMODB_CONFIG);
@@ -89,4 +89,47 @@ export async function savePersonaDetail(userId: string, detail: string, value: s
 
   await docClient.send(command);
   return true;
+}
+
+export async function incrementPersonaDetail(userId: string, detail: string, amount: number): Promise<number> {
+  const command = new UpdateCommand({
+    TableName: 'Persona',
+    Key: {
+      userId,
+      detail
+    },
+    UpdateExpression: 'SET #value = if_not_exists(#value, :zero) + :amount',
+    ExpressionAttributeNames: {
+      '#value': 'value'
+    },
+    ExpressionAttributeValues: {
+      ':amount': amount,
+      ':zero': 0
+    },
+    ReturnValues: 'UPDATED_NEW'
+  });
+
+  const result = await docClient.send(command);
+  return parseInt(result.Attributes?.value || '0', 10);
+}
+
+export async function getPersonaDetails(userId: string): Promise<Record<string, string>> {
+  const command = new QueryCommand({
+    TableName: 'Persona',
+    KeyConditionExpression: 'userId = :userId',
+    ExpressionAttributeValues: {
+      ':userId': userId
+    }
+  });
+
+  const result = await docClient.send(command);
+  const details: Record<string, string> = {};
+  
+  if (result.Items) {
+    for (const item of result.Items) {
+      details[item.detail] = item.value;
+    }
+  }
+  
+  return details;
 }

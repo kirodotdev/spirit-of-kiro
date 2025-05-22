@@ -67,4 +67,9 @@ export interface SellItemMessage {
     };
 }
 
-export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | MoveItemMessage | UseSkillMessage | SellItemMessage;
+export interface FetchPersonaMessage {
+  type: 'fetch-persona';
+  body: {};
+}
+
+export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | MoveItemMessage | UseSkillMessage | SellItemMessage | FetchPersonaMessage;

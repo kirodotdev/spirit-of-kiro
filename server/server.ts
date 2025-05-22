@@ -9,8 +9,9 @@ import handleDiscardItem from './handlers/discard-item';
 import handleMoveItem from './handlers/move-item';
 import handleUseSkill from './handlers/use-skill';
 import handleSellItem from './handlers/sell-item';
+import handleFetchPersona from './handlers/fetch-persona';
 import { formatMessage } from './utils/message';
-import { WebSocketMessage, SignupMessage, SigninMessage, PullItemMessage, ListInventoryMessage, DiscardItemMessage, MoveItemMessage, UseSkillMessage, SellItemMessage, ConnectionState } from './types';
+import { WebSocketMessage, SignupMessage, SigninMessage, PullItemMessage, ListInventoryMessage, DiscardItemMessage, MoveItemMessage, UseSkillMessage, SellItemMessage, FetchPersonaMessage, ConnectionState } from './types';
 import * as config from './config';
 
 interface WebSocketData {
@@ -113,6 +114,10 @@ export default {
           break;
         case 'sell-item':
           result = await handleSellItem(ws.data.state, data as SellItemMessage);
+          ws.send(formatMessage(result.type, result.body));
+          break;
+        case 'fetch-persona':
+          result = await handleFetchPersona(ws.data.state, data as FetchPersonaMessage);
           ws.send(formatMessage(result.type, result.body));
           break;
         default:
