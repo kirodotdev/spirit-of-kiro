@@ -137,6 +137,61 @@ function replaceWithOriginalIds(item: any, shortIdToId: Record<string, string>):
   return newItem;
 }
 
+// Appraise an item to determine its market value
+export const appraiseItem = async function (item: any): Promise<any> {
+  // Filter item properties to only include what's needed for appraisal
+  const itemToAppraise = filterItemProperties(item);
+
+  const prompt = {
+    system: [
+      {
+        "text": `
+          You are an experienced appraiser in a fantasy scrapyard game.
+          Your job is to evaluate items and determine their market value.
+          
+          Consider the following factors when appraising:
+          - Material quality and rarity
+          - Condition (damage level)
+          - Utility (skills and functionality)
+          - Uniqueness and collectability
+          
+          Your responses must be in JSON format between two <RESULT> tags, with the following fields:
+          
+          appraisal: {
+            baseValue: The item's original value
+            marketValue: The appraised market value (can be higher or lower than baseValue)
+            explanation: 2-3 sentences explaining your valuation
+            condition: Brief assessment of the item's condition
+            specialNotes: Any unique qualities that affected the valuation
+          }
+        `
+      },
+      {
+        "cachePoint": {
+          "type": "default"
+        }
+      }
+    ],
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            text: `Please appraise this item: ${JSON.stringify(itemToAppraise)}`
+          }
+        ]
+      }
+    ]
+  };
+
+  const result = await invoke(prompt);
+  if (!result) return null;
+
+  const resultMatch = result.match(/<RESULT>([\s\S]*?)<\/RESULT>/);
+  const resultContent = resultMatch ? resultMatch[1].trim() : result;
+  return JSON.parse(resultContent);
+};
+
 // Use one item's skill one or more other items.
 export const useSkill = async function (toolItem: any, skillIndex: any, targetItems: any): Promise<any> {
   // Create ID mappings for tool item and target items

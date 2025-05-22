@@ -60,4 +60,11 @@ export interface UseSkillMessage {
     };
 }
 
-export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | MoveItemMessage | UseSkillMessage;
+export interface SellItemMessage {
+    type: 'sell-item';
+    body: {
+        itemId: string;
+    };
+}
+
+export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | MoveItemMessage | UseSkillMessage | SellItemMessage;

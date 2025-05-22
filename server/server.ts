@@ -8,8 +8,9 @@ import handleListInventory from './handlers/list-inventory';
 import handleDiscardItem from './handlers/discard-item';
 import handleMoveItem from './handlers/move-item';
 import handleUseSkill from './handlers/use-skill';
+import handleSellItem from './handlers/sell-item';
 import { formatMessage } from './utils/message';
-import { WebSocketMessage, SignupMessage, SigninMessage, PullItemMessage, ListInventoryMessage, DiscardItemMessage, MoveItemMessage, UseSkillMessage, ConnectionState } from './types';
+import { WebSocketMessage, SignupMessage, SigninMessage, PullItemMessage, ListInventoryMessage, DiscardItemMessage, MoveItemMessage, UseSkillMessage, SellItemMessage, ConnectionState } from './types';
 import * as config from './config';
 
 interface WebSocketData {
@@ -108,6 +109,10 @@ export default {
           break;
         case 'use-skill':
           result = await handleUseSkill(ws.data.state, data as UseSkillMessage, ws);
+          ws.send(formatMessage(result.type, result.body));
+          break;
+        case 'sell-item':
+          result = await handleSellItem(ws.data.state, data as SellItemMessage);
           ws.send(formatMessage(result.type, result.body));
           break;
         default:
