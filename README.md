@@ -13,7 +13,7 @@ This game has a sample branch that is deliberately left unfinished, with a few b
 - Real-time WebSocket communication between client and server
 - AI-powered item generation with unique descriptions and images
 - Interactive game objects (dispensers, workbenches, garbage chutes)
-- Inventory and equipment management
+- Inventory management
 - Item recycling system with ownership history tracking
 - Discarded items can be found by other players (but not by their previous owner)
 - Item recycling system with ownership history tracking

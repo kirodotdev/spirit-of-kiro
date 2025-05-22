@@ -203,7 +203,7 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
     id: 'chest1',
     type: Chest,
     row: 10.5,
-    col: 2.25,
+    col: 17.75,
     width: 2,
     depth: 1.5,
     height: 3.5, // Helps prevent items getting stuck on top of chest

@@ -237,6 +237,8 @@ const transform = computed(() => {
     // This is the northwest sprite which is the same
     // sprite as the northeast sprite, but mirrored
     scaleX = -1;
+  } else if (angle.value == 270) {
+    scaleX = -1;
   } else if (angle.value == 180) {
     // For west direction, we're using east.png but flipping it horizontally
     scaleX = -1;
