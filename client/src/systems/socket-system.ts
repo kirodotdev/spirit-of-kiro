@@ -247,6 +247,22 @@ export class SocketSystem {
     this.ws.value.send(JSON.stringify(message))
   }
 
+  sellItem(itemId: string) {
+    if (!this.ws.value || !this.isAuthenticated.value) {
+      console.error('Cannot sell item: not connected or not authenticated')
+      return
+    }
+
+    const message = {
+      type: 'sell-item',
+      body: {
+        itemId: itemId
+      }
+    }
+
+    this.ws.value.send(JSON.stringify(message))
+  }
+
   /**
    * Schedule a reconnection attempt with exponential backoff
    */

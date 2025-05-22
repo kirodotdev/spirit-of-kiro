@@ -59,6 +59,7 @@ export const useGameStore = defineStore('game', () => {
     discardItem: socketSystem.discardItem.bind(socketSystem),
     moveItem: socketSystem.moveItem.bind(socketSystem),
     useSkill: socketSystem.useSkill.bind(socketSystem),
+    sellItem: socketSystem.sellItem.bind(socketSystem),
     reconnect: socketSystem.reconnect.bind(socketSystem),
     cleanup: socketSystem.cleanup.bind(socketSystem),
 

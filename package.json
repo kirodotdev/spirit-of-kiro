@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "AI-powered scrapyard game with client and server components",
   "scripts": {
-    "start": "bun launch.ts",
-    "dev": "bun launch.ts"
+    "dev": "op run --env-file=./dev.env -- bun launch.ts",
+    "id": "op run --env-file=./dev.env -- aws sts get-caller-identity"
   },
   "dependencies": {
     "@types/uuid": "^10.0.0",

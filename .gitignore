@@ -8,3 +8,4 @@ docker
 .odo
 *.spec.md
 *.code-workspace
+dev.env
