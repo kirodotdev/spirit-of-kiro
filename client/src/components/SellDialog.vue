@@ -15,6 +15,7 @@ const result = ref<any>(null);
 // State to track which item is being hovered
 const hoveredItemId = ref<string | null>(null);
 const hoveredItemElement = ref<HTMLElement | null>(null);
+const hoveredItemPosition = ref({ x: 0, y: 0 });
 
 // Get the currently hovered item object
 const hoveredItem = computed(() => {
@@ -26,6 +27,35 @@ const hoveredItem = computed(() => {
 function handleItemMouseEnter(itemId: string, event: MouseEvent) {
   hoveredItemId.value = itemId;
   hoveredItemElement.value = event.currentTarget as HTMLElement;
+  
+  // Capture the position of the hovered item
+  const target = event.currentTarget as HTMLElement;
+  if (target) {
+    const rect = target.getBoundingClientRect();
+    const tooltipWidth = 300; // Approximate width of tooltip
+
+    hoveredItemPosition.value = {
+      x: rect.right + 10, // Position to the right of the item
+      y: rect.top // Align with the top of the item
+    };
+    
+    // Check if tooltip would go off-screen to the right
+    if (hoveredItemPosition.value.x + tooltipWidth > window.innerWidth) {
+      hoveredItemPosition.value.x = rect.left - tooltipWidth - 10; // Position to the left of the item
+    }
+
+    // Check if tooltip would go off-screen to the left
+    if (hoveredItemPosition.value.x < 0) {
+      hoveredItemPosition.value.x = 10;
+    }
+    
+    // Check if tooltip would go off-screen at the bottom
+    const tooltipHeight = 400; // Approximate height of tooltip
+    if (hoveredItemPosition.value.y + tooltipHeight > window.innerHeight) {
+      // Adjust y position to keep tooltip on screen
+      hoveredItemPosition.value.y = window.innerHeight - tooltipHeight - 10;
+    }
+  }
 }
 
 // Handle mouse leave event for items
@@ -103,10 +133,11 @@ onUnmounted(() => {
       
       <!-- Loading state -->
       <div v-if="isLoading" class="dialog-content loading-content">
-        <div class="item-container" v-if="sellData"
-             @mouseenter="(event) => handleItemMouseEnter(sellData.id, event)"
-             @mouseleave="handleItemMouseLeave">
-          <div class="item-wrapper" :class="getRarityClass(sellData.value)">
+        <div class="item-container" v-if="sellData">
+          <div class="item-wrapper" 
+               :class="getRarityClass(sellData.value)"
+               @mouseenter="(event) => handleItemMouseEnter(sellData.id, event)"
+               @mouseleave="handleItemMouseLeave">
             <img :src="sellData.imageUrl" class="item-image" :alt="sellData.name" />
           </div>
         </div>
@@ -117,7 +148,9 @@ onUnmounted(() => {
       <!-- Result state -->
       <div v-else class="dialog-content result-content">
         <div class="appraisal-container">
-          <div class="item-display" v-if="sellData">
+          <div class="item-display" v-if="sellData"
+               @mouseenter="(event) => handleItemMouseEnter(sellData.id, event)"
+               @mouseleave="handleItemMouseLeave">
             <div class="item-wrapper" :class="getRarityClass(sellData.value)">
               <img :src="sellData.imageUrl" class="item-image" :alt="sellData.name" />
             </div>
@@ -152,13 +185,14 @@ onUnmounted(() => {
       
       <!-- Item Preview Component -->
       <ItemPreview 
-        v-if="hoveredItem"
+        v-if="hoveredItem && hoveredItemElement"
         :item="hoveredItem"
         :style="{
           position: 'fixed',
-          top: `${hoveredItemElement?.getBoundingClientRect().top}px`,
-          left: `${hoveredItemElement?.getBoundingClientRect().right + 10}px`,
-          transform: 'translateY(-25%)'
+          left: `${hoveredItemPosition.x}px`,
+          top: `${hoveredItemPosition.y}px`,
+          maxHeight: '80vh',
+          overflowY: 'auto'
         }"
       />
     </div>
@@ -255,8 +289,6 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.3);
-  border: 2px solid #333;
   padding: 5px;
   transition: all 0.2s;
 }
@@ -346,28 +378,4 @@ onUnmounted(() => {
   line-height: 1.5;
 }
 
-.item-wrapper.item-common {
-  border-color: #ffffff;
-  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
-}
-
-.item-wrapper.item-uncommon {
-  border-color: #4caf50;
-  box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
-}
-
-.item-wrapper.item-rare {
-  border-color: #2196f3;
-  box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);
-}
-
-.item-wrapper.item-epic {
-  border-color: #9c27b0;
-  box-shadow: 0 0 5px rgba(156, 39, 176, 0.3);
-}
-
-.item-wrapper.item-legendary {
-  border-color: #ff9800;
-  box-shadow: 0 0 5px rgba(255, 152, 0, 0.5);
-}
 </style>
