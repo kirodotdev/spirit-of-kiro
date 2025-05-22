@@ -254,20 +254,3 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
 
   return parsedResult;
 };
-
-// Generate a description of a character based on equipped items
-export const generatePersonaDescription = async function (equippedItems: any[]): Promise<string | null> {
-  const prompt = `
-    I am a character in a whimsical post-apocalyptic world. I have the following items equipped:
-    ${equippedItems.map(item => `${item.name} - ${item.description}\nEquipment effects: ${item.equipmentSlots.map(slot => slot.effects).join(', ')}`).join('\n')}
-
-    Write a single descriptive paragraph about my appearance and demeanor based on these equipped items and their effects.
-    The response should be plain text between two <RESULT> tags.
-  `;
-
-  const result = await invoke(prompt);
-  if (!result) return null;
-
-  const resultMatch = result.match(/<RESULT>([\s\S]*?)<\/RESULT>/);
-  return resultMatch ? resultMatch[1].trim() : null;
-};

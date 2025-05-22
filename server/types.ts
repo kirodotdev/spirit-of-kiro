@@ -43,14 +43,6 @@ export interface DiscardItemMessage {
     };
 }
 
-export interface EquipItemMessage {
-    type: 'equip-item';
-    body: {
-        itemId: string;
-        slot: string;
-    };
-}
-
 export interface MoveItemMessage {
     type: 'move-item';
     body: {
@@ -68,4 +60,4 @@ export interface UseSkillMessage {
     };
 }
 
-export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | EquipItemMessage | MoveItemMessage | UseSkillMessage;
+export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | MoveItemMessage | UseSkillMessage;

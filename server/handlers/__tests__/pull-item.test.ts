@@ -65,13 +65,7 @@ describe('Pull Item handler', () => {
     expect(data.body.item).toHaveProperty('color');
     expect(data.body.item).toHaveProperty('materials');
     expect(data.body.item).toHaveProperty('damage');
-    expect(data.body.item).toHaveProperty('equipmentSlots');
     expect(Array.isArray(data.body.item.materials)).toBe(true);
-    expect(Array.isArray(data.body.item.equipmentSlots)).toBe(true);
-    if (data.body.item.equipmentSlots.length > 0) {
-      expect(data.body.item.equipmentSlots[0]).toHaveProperty('slot');
-      expect(data.body.item.equipmentSlots[0]).toHaveProperty('effects');
-    }
 
     // Verify the mocked data matches
     //expect(data.body.story).toEqual(mockPullItemResponse.story);

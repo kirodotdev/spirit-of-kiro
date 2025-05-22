@@ -9,16 +9,6 @@
       "color": "Chrome and Battle-Scarred Bronze",
       "materials": ["enchanted metal", "dwarven steel", "runic crystal"],
       "damage": "Speed setting 3 causes dimensional rifts, right beater slightly bent from fighting frost giants",
-      "equipmentSlots": [
-          {
-              "slot": "hands",
-              "effects": "User's beard grows 3 inches longer and braids itself automatically (beardless users manifest a ghostly Viking beard)"
-          },
-          {
-              "slot": "toolbelt",
-              "effects": "Emits war chants when cooking, all baked goods come out shaped like longships"
-          }
-      ],
       "skills": [
           {
               "name": "Whisk of the Valkyries",
