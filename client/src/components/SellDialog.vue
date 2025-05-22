@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import ItemPreview from './ItemPreview.vue';
 import { getRarityClass } from '../utils/items';
@@ -12,8 +12,32 @@ const isLoading = ref(true);
 const sellData = ref<any>(null);
 const result = ref<any>(null);
 
+// State to track which item is being hovered
+const hoveredItemId = ref<string | null>(null);
+const hoveredItemElement = ref<HTMLElement | null>(null);
+
+// Get the currently hovered item object
+const hoveredItem = computed(() => {
+  if (!hoveredItemId.value) return null;
+  return store.itemsById.get(hoveredItemId.value) || null;
+});
+
+// Handle mouse enter event for items
+function handleItemMouseEnter(itemId: string, event: MouseEvent) {
+  hoveredItemId.value = itemId;
+  hoveredItemElement.value = event.currentTarget as HTMLElement;
+}
+
+// Handle mouse leave event for items
+function handleItemMouseLeave() {
+  hoveredItemId.value = null;
+  hoveredItemElement.value = null;
+}
+
 function closeDialog() {
   if (isLoading.value) return;
+  // Clear any hovered item preview when closing
+  hoveredItemId.value = null;
   visible.value = false;
   store.interactionLocked = false;
 }
@@ -31,23 +55,29 @@ let itemSoldListenerId: string;
 
 onMounted(() => {
   sellItemListenerId = store.addEventListener('sell-item', (data) => {
-    sellData.value = data;
-    visible.value = true;
-    isLoading.value = true;
-    store.interactionLocked = true;
-    
-    // Remove the game object from the world
-    if (data.id) {
-      store.removeObject(data.id);
+    if (data && data.id) {
+      // Get the item data directly from the store using the ID
+      const itemData = store.itemsById.get(data.id);
+      if (itemData) {
+        sellData.value = itemData;
+        visible.value = true;
+        isLoading.value = true;
+        store.interactionLocked = true;
+        
+        // Remove the game object from the world
+        store.removeObject(data.id);
+        
+        // Send sell-item request to server
+        store.sellItem(data.id);
+      }
     }
-    
-    // Send sell-item request to server
-    store.sellItem(data.id);
   });
   
   itemSoldListenerId = store.addEventListener('item-sold', (data) => {
     result.value = data;
     isLoading.value = false;
+    // Clear any hovered item preview when the result comes back
+    hoveredItemId.value = null;
   });
   
   window.addEventListener('keydown', handleKeyDown);
@@ -73,7 +103,9 @@ onUnmounted(() => {
       
       <!-- Loading state -->
       <div v-if="isLoading" class="dialog-content loading-content">
-        <div class="item-preview" v-if="sellData">
+        <div class="item-container" v-if="sellData"
+             @mouseenter="(event) => handleItemMouseEnter(sellData.id, event)"
+             @mouseleave="handleItemMouseLeave">
           <div class="item-wrapper" :class="getRarityClass(sellData.value)">
             <img :src="sellData.imageUrl" class="item-image" :alt="sellData.name" />
           </div>
@@ -84,8 +116,51 @@ onUnmounted(() => {
       
       <!-- Result state -->
       <div v-else class="dialog-content result-content">
-        <pre>{{ JSON.stringify(result, null, 2) }}</pre>
+        <div class="appraisal-container">
+          <div class="item-display" v-if="sellData">
+            <div class="item-wrapper" :class="getRarityClass(sellData.value)">
+              <img :src="sellData.imageUrl" class="item-image" :alt="sellData.name" />
+            </div>
+          </div>
+          <div class="appraisal-details">
+            <h3>Appraisal Results</h3>
+            <div class="appraisal-info">
+              <div class="appraisal-row">
+                <span class="label">Base Value:</span>
+                <span class="value">{{ result?.appraisal?.appraisal?.baseValue || 0 }} coins</span>
+              </div>
+              <div class="appraisal-row">
+                <span class="label">Market Value:</span>
+                <span class="value">{{ result?.appraisal?.appraisal?.marketValue || 0 }} coins</span>
+              </div>
+              <div class="appraisal-row">
+                <span class="label">Condition:</span>
+                <span class="value">{{ result?.appraisal?.appraisal?.condition || 'Unknown' }}</span>
+              </div>
+              <div class="appraisal-row explanation">
+                <span class="label">Explanation:</span>
+                <p>{{ result?.appraisal?.appraisal?.explanation || 'No explanation provided.' }}</p>
+              </div>
+              <div class="appraisal-row" v-if="result?.appraisal?.appraisal?.specialNotes">
+                <span class="label">Special Notes:</span>
+                <p>{{ result?.appraisal?.appraisal?.specialNotes }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+      
+      <!-- Item Preview Component -->
+      <ItemPreview 
+        v-if="hoveredItem"
+        :item="hoveredItem"
+        :style="{
+          position: 'fixed',
+          top: `${hoveredItemElement?.getBoundingClientRect().top}px`,
+          left: `${hoveredItemElement?.getBoundingClientRect().right + 10}px`,
+          transform: 'translateY(-25%)'
+        }"
+      />
     </div>
   </div>
 </template>
@@ -113,6 +188,8 @@ onUnmounted(() => {
   overflow-y: auto;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   border: 2px solid #333;
+  position: relative;
+  overflow: visible; /* Allow the preview to stick out */
 }
 
 .dialog-header {
@@ -161,8 +238,14 @@ onUnmounted(() => {
   min-height: 300px;
 }
 
-.item-preview {
+.item-container {
   margin-bottom: 20px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.item-container:hover {
+  transform: scale(1.05);
 }
 
 .item-wrapper {
@@ -175,6 +258,7 @@ onUnmounted(() => {
   background-color: rgba(0, 0, 0, 0.3);
   border: 2px solid #333;
   padding: 5px;
+  transition: all 0.2s;
 }
 
 .item-image {
@@ -209,13 +293,57 @@ onUnmounted(() => {
   padding: 20px;
 }
 
-pre {
+.appraisal-container {
+  display: flex;
+  gap: 20px;
+}
+
+.item-display {
+  flex-shrink: 0;
+}
+
+.appraisal-details {
+  flex-grow: 1;
+}
+
+.appraisal-details h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #fff;
+  font-size: 1.3rem;
+}
+
+.appraisal-info {
   background-color: rgba(0, 0, 0, 0.2);
   padding: 15px;
   border-radius: 8px;
-  overflow-x: auto;
-  color: #bbb;
-  white-space: pre-wrap;
+}
+
+.appraisal-row {
+  margin-bottom: 10px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.appraisal-row.explanation {
+  flex-direction: column;
+}
+
+.appraisal-row .label {
+  font-weight: bold;
+  color: #aaa;
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.appraisal-row .value {
+  color: #ddd;
+}
+
+.appraisal-row p {
+  margin: 5px 0 0;
+  color: #ddd;
+  line-height: 1.5;
 }
 
 .item-wrapper.item-common {
