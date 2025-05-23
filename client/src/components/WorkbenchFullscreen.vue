@@ -280,14 +280,14 @@ const handleDrop = (event: DragEvent, targetArea: 'tools' | 'working') => {
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Escape') {
+  if (e.key === 'Escape' && props.show && gameStore.hasFocus('workbench')) {
     if (selectedSkill.value) {
       // First cancel any selected skill
       selectedSkill.value = null;
     } else if (showSkillsDropdown.value) {
       // Close the skills dropdown if it's open
       showSkillsDropdown.value = false;
-    } else if (props.show) {
+    } else {
       // Then close the workbench if no skill is selected and dropdown is closed
       emit('close');
     }
@@ -350,12 +350,14 @@ onUnmounted(() => {
   }
 });
 
-// Watch for changes to show prop to lock/unlock interaction
+// Watch for changes to show prop to lock/unlock interaction and manage focus
 watch(() => props.show, (newValue) => {
   if (newValue) {
     gameStore.interactionLocked = true;
+    gameStore.pushFocus('workbench');
   } else {
     gameStore.interactionLocked = false;
+    gameStore.popFocus();
   }
 }, { immediate: true });
 </script>

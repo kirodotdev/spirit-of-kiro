@@ -79,7 +79,7 @@ function closeDialog() {
 
 // Handle keydown events
 function handleKeyDown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && visible.value && !isLoading.value) {
+  if (event.key === 'Escape' && visible.value && !isLoading.value && store.hasFocus('sell-dialog')) {
     closeDialog();
   }
 }
@@ -98,6 +98,7 @@ onMounted(() => {
         visible.value = true;
         isLoading.value = true;
         store.interactionLocked = true;
+        store.pushFocus('sell-dialog');
         
         // Remove the game object from the world
         store.removeObject(data.id);
@@ -126,6 +127,7 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
   if (visible.value) {
     store.interactionLocked = false;
+    store.popFocus();
   }
 });
 

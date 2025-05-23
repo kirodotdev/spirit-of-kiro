@@ -21,6 +21,8 @@ export const useGameStore = defineStore('game', () => {
   const heldItemId = ref<string | null>(null)
   const inventories = ref<Map<string, Map<string, Item>>>(new Map())
   const personaData = ref<Map<string, string>>(new Map())
+  const skillResultVisible = ref(false)
+  const focusedComponent = ref<string | null>(null)
 
   // Flags
   const debug = ref(false)
@@ -36,6 +38,19 @@ export const useGameStore = defineStore('game', () => {
   const inventorySystem = new InventorySystem(inventories, socketSystem, userId);
   const personaSystem = new PersonaSystem(personaData, socketSystem);
   
+  // Focus management functions
+  function pushFocus(componentId: string) {
+    focusedComponent.value = componentId;
+  }
+
+  function popFocus() {
+    focusedComponent.value = null;
+  }
+
+  function hasFocus(componentId: string): boolean {
+    return focusedComponent.value === componentId;
+  }
+
   return {
     // State
     ws,
@@ -52,6 +67,13 @@ export const useGameStore = defineStore('game', () => {
     heldItemId,
     inventories,
     personaData,
+    skillResultVisible,
+    focusedComponent,
+
+    // Focus management
+    pushFocus,
+    popFocus,
+    hasFocus,
 
     // Socket actions
     initWebSocket: socketSystem.initWebSocket.bind(socketSystem),

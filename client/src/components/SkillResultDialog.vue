@@ -7,7 +7,7 @@ import { getRarityClass } from '../utils/items';
 const store = useGameStore();
 
 // State to track dialog visibility, loading state, story state, and result data
-const visible = ref(false);
+const visible = computed(() => store.skillResultVisible);
 const isLoading = ref(true);
 const hasStory = ref(false);
 const storyText = ref<string>('');
@@ -84,13 +84,13 @@ function closeDialog() {
   }
   // Emit clean-workbench-results event before closing
   store.emitEvent('clean-workbench-results');
-  visible.value = false;
+  store.skillResultVisible = false;
   store.interactionLocked = false;
 }
 
 // Function to handle keydown events
 function handleKeyDown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && visible.value && !isLoading.value) {
+  if (event.key === 'Escape' && visible.value && !isLoading.value && store.hasFocus('skill-result-dialog')) {
     closeDialog();
   }
 }
@@ -112,11 +112,12 @@ function setAnimationDurations() {
 onMounted(() => {
   // Listen for skill-invoked event to show loading state
   skillInvokedListenerId = store.addEventListener('skill-invoked', (data) => {
-    visible.value = true;
+    store.skillResultVisible = true;
     isLoading.value = true;
     hasStory.value = false;
     storyText.value = '';
     store.interactionLocked = true;
+    store.pushFocus('skill-result-dialog');
     
     // Store the skill invocation data for the loading animation
     skillInvocationData.value = data;
@@ -161,6 +162,7 @@ onUnmounted(() => {
   
   if (visible.value) {
     store.interactionLocked = false;
+    store.popFocus();
   }
 });
 </script>
@@ -282,6 +284,32 @@ onUnmounted(() => {
         <!-- No items message -->
         <div v-if="!removedItems.length && !workbenchResultItems.length" class="no-items">
           <p>No items were affected by this skill.</p>
+        </div>
+
+        <div class="appraisal-details">
+          <div class="appraisal-header">
+            <button class="close-appraisal-button" @click="closeDialog">×</button>
+          </div>
+          <div class="appraisal-row">
+            <p class="value">{{ resultData?.appraisal?.appraisal?.analysis || 'No analysis provided.' }}</p>
+          </div>
+          <div class="appraisal-row">
+            <div class="gold-display">
+              <div class="gold-icon"></div>
+              <span class="gold-amount">{{ resultData?.appraisal?.appraisal?.saleAmount || 0 }}</span>
+            </div>
+          </div>
+          <div class="appraisal-row">
+            <span class="value" :class="{
+              'very-happy': resultData?.appraisal?.appraisal?.happiness > 50,
+              'happy': resultData?.appraisal?.appraisal?.happiness > 0 && resultData?.appraisal?.appraisal?.happiness <= 50,
+              'neutral': resultData?.appraisal?.appraisal?.happiness === 0,
+              'unhappy': resultData?.appraisal?.appraisal?.happiness < 0 && resultData?.appraisal?.appraisal?.happiness >= -50,
+              'very-unhappy': resultData?.appraisal?.appraisal?.happiness < -50
+            }">
+              {{ getHappinessText(resultData?.appraisal?.appraisal?.happiness) }}
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -677,5 +705,46 @@ onUnmounted(() => {
   padding: 20px;
   color: #aaa;
   font-style: italic;
+}
+
+.appraisal-details {
+  position: absolute;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  width: 95%;
+  height: 24%;
+  top: 77%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  border: 2px solid #333;
+  padding: 15px;
+}
+
+.appraisal-header {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-appraisal-button {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.close-appraisal-button:hover {
+  color: white;
 }
 </style>
