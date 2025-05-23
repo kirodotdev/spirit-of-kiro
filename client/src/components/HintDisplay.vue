@@ -72,19 +72,20 @@ onUnmounted(() => {
 
 <style scoped>
 .hint-display {
-  position: fixed;
+  position: absolute;
   bottom: 20px;
   right: 20px;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(40, 40, 40, 0.8);
   color: white;
   padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: 12px;
   max-width: 300px;
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
   z-index: 1000;
   text-align: left;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .hint-visible {

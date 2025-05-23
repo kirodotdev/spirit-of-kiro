@@ -1,4 +1,3 @@
-
 <template>
   <div class="app">
     <div class="control-buttons">
@@ -9,6 +8,7 @@
       <GameGrid :grid-size="gridSize" :tile-size="tileSize" />
       <GameObjects :gameObjects="gameStore.objects" :tileSize="tileSize" />
       <HintDisplay />
+      <HUD />
     </div>
     <div class="connection-status" :class="{ connected: gameStore.wsConnected }" />
     <!-- Dialogs are not constantly visible, but will appear as needed -->
@@ -29,6 +29,7 @@ import ItemDialog from '../components/ItemDialog.vue'
 import SellDialog from '../components/SellDialog.vue'
 import DiscardDialog from '../components/DiscardDialog.vue'
 import SkillResultDialog from '../components/SkillResultDialog.vue'
+import HUD from '../components/HUD.vue'
 import { setupGameObjects } from '../utils/init-world'
 import { storeToRefs } from 'pinia'
 
