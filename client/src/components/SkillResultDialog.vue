@@ -285,32 +285,6 @@ onUnmounted(() => {
         <div v-if="!removedItems.length && !workbenchResultItems.length" class="no-items">
           <p>No items were affected by this skill.</p>
         </div>
-
-        <div class="appraisal-details">
-          <div class="appraisal-header">
-            <button class="close-appraisal-button" @click="closeDialog">×</button>
-          </div>
-          <div class="appraisal-row">
-            <p class="value">{{ resultData?.appraisal?.appraisal?.analysis || 'No analysis provided.' }}</p>
-          </div>
-          <div class="appraisal-row">
-            <div class="gold-display">
-              <div class="gold-icon"></div>
-              <span class="gold-amount">{{ resultData?.appraisal?.appraisal?.saleAmount || 0 }}</span>
-            </div>
-          </div>
-          <div class="appraisal-row">
-            <span class="value" :class="{
-              'very-happy': resultData?.appraisal?.appraisal?.happiness > 50,
-              'happy': resultData?.appraisal?.appraisal?.happiness > 0 && resultData?.appraisal?.appraisal?.happiness <= 50,
-              'neutral': resultData?.appraisal?.appraisal?.happiness === 0,
-              'unhappy': resultData?.appraisal?.appraisal?.happiness < 0 && resultData?.appraisal?.appraisal?.happiness >= -50,
-              'very-unhappy': resultData?.appraisal?.appraisal?.happiness < -50
-            }">
-              {{ getHappinessText(resultData?.appraisal?.appraisal?.happiness) }}
-            </span>
-          </div>
-        </div>
       </div>
     </div>
   </div>

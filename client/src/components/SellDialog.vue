@@ -196,6 +196,9 @@ function getAppraiserComment(happiness: number): string {
           </div>
         </div>
         <div class="appraisal-details">
+          <div class="appraisal-header">
+            <button class="close-appraisal-button" @click="closeDialog">×</button>
+          </div>
           <div class="appraisal-row">
             <p class="value">{{ result?.appraisal?.appraisal?.analysis || 'No analysis provided.' }}</p>
           </div>
@@ -544,5 +547,29 @@ function getAppraiserComment(happiness: number): string {
 
 .gold-amount {
   font-size: 1.1em;
+}
+
+.appraisal-header {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-appraisal-button {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.close-appraisal-button:hover {
+  color: white;
 }
 </style>
