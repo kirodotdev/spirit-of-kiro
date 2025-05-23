@@ -272,10 +272,11 @@ onUnmounted(() => {
         <!-- Item Preview Component -->
         <ItemPreview 
           :item="hoveredItem"
-          position="absolute"
+          position="fixed"
           top="50%"
           left="50%"
           transform="translate(-50%, -50%)"
+          style="z-index: 10000;"
         />
         
         <!-- No items message -->
