@@ -56,8 +56,8 @@ export default async function handleSellItem(state: ConnectionState, data: SellI
     const appraisal = await appraiseItem(item);
     console.log('Item appraisal:', appraisal);
 
-    // Increment the player's gold with the market value
-    const newGold = await incrementPersonaDetail(state.userId, 'gold', appraisal.appraisal.marketValue || 0);
+    // Increment the player's gold with the sale amount
+    const newGold = await incrementPersonaDetail(state.userId, 'gold', appraisal.appraisal.saleAmount || 0);
 
     // Move the item to the discarded location
     await moveItemLocation(data.body.itemId, currentLocation, 'discarded');

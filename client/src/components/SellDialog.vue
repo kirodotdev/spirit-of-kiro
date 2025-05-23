@@ -5,6 +5,9 @@ import ItemPreview from './ItemPreview.vue';
 import { getRarityClass } from '../utils/items';
 import sellTableImage from '../assets/sell-table.png';
 import appraisingImage from '../assets/appraising.png';
+import happyImage from '../assets/happy.png';
+import unhappyImage from '../assets/unhappy.png';
+import neutralImage from '../assets/neutral.png';
 
 const store = useGameStore();
 
@@ -105,12 +108,12 @@ onMounted(() => {
     }
   });
   
-  /*itemSoldListenerId = store.addEventListener('item-sold', (data) => {
+  itemSoldListenerId = store.addEventListener('item-sold', (data) => {
     result.value = data;
     isLoading.value = false;
     // Clear any hovered item preview when the result comes back
     hoveredItemId.value = null;
-  });*/
+  });
   
   window.addEventListener('keydown', handleKeyDown);
 });
@@ -125,6 +128,28 @@ onUnmounted(() => {
     store.interactionLocked = false;
   }
 });
+
+function getHappinessText(happiness: number): string {
+  if (happiness > 50) return 'Absolutely Thrilled!';
+  if (happiness > 0) return 'Quite Pleased';
+  if (happiness === 0) return 'Neutral';
+  if (happiness > -50) return 'Disappointed';
+  return 'Absolutely Disgusted';
+}
+
+function getAppraiserImage(happiness: number): string {
+  if (happiness > 50) return happyImage;
+  if (happiness < -50) return unhappyImage;
+  return neutralImage;
+}
+
+function getAppraiserComment(happiness: number): string {
+  if (happiness > 50) return "What an exceptional find!";
+  if (happiness > 0) return "Not bad at all!";
+  if (happiness === 0) return "Hmm, interesting...";
+  if (happiness > -50) return "Well, it's something...";
+  return "Oh my...";
+}
 </script>
 
 <template>
@@ -152,42 +177,43 @@ onUnmounted(() => {
       <!-- Result state -->
       <div v-else class="dialog-content result-content">
         <div class="appraisal-container">
-          <div class="preview-grid" v-if="sellData">
-            <div class="item-wrapper" 
-                 :class="getRarityClass(sellData.value)"
-                 @mouseenter="(event) => handleItemMouseEnter(sellData.id, event)"
-                 @mouseleave="handleItemMouseLeave">
-              <img :src="sellData.imageUrl" class="item-image" :alt="sellData.name" />
-            </div>
-          </div>
-          <div class="appraisal-details">
-            <h3>Appraisal Results</h3>
-            <div class="appraisal-info">
-              <div class="appraisal-row">
-                <span class="label">Base Value:</span>
-                <span class="value">{{ result?.appraisal?.appraisal?.baseValue || 0 }} coins</span>
-              </div>
-              <div class="appraisal-row">
-                <span class="label">Market Value:</span>
-                <span class="value">{{ result?.appraisal?.appraisal?.marketValue || 0 }} coins</span>
-              </div>
-              <div class="appraisal-row">
-                <span class="label">Condition:</span>
-                <span class="value">{{ result?.appraisal?.appraisal?.condition || 'Unknown' }}</span>
-              </div>
-              <div class="appraisal-row explanation">
-                <span class="label">Explanation:</span>
-                <p>{{ result?.appraisal?.appraisal?.explanation || 'No explanation provided.' }}</p>
-              </div>
-              <div class="appraisal-row" v-if="result?.appraisal?.appraisal?.specialNotes">
-                <span class="label">Special Notes:</span>
-                <p>{{ result?.appraisal?.appraisal?.specialNotes }}</p>
-              </div>
-            </div>
+          <div class="appraising-container">
+            <div class="chat-bubble">{{ getAppraiserComment(result?.appraisal?.appraisal?.happiness) }}</div>
+            <img :src="getAppraiserImage(result?.appraisal?.appraisal?.happiness)" class="appraising-image" alt="Appraiser" />
           </div>
         </div>
         <div class="table-container">
           <img :src="sellTableImage" class="table-image" alt="Sell Table" />
+        </div>
+        <div class="preview-grid" v-if="sellData">
+          <div class="item-wrapper" 
+                :class="getRarityClass(sellData.value)"
+                @mouseenter="(event) => handleItemMouseEnter(sellData.id, event)"
+                @mouseleave="handleItemMouseLeave">
+            <img :src="sellData.imageUrl" class="item-image" :alt="sellData.name" />
+          </div>
+        </div>
+        <div class="appraisal-details">
+          <div class="appraisal-row">
+            <p class="value">{{ result?.appraisal?.appraisal?.analysis || 'No analysis provided.' }}</p>
+          </div>
+          <div class="appraisal-row">
+            <div class="gold-display">
+              <div class="gold-icon"></div>
+              <span class="gold-amount">{{ result?.appraisal?.appraisal?.saleAmount || 0 }}</span>
+            </div>
+          </div>
+          <div class="appraisal-row">
+            <span class="value" :class="{
+              'very-happy': result?.appraisal?.appraisal?.happiness > 50,
+              'happy': result?.appraisal?.appraisal?.happiness > 0 && result?.appraisal?.appraisal?.happiness <= 50,
+              'neutral': result?.appraisal?.appraisal?.happiness === 0,
+              'unhappy': result?.appraisal?.appraisal?.happiness < 0 && result?.appraisal?.appraisal?.happiness >= -50,
+              'very-unhappy': result?.appraisal?.appraisal?.happiness < -50
+            }">
+              {{ getHappinessText(result?.appraisal?.appraisal?.happiness) }}
+            </span>
+          </div>
         </div>
       </div>
       
@@ -242,7 +268,7 @@ onUnmounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  z-index: 1;
+  z-index: 2;
 }
 
 .table-image {
@@ -392,53 +418,54 @@ onUnmounted(() => {
 
 .appraisal-details {
   position: absolute;
-  width: 58%;
+  background-color: #1a1a1a;
+  border-radius: 8px;
+  width: 95%;
   height: 24%;
-  top: 47%;
+  top: 77%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-
-.appraisal-details h3 {
-  margin-top: 0;
-  margin-bottom: 15px;
-  color: #fff;
-  font-size: 1.3rem;
-}
-
-.appraisal-info {
-  background-color: rgba(0, 0, 0, 0.2);
+  z-index: 3;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  border: 2px solid #333;
   padding: 15px;
-  border-radius: 8px;
 }
 
 .appraisal-row {
   margin-bottom: 10px;
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.appraisal-row.explanation {
-  flex-direction: column;
-}
-
-.appraisal-row .label {
-  font-weight: bold;
-  color: #aaa;
-  width: 120px;
-  flex-shrink: 0;
+  width: 100%;
 }
 
 .appraisal-row .value {
   color: #ddd;
+  line-height: 1.4;
+  font-size: 0.9rem;
+  margin: 0;
+  padding: 0;
 }
 
-.appraisal-row p {
-  margin: 5px 0 0;
-  color: #ddd;
-  line-height: 1.5;
+.appraisal-row .value.very-happy {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.appraisal-row .value.happy {
+  color: #8BC34A;
+}
+
+.appraisal-row .value.neutral {
+  color: #FFC107;
+}
+
+.appraisal-row .value.unhappy {
+  color: #FF9800;
+}
+
+.appraisal-row .value.very-unhappy {
+  color: #F44336;
+  font-weight: bold;
 }
 
 .appraising-container {
@@ -452,13 +479,14 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   animation: float 2s ease-in-out infinite;
+  z-index: 1;
 }
 
 .chat-bubble {
   position: absolute;
   top: -40px;
-  background-color: white;
-  color: #333;
+  background-color: rgba(0, 0, 0, 0.7);
+  color: #ddd;
   padding: 10px 15px;
   border-radius: 15px;
   font-size: 1.2em;
@@ -475,7 +503,7 @@ onUnmounted(() => {
   transform: translateX(-50%);
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
-  border-top: 10px solid white;
+  border-top: 10px solid rgba(0, 0, 0, 0.7);
 }
 
 @keyframes fadeIn {
@@ -495,4 +523,24 @@ onUnmounted(() => {
   100% { transform: translateY(0); }
 }
 
+.gold-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  color: white;
+  font-weight: bold;
+}
+
+.gold-icon {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
+}
+
+.gold-amount {
+  font-size: 1.1em;
+}
 </style>

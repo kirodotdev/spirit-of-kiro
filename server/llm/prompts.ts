@@ -158,11 +158,12 @@ export const appraiseItem = async function (item: any): Promise<any> {
           Your responses must be in JSON format between two <RESULT> tags, with the following fields:
           
           appraisal: {
-            baseValue: The item's original value
-            marketValue: The appraised market value (can be higher or lower than baseValue)
-            explanation: 2-3 sentences explaining your valuation
-            condition: Brief assessment of the item's condition
-            specialNotes: Any unique qualities that affected the valuation
+            analysis: A brief, colorful analysis of the item (2-3 sentences)
+            saleAmount: The amount of gold the appraiser is willing to pay
+            happiness: A number between -100 and 100 indicating how happy/unhappy the appraiser is with the item
+              -100: Extremely disappointed, item is worthless or offensive
+              0: Neutral, item is average
+              100: Extremely excited, item is exceptional
           }
         `
       },
