@@ -263,6 +263,20 @@ export class SocketSystem {
     this.ws.value.send(JSON.stringify(message))
   }
 
+  fetchPersona() {
+    if (!this.ws.value || !this.isAuthenticated.value) {
+      console.error('Cannot fetch persona: not connected or not authenticated')
+      return
+    }
+
+    const message = {
+      type: 'fetch-persona',
+      body: {}
+    }
+
+    this.ws.value.send(JSON.stringify(message))
+  }
+
   /**
    * Schedule a reconnection attempt with exponential backoff
    */

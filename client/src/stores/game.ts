@@ -6,6 +6,7 @@ import { defineStore } from 'pinia'
 import { GameObjectSystem, type GameObject } from '../systems/game-object-system'
 import { ItemSystem, type Item } from '../systems/item-system'
 import { InventorySystem } from '../systems/inventory-system'
+import { PersonaSystem } from '../systems/persona-system'
 
 export const useGameStore = defineStore('game', () => {
   // Reactive state variables that are used by front facing
@@ -19,6 +20,7 @@ export const useGameStore = defineStore('game', () => {
   const tileSize = ref(50)
   const heldItemId = ref<string | null>(null)
   const inventories = ref<Map<string, Map<string, Item>>>(new Map())
+  const personaData = ref<Map<string, string>>(new Map())
 
   // Flags
   const debug = ref(false)
@@ -32,6 +34,7 @@ export const useGameStore = defineStore('game', () => {
   const gameObjectSystem = new GameObjectSystem(objects);
   const itemSystem = new ItemSystem(items, socketSystem);
   const inventorySystem = new InventorySystem(inventories, socketSystem, userId);
+  const personaSystem = new PersonaSystem(personaData, socketSystem);
   
   return {
     // State
@@ -48,6 +51,7 @@ export const useGameStore = defineStore('game', () => {
     hasActivePhysics,
     heldItemId,
     inventories,
+    personaData,
 
     // Socket actions
     initWebSocket: socketSystem.initWebSocket.bind(socketSystem),
@@ -60,6 +64,7 @@ export const useGameStore = defineStore('game', () => {
     moveItem: socketSystem.moveItem.bind(socketSystem),
     useSkill: socketSystem.useSkill.bind(socketSystem),
     sellItem: socketSystem.sellItem.bind(socketSystem),
+    fetchPersona: socketSystem.fetchPersona.bind(socketSystem),
     reconnect: socketSystem.reconnect.bind(socketSystem),
     cleanup: socketSystem.cleanup.bind(socketSystem),
 
@@ -79,5 +84,8 @@ export const useGameStore = defineStore('game', () => {
     moveItemToInventory: inventorySystem.moveItemToInventory.bind(inventorySystem),
     getInventoryItems: inventorySystem.getInventoryItems.bind(inventorySystem),
     refreshInventory: inventorySystem.refreshInventory.bind(inventorySystem),
+
+    // Persona system actions
+    usePersona: personaSystem.usePersona.bind(personaSystem),
   }
 })

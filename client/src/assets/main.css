@@ -24,7 +24,7 @@ body {
   object-fit: contain;
   border-radius: 10px;
   transition: transform 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
-  border: 2px solid #333;
+  border: .25em solid #333;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
 }
 

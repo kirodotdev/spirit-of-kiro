@@ -167,107 +167,103 @@ onUnmounted(() => {
 
 <template>
   <div v-if="visible" class="skill-result-overlay">
-    <div class="skill-result-dialog">
-      <div class="dialog-header">
-        <h2>Results</h2>
-        <button class="close-button" :disabled="isLoading" @click="closeDialog">×</button>
-      </div>
-      
-      <!-- Loading state -->
-      <div v-if="isLoading" class="dialog-content loading-content">
-        <div class="skill-fusion-container">
-          <!-- Tool item on the left -->
-          <div v-if="skillInvocationData?.tool" class="fusion-item tool-item">
-            <div class="item-wrapper" :class="getRarityClass(skillInvocationData.tool.value)">
-              <img :src="skillInvocationData.tool.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="skillInvocationData.tool.name" />
-            </div>
-            <div class="fusion-label">Tool</div>
+    <!-- Loading state - just the animation -->
+    <div v-if="isLoading" class="loading-phase">
+      <div class="skill-fusion-container">
+        <!-- Tool item on the left -->
+        <div v-if="skillInvocationData?.tool" class="fusion-item tool-item">
+          <div class="item-wrapper" :class="getRarityClass(skillInvocationData.tool.value)">
+            <img :src="skillInvocationData.tool.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="skillInvocationData.tool.name" />
           </div>
-          
-          <!-- Skill name at the top -->
-          <div class="fusion-skill">
-            <div class="skill-name">{{ skillInvocationData?.skill?.name || 'Skill' }}</div>
-            <div class="fusion-label">Skill</div>
-          </div>
-          
-          <!-- Target item on the right -->
-          <div v-if="skillInvocationData?.target" class="fusion-item target-item">
-            <div class="item-wrapper" :class="getRarityClass(skillInvocationData.target.value)">
-              <img :src="skillInvocationData.target.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="skillInvocationData.target.name" />
-            </div>
-            <div class="fusion-label">Target</div>
-          </div>
-          
-          <!-- Central fusion point with soft glow effect -->
-          <div class="fusion-center">
-            <div class="glow-effect"></div>
-          </div>
+          <div class="fusion-label">Tool</div>
         </div>
-        <p class="processing-text">Combining elements...</p>
+        
+        <!-- Skill name at the top -->
+        <div class="fusion-skill">
+          <div class="skill-name">{{ skillInvocationData?.skill?.name || 'Skill' }}</div>
+          <div class="fusion-label">Skill</div>
+        </div>
+        
+        <!-- Target item on the right -->
+        <div v-if="skillInvocationData?.target" class="fusion-item target-item">
+          <div class="item-wrapper" :class="getRarityClass(skillInvocationData.target.value)">
+            <img :src="skillInvocationData.target.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="skillInvocationData.target.name" />
+          </div>
+          <div class="fusion-label">Target</div>
+        </div>
       </div>
-      
-      <!-- Story state -->
-      <div v-else-if="hasStory" class="dialog-content story-content">
+    </div>
+    
+    <!-- Story state - mini dialog above animation -->
+    <div v-else-if="hasStory" class="story-phase">
+      <div class="story-dialog">
         <p class="story-text">{{ storyText }}</p>
         <div class="loading-footer">
           <div class="small-spinner"></div>
-          <p>Gathering results...</p>
         </div>
       </div>
+    </div>
+    
+    <!-- Result state - full dialog -->
+    <div v-else class="skill-result-dialog">
+      <div class="dialog-header">
+        <h2>Results</h2>
+        <button class="close-button" @click="closeDialog">×</button>
+      </div>
       
-      <!-- Result state -->
-      <div v-else class="dialog-content result-content">
-
+      <div class="dialog-content">
         <!-- Story section -->
         <p class="story-text">{{ resultData?.story || 'Something unexpected happened...' }}</p>
 
-        <!-- Tool used section -->
-        <div v-if="resultData?.tool" class="tool-section">
-          <h3>Tool:</h3>
-          <div class="items-grid">
-            <div 
-              class="item-container"
-              @mouseenter="handleToolMouseEnter"
-              @mouseleave="handleToolMouseLeave"
-            >
-              <div class="item-wrapper" :class="getRarityClass(resultData.tool.value)">
-                <img :src="resultData.tool.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="resultData.tool.name" />
+        <div class="results-grid">
+          <!-- Tool used section -->
+          <div v-if="resultData?.tool" class="tool-section">
+            <h3>Tool</h3>
+            <div class="items-grid">
+              <div 
+                class="item-container"
+                @mouseenter="handleToolMouseEnter"
+                @mouseleave="handleToolMouseLeave"
+              >
+                <div class="item-wrapper" :class="getRarityClass(resultData.tool.value)">
+                  <img :src="resultData.tool.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="resultData.tool.name" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Lost section - showing removed items -->
-        <div v-if="removedItems.length > 0" class="lost-section">
-          <h3>Lost:</h3>
-          <div class="items-grid">
-            <div 
-              v-for="item in removedItems" 
-              :key="item.id" 
-              class="item-container"
-              @mouseenter="handleItemMouseEnter(item.id)"
-              @mouseleave="handleItemMouseLeave"
-            >
-              <div class="item-wrapper" :class="getRarityClass(item.value)">
-                <img :src="item.imageUrl" class="item-image" :alt="item.name" />
+          
+          <!-- Lost section -->
+          <div v-if="removedItems.length > 0" class="lost-section">
+            <h3>Lost</h3>
+            <div class="items-grid">
+              <div 
+                v-for="item in removedItems" 
+                :key="item.id" 
+                class="item-container"
+                @mouseenter="handleItemMouseEnter(item.id)"
+                @mouseleave="handleItemMouseLeave"
+              >
+                <div class="item-wrapper" :class="getRarityClass(item.value)">
+                  <img :src="item.imageUrl" class="item-image" :alt="item.name" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        <!-- Results section - showing workbench results inventory items -->
-        <div v-if="workbenchResultItems.length > 0" class="results-section">
-          <h3>Gained:</h3>
-          <div class="items-grid">
-            <div 
-              v-for="item in workbenchResultItems" 
-              :key="item.id" 
-              class="item-container"
-              @mouseenter="handleItemMouseEnter(item.id)"
-              @mouseleave="handleItemMouseLeave"
-            >
-              <div class="item-wrapper" :class="getRarityClass(item.value)">
-                <img :src="item.imageUrl" class="item-image" :alt="item.name" />
+          
+          <!-- Results section -->
+          <div v-if="workbenchResultItems.length > 0" class="results-section">
+            <h3>Gained</h3>
+            <div class="items-grid">
+              <div 
+                v-for="item in workbenchResultItems" 
+                :key="item.id" 
+                class="item-container"
+                @mouseenter="handleItemMouseEnter(item.id)"
+                @mouseleave="handleItemMouseLeave"
+              >
+                <div class="item-wrapper" :class="getRarityClass(item.value)">
+                  <img :src="item.imageUrl" class="item-image" :alt="item.name" />
+                </div>
               </div>
             </div>
           </div>
@@ -283,7 +279,7 @@ onUnmounted(() => {
         />
         
         <!-- No items message -->
-        <div v-if="!removedItems.length && !workbenchResultItems.length && !isLoading" class="no-items">
+        <div v-if="!removedItems.length && !workbenchResultItems.length" class="no-items">
           <p>No items were affected by this skill.</p>
         </div>
       </div>
@@ -292,7 +288,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Dialog Styles */
 .skill-result-overlay {
   position: fixed;
   top: 0;
@@ -306,6 +301,33 @@ onUnmounted(() => {
   z-index: 9999;
 }
 
+/* Loading phase styles */
+.loading-phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Story phase styles */
+.story-phase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+}
+
+.story-dialog {
+  background-color: rgba(26, 26, 26, 0.9);
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 600px;
+  width: 90%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  border: 1px solid #333;
+}
+
+/* Result dialog styles */
 .skill-result-dialog {
   background-color: #1a1a1a;
   border-radius: 8px;
@@ -315,6 +337,8 @@ onUnmounted(() => {
   overflow-y: auto;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   border: 2px solid #333;
+  position: relative;
+  top: -20%; /* Move the dialog up by 20% */
 }
 
 .dialog-header {
@@ -345,14 +369,12 @@ onUnmounted(() => {
   color: white;
 }
 
-.close-button:disabled {
-  color: #555;
-  cursor: not-allowed;
-}
-
 .dialog-content {
   padding: 20px;
   color: #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 /* Loading state styles */
@@ -392,25 +414,26 @@ onUnmounted(() => {
 }
 
 .tool-item {
-  left: 25%;
+  left: 50%;
   top: 50%;
-  transform: translateY(-50%);
-  animation: smash-from-left linear infinite;
+  transform: translate(-50%, -50%) translateX(-150px);
+  animation: orbit-around-center linear infinite;
   animation-duration: var(--smash-tool-duration);
+  animation-direction: reverse;
 }
 
 .target-item {
-  right: 25%;
+  left: 50%;
   top: 50%;
-  transform: translateY(-50%);
-  animation: smash-from-right linear infinite;
+  transform: translate(-50%, -50%) translateX(150px);
+  animation: orbit-around-center linear infinite;
   animation-duration: var(--smash-target-duration);
 }
 
 .fusion-skill {
   position: absolute;
-  top: 30%;
   left: 50%;
+  top: 50%;
   transform: translate(-50%, -50%);
   background-color: rgba(33, 150, 243, 0.2);
   border: 2px solid #2196f3;
@@ -418,13 +441,11 @@ onUnmounted(() => {
   padding: 8px 15px;
   color: #2196f3;
   font-weight: bold;
-  animation: smash-from-top linear infinite;
-  animation-duration: var(--smash-skill-duration);
-  z-index: 2;
+  z-index: 3;
 }
 
 .fusion-label {
-  margin-top: 8px;
+  margin-top: 4px;
   font-size: 0.8rem;
   color: #aaa;
   text-align: center;
@@ -435,30 +456,6 @@ onUnmounted(() => {
   text-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
 }
 
-.fusion-center {
-  position: absolute;
-  width: 30px;
-  height: 30px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.2) 70%, transparent 100%);
-  border-radius: 50%;
-  z-index: 1;
-}
-
-.glow-effect {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 30%, rgba(255, 255, 255, 0.3) 60%, transparent 100%);
-  transform: scale(1);
-  opacity: 0.5;
-  animation: pulse-glow infinite;
-  animation-duration: var(--pulse-glow-duration);
-  animation-timing-function: ease-in-out;
-  animation-delay: calc(var(--smash-tool-duration) / 2 - var(--pulse-glow-duration) / 2);
-  box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.5);
-}
-
 .processing-text {
   margin-top: 20px;
   color: #ddd;
@@ -466,34 +463,13 @@ onUnmounted(() => {
   text-align: center;
 }
 
-@keyframes smash-from-left {
-  0% { transform: translate(-50%, -50%); }
-  45% { transform: translate(calc(50% - 60px), -50%); }
-  50% { transform: translate(calc(50% - 40px), -50%); opacity: 1; }
-  55% { transform: translate(50%, -50%); opacity: 0; }
-  100% { transform: translate(-50%, -50%); opacity: 0; }
-}
-
-@keyframes smash-from-right {
-  0% { transform: translate(50%, -50%); }
-  45% { transform: translate(calc(-50% + 60px), -50%); }
-  50% { transform: translate(calc(-50% + 40px), -50%); opacity: 1; }
-  55% { transform: translate(-50%, -50%); opacity: 0; }
-  100% { transform: translate(50%, -50%); opacity: 0; }
-}
-
-@keyframes smash-from-top {
-  0% { transform: translate(-50%, -50%); }
-  45% { transform: translate(-50%, -20%); }
-  50% { transform: translate(-50%, 0%); opacity: 1; }
-  55% { transform: translate(-50%, 10%); opacity: 0; }
-  100% { transform: translate(-50%, -50%); opacity: 0; }
-}
-
-@keyframes pulse-glow {
-  0% { transform: scale(0.8); opacity: 0.3; }
-  50% { transform: scale(1.5); opacity: 0.8; }
-  100% { transform: scale(0.8); opacity: 0.3; }
+@keyframes orbit-around-center {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg) translateX(150px) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg) translateX(150px) rotate(-360deg);
+  }
 }
 
 .small-spinner {
@@ -531,9 +507,12 @@ onUnmounted(() => {
 
 /* Result state styles */
 .result-content {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  width: 90%;
+  max-width: 800px;
+  max-height: 80vh;
+  overflow-y: auto;
+  color: #ddd;
+  padding: 20px;
 }
 
 .story-section {
@@ -553,26 +532,54 @@ onUnmounted(() => {
   line-height: 1.6;
   font-size: 1rem;
   color: #ddd;
-  white-space: pre-line; /* Preserves line breaks in the story text */
+  white-space: pre-line;
+  margin-bottom: 20px;
 }
 
+.results-grid {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.tool-section,
+.lost-section,
+.results-section {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.tool-section h3,
+.lost-section h3,
 .results-section h3 {
   margin-bottom: 15px;
-  color: #4caf50;
   font-size: 1.2rem;
+  text-align: center;
+}
+
+.tool-section h3 {
+  color: #2196f3;
 }
 
 .lost-section h3 {
-  margin-bottom: 15px;
   color: #ff5252;
-  font-size: 1.2rem;
+}
+
+.results-section h3 {
+  color: #4caf50;
 }
 
 .items-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
   gap: 10px;
   margin-top: 10px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .item-container {
@@ -594,35 +601,23 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: rgba(0, 0, 0, 0.3);
-  border: 2px solid #333;
-  padding: 5px;
+  padding: 0px;
   transition: all 0.2s;
 }
 
 .item-wrapper.item-common {
-  border-color: #ffffff;
-  box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
 }
 
 .item-wrapper.item-uncommon {
-  border-color: #4caf50;
-  box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
 }
 
 .item-wrapper.item-rare {
-  border-color: #2196f3;
-  box-shadow: 0 0 5px rgba(33, 150, 243, 0.3);
 }
 
 .item-wrapper.item-epic {
-  border-color: #9c27b0;
-  box-shadow: 0 0 5px rgba(156, 39, 176, 0.3);
 }
 
 .item-wrapper.item-legendary {
-  border-color: #ff9800;
-  box-shadow: 0 0 5px rgba(255, 152, 0, 0.5);
 }
 
 .item-image {
