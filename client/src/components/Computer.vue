@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import computerImage from '../assets/computer.png';
+import computerZoomImage from '../assets/computer-zoom.png';
 import { useGameStore } from '../stores/game';
-import { ref, onMounted, onUnmounted } from 'vue';
-import { storeToRefs } from 'pinia'
+import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { storeToRefs } from 'pinia';
+import ComputerFullscreen from './ComputerFullscreen.vue';
+import { getRarityClass } from '../utils/items';
 
 const props = defineProps<{
   row: number;
@@ -15,59 +18,164 @@ const props = defineProps<{
 }>();
 
 const gameStore = useGameStore();
-const { heldItemId } = storeToRefs(gameStore);
-let interactionListenerId: string;
+const showFullscreen = ref(false);
+
+const inventoryName = "computer";
+const inventory = gameStore.useInventory(inventoryName);
+
+// Add maxCapacity constant
+const maxCapacity = 21;
+
+// Create computed property for usedCapacity
+const usedCapacity = computed(() => {
+  return inventory.value.length;
+});
+
+// Computed property to determine the color of each dot based on item rarity
+const capacityDots = computed(() => {
+  const dots = [];
+  const items = inventory.value.map(id => gameStore.itemsById.get(id)).filter(Boolean);
+  
+  // Fill dots with items that exist in inventory
+  for (let i = 0; i < Math.min(items.length, maxCapacity); i++) {
+    const item = items[i];
+    if (item) {
+      const rarityClass = getRarityClass(item.value);
+      dots.push({
+        filled: true,
+        rarityClass
+      });
+    }
+  }
+  
+  // Fill remaining dots as empty
+  for (let i = items.length; i < maxCapacity; i++) {
+    dots.push({
+      filled: false,
+      rarityClass: 'empty'
+    });
+  }
+  
+  return dots;
+});
+
+const linkedInventory = computed(() => {
+  return `${gameStore.userId}:${inventoryName}`
+});
 
 // Function to handle player interaction with the computer
-const interaction = () => {
+const handlePlayerInteraction = () => {
   if (!props.playerIsNear) {
     return;
   }
 
-  // Emit peek-discarded event
-  gameStore.peekDiscarded(5); // Peek at 5 discarded items
+  if (!gameStore.heldItemId) {
+    showFullscreen.value = true;
+    return;
+  }
+  
+  // Check if player is holding an item
+  if (gameStore.heldItemId) {
+    // Check if the computer is full before adding the item
+    if (usedCapacity.value >= maxCapacity) {
+      // Computer is full, emit drop-item event and open computer without adding item
+      gameStore.emitEvent('drop-item', { itemId: gameStore.heldItemId });
+      showFullscreen.value = true;
+      return;
+    }
+    
+    // Computer has space, move the held item to the computer inventory
+    gameStore.moveItem(
+      gameStore.heldItemId,
+      linkedInventory.value
+    );
+    
+    // Remove the held item
+    gameStore.heldItemId = null;
+  }
 };
 
+function handleItemMoved(data: any) {
+  if (!data) {
+    return;
+  }
+   
+  if (data.targetInventoryId === linkedInventory.value) {
+    // Open the computer when an item is moved to it
+    showFullscreen.value = true;
+  }
+}
+
+let interactionListenerId: string;
+let itemMovedListenerId: string;
+
 onMounted(() => {
-  interactionListenerId = gameStore.addEventListener('player-interaction', interaction);
+  interactionListenerId = gameStore.addEventListener('player-interaction', handlePlayerInteraction);
+  itemMovedListenerId = gameStore.addEventListener('item-moved', handleItemMoved);
 });
 
 onUnmounted(() => {
-  // Clean up event listener
   gameStore.removeEventListener('player-interaction', interactionListenerId);
+  gameStore.removeEventListener('item-moved', itemMovedListenerId);
 });
+
+const closeFullscreen = () => {
+  showFullscreen.value = false;
+};
 </script>
 
 <template>
-  <div :style="{
-    position: 'absolute',
-    top: `${row * tileSize}px`,
-    left: `${col * tileSize}px`,
-    width: `${width * tileSize}px`,
-    height: `${depth * tileSize}px`,
-    border: gameStore.debug ? '1px solid red': 'none'
-  }">
-    <div v-if="playerIsNear" class="interact-prompt">E</div>
-    <img 
-      :src="computerImage" 
-      :width="width * tileSize" 
-      :style="{
-        position: 'absolute',
-        top: `-${tileSize * 1}px`
-      }"
-      :class="['computer', { 'computer-active': playerIsNear }]"
-      alt="Computer"
-    />
-    <!-- Height visualization line (only visible in debug mode) -->
-    <div v-if="gameStore.debug" class="height-line" :style="{
+  <div>
+    <!-- Regular computer view -->
+    <div :style="{
       position: 'absolute',
-      left: '0',
-      bottom: '0',
-      width: '2px',
-      height: `${height * tileSize}px`,
-      backgroundColor: 'blue',
-      zIndex: 1000
-    }" />
+      top: `${row * tileSize}px`,
+      left: `${col * tileSize}px`,
+      width: `${width * tileSize}px`,
+      height: `${depth * tileSize}px`,
+      border: gameStore.debug ? '1px solid red': 'none'
+    }">
+      <div v-if="playerIsNear" class="interact-prompt">E</div>
+      
+      <img 
+        :src="computerImage" 
+        :width="width * tileSize" 
+        :style="{
+          position: 'absolute',
+          top: `-${tileSize * 1}px`
+        }"
+        :class="['computer', { 'computer-active': playerIsNear }]"
+        alt="Computer"
+      />
+
+      <!-- Capacity display as grid of dots -->
+      <div v-if="playerIsNear" class="capacity-grid">
+        <div 
+          v-for="(dot, index) in capacityDots" 
+          :key="index" 
+          class="capacity-dot"
+          :class="[dot.rarityClass]"
+        ></div>
+      </div>
+      
+      <!-- Height visualization line (only visible in debug mode) -->
+      <div v-if="gameStore.debug" class="height-line" :style="{
+        position: 'absolute',
+        left: '0',
+        bottom: '0',
+        width: '2px',
+        height: `${height * tileSize}px`,
+        backgroundColor: 'blue',
+        zIndex: 1000
+      }" />
+    </div>
+
+    <ComputerFullscreen
+      :show="showFullscreen"
+      :computer-image="computerZoomImage"
+      :items="inventory"
+      @close="closeFullscreen"
+    />
   </div>
 </template>
 
@@ -96,6 +204,51 @@ onUnmounted(() => {
   border-radius: calc(0.08 * v-bind(tileSize) * 1px);
   z-index: 1;
   line-height: 1;
+}
+
+.capacity-grid {
+  position: absolute;
+  top: -21.5%;
+  left: 46.5%;
+  transform: translateX(-50%);
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: calc(0.05 * v-bind(tileSize) * 1px);
+  width: calc(0.7 * v-bind(tileSize) * 1px);
+}
+
+.capacity-dot {
+  width: calc(0.08 * v-bind(tileSize) * 1px);
+  height: calc(0.08 * v-bind(tileSize) * 1px);
+  border-radius: 50%;
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+}
+
+/* Dot colors based on item rarity */
+.capacity-dot.empty {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.capacity-dot.item-common {
+  background-color: #ffffff;
+}
+
+.capacity-dot.item-uncommon {
+  background-color: #4caf50;
+}
+
+.capacity-dot.item-rare {
+  background-color: #2196f3;
+}
+
+.capacity-dot.item-epic {
+  background-color: #9c27b0;
+}
+
+.capacity-dot.item-legendary {
+  background-color: #ff9800;
+  box-shadow: 0 0 4px rgba(255, 152, 0, 0.8);
 }
 
 @keyframes pulse {

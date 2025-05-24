@@ -25,18 +25,20 @@ export default async function handlePeekDiscarded(state: ConnectionState, data: 
   try {
     const { numberOfItems } = data.body;
     const items: ItemResponse[] = [];
+    const seenItemIds = new Set<string>();
 
     // Find the requested number of items
-    for (let i = 0; i < numberOfItems; i++) {
+    while (items.length < numberOfItems) {
       const item = await findJunkItem();
-      if (item) {
+      if (item && !seenItemIds.has(item.id)) {
         items.push(item);
+        seenItemIds.add(item.id);
       }
     }
 
     return {
       type: 'discarded-results',
-      body: { items }
+      body: items
     };
   } catch (error) {
     console.error('Error peeking discarded items:', error);

@@ -35,6 +35,7 @@ export class ItemSystem {
     this.eventListenerIds.push(this.socketSystem.addEventListener('inventory-items:*', this.handleInventoryItems.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('pulled-item', this.handlePulledItem.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('skill-results', this.handleSkillResults.bind(this)))
+    this.eventListenerIds.push(this.socketSystem.addEventListener('discarded-results', this.handleDiscardedResults.bind(this)))
   }
 
   addItem(item: Item) {
@@ -108,14 +109,28 @@ export class ItemSystem {
       })
     }*/
   }
+
+  /**
+   * Handles discarded results from the server
+   * @param data The discarded results data containing items
+   * @param eventType The type of event that triggered this handler
+   */
+  private handleDiscardedResults(data?: any, eventType?: string) {
+    // Add all items to the local item store
+    if (data && Array.isArray(data)) {
+      data.forEach((item: Item) => {
+        this.addItem(item)
+      })
+    }
+  }
   
   /**
    * Clean up resources when the component is unmounted
    */
   cleanup() {
-    // Remove event listener if it exists
+    // Remove event listeners
     this.eventListenerIds.forEach((id) => {
-      this.socketSystem.removeEventListener(id)
+      this.socketSystem.removeEventListener('discarded-results', id)
     })
     this.eventListenerIds = [];
   }

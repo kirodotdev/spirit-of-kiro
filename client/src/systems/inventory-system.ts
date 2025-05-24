@@ -24,6 +24,7 @@ export class InventorySystem {
     this.eventListenerIds.push(this.socketSystem.addEventListener('item-moved', this.handleItemMoved.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('skill-results', this.handleSkillResults.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('clean-workbench-results', this.handleCleanWorkbenchResults.bind(this)))
+    this.eventListenerIds.push(this.socketSystem.addEventListener('discarded-results', this.handleDiscardedResults.bind(this)))
   }
 
   /**
@@ -306,6 +307,33 @@ export class InventorySystem {
         this.socketSystem.emitEvent('workbench-overflow-item', { itemId });
       }
     }
+  }
+
+  /**
+   * Handle discarded results events
+   * @param data The discarded results data containing items
+   */
+  private handleDiscardedResults(data: any) {
+    if (!data || !Array.isArray(data)) {
+      return;
+    }
+
+    // Create a new Map to maintain reactivity
+    const newInventories = new Map(this.inventories.value);
+    
+    // Extract item IDs from the discarded items
+    const itemIds = data.map((item: any) => item.id);
+    
+    // Replace the computer inventory entirely with the new items
+    newInventories.set('computer', itemIds);
+    
+    // Update the inventoryForItem map
+    itemIds.forEach((itemId: string) => {
+      this.inventoryForItem.set(itemId, 'computer');
+    });
+    
+    // Update the ref to maintain reactivity
+    this.inventories.value = newInventories;
   }
 
   /**

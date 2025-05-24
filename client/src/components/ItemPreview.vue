@@ -11,6 +11,7 @@ const props = defineProps<{
   bottom?: string;
   left?: string;
   transform?: string;
+  showOnlyPrice?: boolean;
 }>();
 
 // Computed properties for the preview
@@ -66,28 +67,28 @@ function getOutcomeClass(outcome: string): string {
 
 <template>
   <div v-if="item" class="item-preview" :class="rarityClass" :style="positionStyle">
-    <div class="preview-header">
+    <div v-if="!showOnlyPrice" class="preview-header">
       <h3>{{ item.name || 'Unknown Item' }}</h3>
     </div>
     <div class="preview-content">
       <div class="preview-image-container">
         <img :src="imageUrl" alt="Item" class="preview-image" />
         <div class="tags-container">
-          <span class="tag item-rarity" :class="rarityClass">
+          <span v-if="!showOnlyPrice" class="tag item-rarity" :class="rarityClass">
             {{ rarityText }}
           </span>
           <span v-if="item.value !== undefined" class="tag stat-tag">
             <span class="stat-icon">💰</span> {{ item.value }}
           </span>
-          <span v-if="item.weight" class="tag stat-tag">
+          <span v-if="!showOnlyPrice && item.weight" class="tag stat-tag">
             {{ item.weight }}
           </span>
-          <span v-if="item.damage" class="tag stat-tag">
+          <span v-if="!showOnlyPrice && item.damage" class="tag stat-tag">
             {{ item.damage }}
           </span>
         </div>
       </div>
-      <div class="preview-details">
+      <div v-if="!showOnlyPrice" class="preview-details">
         <p class="item-description">{{ item.description || 'No description available.' }}</p>
         
         <div class="item-skills" v-if="item.skills && item.skills.length > 0">
@@ -125,6 +126,13 @@ function getOutcomeClass(outcome: string): string {
   border: 2px solid #333;
   z-index: 30;
   pointer-events: none; /* Allow clicking through the preview */
+}
+
+/* When showing only price, make the preview more compact */
+.item-preview:has(.preview-content:only-child) {
+  width: auto;
+  max-width: none;
+  padding: 10px;
 }
 
 .item-preview.item-uncommon {
@@ -169,6 +177,12 @@ function getOutcomeClass(outcome: string): string {
   gap: 15px;
 }
 
+/* When showing only price, adjust the content layout */
+.item-preview:has(.preview-content:only-child) .preview-content {
+  padding: 0;
+  gap: 8px;
+}
+
 .preview-image-container {
   display: flex;
   flex-direction: column;
@@ -178,10 +192,22 @@ function getOutcomeClass(outcome: string): string {
   max-width: 120px;
 }
 
+/* When showing only price, adjust the image container */
+.item-preview:has(.preview-content:only-child) .preview-image-container {
+  width: auto;
+  min-width: 40px;
+  max-width: 60px;
+}
+
 .preview-image {
   width: 100%;
   max-height: 120px;
   object-fit: contain;
+}
+
+/* When showing only price, adjust the image size */
+.item-preview:has(.preview-content:only-child) .preview-image {
+  max-height: 40px;
 }
 
 .preview-details {
@@ -219,6 +245,13 @@ function getOutcomeClass(outcome: string): string {
   padding: 1px 5px;
   color: white;
   background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* When showing only price, make the price tag more prominent */
+.item-preview:has(.preview-content:only-child) .stat-tag {
+  font-size: 1rem;
+  padding: 2px 8px;
+  background-color: rgba(255, 255, 255, 0.4);
 }
 
 .stat-icon {
@@ -259,6 +292,12 @@ function getOutcomeClass(outcome: string): string {
   justify-content: flex-start;
   margin-top: 8px;
   width: 100%;
+}
+
+/* When showing only price, adjust the tags container */
+.item-preview:has(.preview-content:only-child) .tags-container {
+  margin-top: 0;
+  width: auto;
 }
 
 /* Skill styles */
