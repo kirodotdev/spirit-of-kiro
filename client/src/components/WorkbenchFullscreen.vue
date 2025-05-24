@@ -435,7 +435,14 @@ watch(() => props.show, (newValue) => {
                 <img :src="selectedToolItem.imageUrl" class="tool-icon-image" :alt="selectedToolItem.name" />
               </div>
               <div class="skill-text">
-                <div class="skill-name">{{ skill.name }}</div>
+                <div class="skill-header">
+                  <div class="skill-name">{{ skill.name }}</div>
+                  <div v-if="skill.targets !== undefined" class="skill-targets">
+                    <span class="target-tag">
+                      {{ skill.targets === 0 ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets' }}
+                    </span>
+                  </div>
+                </div>
                 <div class="skill-description">{{ skill.description }}</div>
               </div>
             </div>
@@ -762,10 +769,32 @@ watch(() => props.show, (newValue) => {
   flex: 1;
 }
 
+.skill-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
 .skill-name {
   font-weight: bold;
-  margin-bottom: 4px;
   font-size: 0.95em;
+}
+
+.skill-targets {
+  display: flex;
+  align-items: center;
+}
+
+.target-tag {
+  font-size: 0.65rem;
+  padding: 1px 4px;
+  border-radius: 8px;
+  font-weight: bold;
+  background-color: #607d8b;
+  color: white;
+  white-space: nowrap;
+  display: inline-block;
 }
 
 .skill-description {
