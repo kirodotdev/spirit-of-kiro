@@ -84,6 +84,8 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown);
+  // Emit peek-discarded event to fetch 21 items
+  gameStore.peekDiscarded(21);
 });
 
 onUnmounted(() => {
@@ -98,8 +100,6 @@ onUnmounted(() => {
 watch(() => props.show, (newValue) => {
   if (newValue) {
     gameStore.interactionLocked = true;
-    // Emit peek-discarded event to fetch 21 items
-    gameStore.peekDiscarded(21);
   } else {
     gameStore.interactionLocked = false;
   }
@@ -126,6 +126,17 @@ const handleReset = () => {
           transform: 'translateX(-50%)'
         }"
       />
+      <div v-if="hoveredItem" 
+        class="item-tooltip"
+        :class="getRarityClass(hoveredItem.value)"
+        :style="{
+          left: hoveredItemPosition.x + 'px',
+          top: (hoveredItemPosition.y - 30) + 'px',
+          transform: 'translateX(-50%)'
+        }"
+      >
+        {{ hoveredItem.name }}
+      </div>
       
       <div class="inventory-area">
         <div class="crt-wrapper">
@@ -369,5 +380,35 @@ const handleReset = () => {
   box-shadow: 
     0 0 0 #cc0000,
     0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.item-tooltip {
+  position: fixed;
+  background-color: rgba(40, 40, 40, 0.8);
+  border-radius: 12px;
+  padding: 4px 12px;
+  color: white;
+  font-size: 0.9em;
+  font-weight: bold;
+  white-space: nowrap;
+  z-index: 30;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.item-tooltip.item-uncommon {
+  color: #4caf50;
+}
+
+.item-tooltip.item-rare {
+  color: #2196f3;
+}
+
+.item-tooltip.item-epic {
+  color: #9c27b0;
+}
+
+.item-tooltip.item-legendary {
+  color: #ff9800;
 }
 </style> 

@@ -112,6 +112,8 @@ let itemMovedListenerId: string;
 onMounted(() => {
   interactionListenerId = gameStore.addEventListener('player-interaction', handlePlayerInteraction);
   itemMovedListenerId = gameStore.addEventListener('item-moved', handleItemMoved);
+  // Pre-fetch discarded items when computer is mounted
+  gameStore.peekDiscarded(21);
 });
 
 onUnmounted(() => {

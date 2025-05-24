@@ -39,10 +39,12 @@ const positionStyle = computed(() => {
   <div v-if="item" class="buy-preview" :class="rarityClass" :style="positionStyle">
     <div class="preview-content">
       <div class="price-container">
-        <div class="gold-icon"></div>
-        <span v-if="item.value !== undefined" class="price-tag">
-          {{ item.value }}
-        </span>
+        <div class="gold-display">
+          <div class="gold-icon"></div>
+          <span v-if="item.value !== undefined" class="price-tag">
+            {{ item.value }}
+          </span>
+        </div>
       </div>
     </div>
   </div>
@@ -95,6 +97,12 @@ const positionStyle = computed(() => {
   font-weight: bold;
 }
 
+.gold-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .gold-icon {
   width: 16px;
   height: 16px;
@@ -107,5 +115,27 @@ const positionStyle = computed(() => {
   font-size: 1.1em;
   color: white;
   font-weight: bold;
+}
+
+.item-name {
+  font-size: 0.9em;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.item-name.item-uncommon {
+  color: #4caf50;
+}
+
+.item-name.item-rare {
+  color: #2196f3;
+}
+
+.item-name.item-epic {
+  color: #9c27b0;
+}
+
+.item-name.item-legendary {
+  color: #ff9800;
 }
 </style> 
