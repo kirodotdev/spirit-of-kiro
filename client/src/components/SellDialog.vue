@@ -196,28 +196,26 @@ function getAppraiserComment(happiness: number): string {
           </div>
         </div>
         <div class="appraisal-details">
-          <div class="appraisal-header">
-            <button class="close-appraisal-button" @click="closeDialog">×</button>
-          </div>
           <div class="appraisal-row">
             <p class="value">{{ result?.appraisal?.appraisal?.analysis || 'No analysis provided.' }}</p>
           </div>
-          <div class="appraisal-row">
-            <div class="gold-display">
-              <div class="gold-icon"></div>
-              <span class="gold-amount">{{ result?.appraisal?.appraisal?.saleAmount || 0 }}</span>
+          <div class="appraisal-tags">
+            <div class="tags-container">
+              <div class="gold-tag">
+                <div class="gold-icon"></div>
+                <span class="gold-amount">{{ result?.appraisal?.appraisal?.saleAmount || 0 }}</span>
+              </div>
+              <div class="happiness-tag" :class="{
+                'very-happy': result?.appraisal?.appraisal?.happiness > 50,
+                'happy': result?.appraisal?.appraisal?.happiness > 0 && result?.appraisal?.appraisal?.happiness <= 50,
+                'neutral': result?.appraisal?.appraisal?.happiness === 0,
+                'unhappy': result?.appraisal?.appraisal?.happiness < 0 && result?.appraisal?.appraisal?.happiness >= -50,
+                'very-unhappy': result?.appraisal?.appraisal?.happiness < -50
+              }">
+                {{ getHappinessText(result?.appraisal?.appraisal?.happiness) }}
+              </div>
             </div>
-          </div>
-          <div class="appraisal-row">
-            <span class="value" :class="{
-              'very-happy': result?.appraisal?.appraisal?.happiness > 50,
-              'happy': result?.appraisal?.appraisal?.happiness > 0 && result?.appraisal?.appraisal?.happiness <= 50,
-              'neutral': result?.appraisal?.appraisal?.happiness === 0,
-              'unhappy': result?.appraisal?.appraisal?.happiness < 0 && result?.appraisal?.appraisal?.happiness >= -50,
-              'very-unhappy': result?.appraisal?.appraisal?.happiness < -50
-            }">
-              {{ getHappinessText(result?.appraisal?.appraisal?.happiness) }}
-            </span>
+            <button class="done-button" @click="closeDialog">Done</button>
           </div>
         </div>
       </div>
@@ -423,24 +421,25 @@ function getAppraiserComment(happiness: number): string {
 
 .appraisal-details {
   position: absolute;
-  background-color: #1a1a1a;
+  background-color: rgba(121, 75, 35);
   border-radius: 8px;
-  width: 95%;
-  height: 24%;
+  left: 2.5%;
+  width: 95.5%;
   top: 77%;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  align-items: flex-start;
+  justify-content: flex-start;
   z-index: 3;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  border: 2px solid #333;
+  border: .7vw solid rgba(50, 36, 20);
   padding: 15px;
+  overflow: hidden;
 }
 
 .appraisal-row {
-  margin-bottom: 10px;
   width: 100%;
+  margin-bottom: 12px;
 }
 
 .appraisal-row .value {
@@ -449,28 +448,80 @@ function getAppraiserComment(happiness: number): string {
   font-size: 0.9rem;
   margin: 0;
   padding: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
-.appraisal-row .value.very-happy {
+.appraisal-tags {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.tags-container {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.gold-tag {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.happiness-tag {
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.happiness-tag.very-happy {
   color: #4CAF50;
-  font-weight: bold;
+  border-color: rgba(76, 175, 80, 0.3);
 }
 
-.appraisal-row .value.happy {
+.happiness-tag.happy {
   color: #8BC34A;
+  border-color: rgba(139, 195, 74, 0.3);
 }
 
-.appraisal-row .value.neutral {
+.happiness-tag.neutral {
   color: #FFC107;
+  border-color: rgba(255, 193, 7, 0.3);
 }
 
-.appraisal-row .value.unhappy {
+.happiness-tag.unhappy {
   color: #FF9800;
+  border-color: rgba(255, 152, 0, 0.3);
 }
 
-.appraisal-row .value.very-unhappy {
+.happiness-tag.very-unhappy {
   color: #F44336;
-  font-weight: bold;
+  border-color: rgba(244, 67, 54, 0.3);
+}
+
+.gold-icon {
+  width: 14px;
+  height: 14px;
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
+}
+
+.gold-amount {
+  font-size: 0.9rem;
+  color: #ffd700;
+  font-weight: 500;
 }
 
 .appraising-container {
@@ -528,27 +579,6 @@ function getAppraiserComment(happiness: number): string {
   100% { transform: translateY(0); }
 }
 
-.gold-display {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 12px;
-  color: white;
-  font-weight: bold;
-}
-
-.gold-icon {
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(135deg, #ffd700, #ffa500);
-  border-radius: 50%;
-  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
-}
-
-.gold-amount {
-  font-size: 1.1em;
-}
-
 .appraisal-header {
   position: absolute;
   top: 10px;
@@ -571,5 +601,27 @@ function getAppraiserComment(happiness: number): string {
 
 .close-appraisal-button:hover {
   color: white;
+}
+
+.done-button {
+  padding: 8px 24px;
+  background-color: rgba(76, 175, 80, 0.2);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  border-radius: 20px;
+  color: #4CAF50;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.done-button:hover {
+  background-color: rgba(76, 175, 80, 0.3);
+  border-color: rgba(76, 175, 80, 0.6);
+  transform: translateY(-1px);
+}
+
+.done-button:active {
+  transform: translateY(0);
 }
 </style>
