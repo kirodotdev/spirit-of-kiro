@@ -7,7 +7,7 @@ import { getRarityClass } from '../utils/items';
 const store = useGameStore();
 
 // State to track dialog visibility, loading state, story state, and result data
-const visible = computed(() => store.skillResultVisible);
+const visible = ref(false);
 const isLoading = ref(true);
 const hasStory = ref(false);
 const storyText = ref<string>('');
@@ -17,7 +17,7 @@ const resultData = ref<any>(null);
 const skillInvocationData = ref<{
   skill: any;
   tool: any;
-  target: any;
+  targets: any[];
 } | null>(null);
 
 // Animation state for the smashing animation - using fixed values now
@@ -84,8 +84,9 @@ function closeDialog() {
   }
   // Emit clean-workbench-results event before closing
   store.emitEvent('clean-workbench-results');
-  store.skillResultVisible = false;
+  visible.value = false;
   store.interactionLocked = false;
+  store.popFocus();
 }
 
 // Function to handle keydown events
@@ -112,7 +113,7 @@ function setAnimationDurations() {
 onMounted(() => {
   // Listen for skill-invoked event to show loading state
   skillInvokedListenerId = store.addEventListener('skill-invoked', (data) => {
-    store.skillResultVisible = true;
+    visible.value = true;
     isLoading.value = true;
     hasStory.value = false;
     storyText.value = '';
@@ -152,18 +153,15 @@ onUnmounted(() => {
   store.removeEventListener('skill-results', skillResultListenerId);
   window.removeEventListener('keydown', handleKeyDown);
   
-  // No animation intervals to clear anymore
-  
   // Reset CSS variables
   document.documentElement.style.removeProperty('--smash-tool-duration');
   document.documentElement.style.removeProperty('--smash-target-duration');
   document.documentElement.style.removeProperty('--smash-skill-duration');
   document.documentElement.style.removeProperty('--pulse-glow-duration');
   
-  if (visible.value) {
-    store.interactionLocked = false;
-    store.popFocus();
-  }
+  // Always ensure focus and interaction lock are reset on unmount
+  store.interactionLocked = false;
+  store.popFocus();
 });
 </script>
 
@@ -177,22 +175,35 @@ onUnmounted(() => {
           <div class="item-wrapper" :class="getRarityClass(skillInvocationData.tool.value)">
             <img :src="skillInvocationData.tool.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="skillInvocationData.tool.name" />
           </div>
-          <div class="fusion-label">Tool</div>
+          <div class="fusion-label">{{ skillInvocationData.tool.name }}</div>
         </div>
         
-        <!-- Skill name at the top -->
+        <!-- Skill name in the center -->
         <div class="fusion-skill">
           <div class="skill-name">{{ skillInvocationData?.skill?.name || 'Skill' }}</div>
           <div class="fusion-label">Skill</div>
         </div>
         
-        <!-- Target item on the right -->
-        <div v-if="skillInvocationData?.target" class="fusion-item target-item">
-          <div class="item-wrapper" :class="getRarityClass(skillInvocationData.target.value)">
-            <img :src="skillInvocationData.target.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="skillInvocationData.target.name" />
+        <!-- Target items on the right -->
+        <template v-if="skillInvocationData?.targets">
+          <div 
+            v-for="(target, index) in skillInvocationData.targets" 
+            :key="target.id"
+            class="fusion-item target-item"
+            :style="{
+              '--target-index': index,
+              '--total-targets': skillInvocationData.targets.length
+            }"
+          >
+            <div class="item-wrapper" :class="getRarityClass(target.value)">
+              <img :src="target.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="target.name" />
+            </div>
+            <div class="fusion-label">{{ target.name }}</div>
           </div>
-          <div class="fusion-label">Target</div>
-        </div>
+        </template>
+
+        <!-- Fusion effect overlay -->
+        <div class="fusion-effect"></div>
       </div>
     </div>
     
@@ -393,10 +404,11 @@ onUnmounted(() => {
 .skill-fusion-container {
   position: relative;
   width: 100%;
-  height: 250px;
+  height: 400px;
   display: flex;
   justify-content: center;
   align-items: center;
+  perspective: 1000px;
 }
 
 :root {
@@ -414,23 +426,23 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   z-index: 2;
+  transition: transform 0.5s ease-out;
 }
 
 .tool-item {
-  left: 50%;
+  left: 25%;
   top: 50%;
-  transform: translate(-50%, -50%) translateX(-150px);
-  animation: orbit-around-center linear infinite;
-  animation-duration: var(--smash-tool-duration);
-  animation-direction: reverse;
+  transform: translate(-50%, -50%);
+  animation: tool-approach 3s ease-in-out infinite;
 }
 
 .target-item {
-  left: 50%;
+  right: 25%;
   top: 50%;
-  transform: translate(-50%, -50%) translateX(150px);
-  animation: orbit-around-center linear infinite;
-  animation-duration: var(--smash-target-duration);
+  transform: translate(50%, -50%);
+  animation: target-approach 3s ease-in-out infinite;
+  animation-delay: calc(var(--target-index) * 0.4s);
+  top: calc(50% + (var(--target-index) - (var(--total-targets) - 1) / 2) * 60px);
 }
 
 .fusion-skill {
@@ -438,13 +450,73 @@ onUnmounted(() => {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  background-color: rgba(33, 150, 243, 0.2);
+  background-color: rgba(33, 150, 243, 0.4);
   border: 2px solid #2196f3;
   border-radius: 8px;
   padding: 8px 15px;
-  color: #2196f3;
+  color: white;
   font-weight: bold;
   z-index: 3;
+  animation: skill-pulse 3s ease-in-out infinite;
+}
+
+.fusion-effect {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(33, 150, 243, 0.2) 0%, rgba(33, 150, 243, 0) 70%);
+  z-index: 1;
+  animation: fusion-pulse 3s ease-in-out infinite;
+}
+
+@keyframes tool-approach {
+  0%, 100% {
+    transform: translate(-50%, -50%) translateX(-100px);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) translateX(0);
+    opacity: 0.5;
+  }
+}
+
+@keyframes target-approach {
+  0%, 100% {
+    transform: translate(50%, -50%) translateX(100px);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(50%, -50%) translateX(0);
+    opacity: 0.5;
+  }
+}
+
+@keyframes skill-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
+    background-color: rgba(33, 150, 243, 0.4);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 0 30px rgba(33, 150, 243, 0.7);
+    background-color: rgba(33, 150, 243, 0.9);
+  }
+}
+
+@keyframes fusion-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0.6;
+  }
 }
 
 .fusion-label {
@@ -452,11 +524,13 @@ onUnmounted(() => {
   font-size: 0.8rem;
   color: #aaa;
   text-align: center;
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 }
 
 .skill-name {
   font-size: 1.2rem;
-  text-shadow: 0 0 5px rgba(33, 150, 243, 0.5);
+  text-shadow: 0 0 8px rgba(33, 150, 243, 0.7);
+  color: white;
 }
 
 .processing-text {
@@ -464,15 +538,6 @@ onUnmounted(() => {
   color: #ddd;
   font-size: 1.1rem;
   text-align: center;
-}
-
-@keyframes orbit-around-center {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg) translateX(150px) rotate(0deg);
-  }
-  100% {
-    transform: translate(-50%, -50%) rotate(360deg) translateX(150px) rotate(-360deg);
-  }
 }
 
 .small-spinner {

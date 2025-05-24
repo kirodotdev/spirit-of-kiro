@@ -21,7 +21,6 @@ export const useGameStore = defineStore('game', () => {
   const heldItemId = ref<string | null>(null)
   const inventories = ref<Map<string, Map<string, Item>>>(new Map())
   const personaData = ref<Map<string, string>>(new Map())
-  const skillResultVisible = ref(false)
   const focusedComponent = ref<string | null>(null)
 
   // Flags
@@ -67,7 +66,6 @@ export const useGameStore = defineStore('game', () => {
     heldItemId,
     inventories,
     personaData,
-    skillResultVisible,
     focusedComponent,
 
     // Focus management

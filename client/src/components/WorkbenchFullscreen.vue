@@ -34,6 +34,9 @@ const selectedToolItem = ref<any>(null);
 // State to track the currently selected skill for casting
 const selectedSkill = ref<any>(null);
 
+// State to track selected targets for multi-target skills
+const selectedTargets = ref<any[]>([]);
+
 // State to track mouse position for skill casting
 const mousePosition = ref({ x: 0, y: 0 });
 
@@ -92,9 +95,50 @@ const handleItemClick = (item: any, sourceArea: 'tools' | 'working', event?: Mou
       }
     }
   } else {
-    // If a skill is selected, cast it on the working item
+    // If a skill is selected, handle target selection
     if (selectedSkill.value) {
-      handleCastSkill(item);
+      // Check if this item is already selected
+      const isAlreadySelected = selectedTargets.value.some(target => target.id === item.id);
+      
+      if (isAlreadySelected) {
+        // Deselect the item
+        selectedTargets.value = selectedTargets.value.filter(target => target.id !== item.id);
+      } else {
+        // Add the item to selected targets
+        selectedTargets.value.push(item);
+        
+        // If we have enough targets, cast the skill
+        if (selectedTargets.value.length >= selectedSkill.value.targets) {
+          // Get the index of the skill in the tool's skills array
+          const toolSkillIndex = selectedToolItem.value.skills.findIndex(
+            (s: any) => s === selectedSkill.value
+          );
+          
+          if (toolSkillIndex === -1) {
+            console.error('Selected skill not found in tool skills');
+            return;
+          }
+          
+          // Emit the skill-invoked event before using the skill
+          gameStore.emitEvent('skill-invoked', {
+            skill: selectedSkill.value,
+            tool: selectedToolItem.value,
+            targets: selectedTargets.value
+          });
+          
+          // Use the skill with all selected targets
+          gameStore.useSkill(
+            selectedToolItem.value.id,
+            toolSkillIndex,
+            selectedTargets.value.map(target => target.id)
+          );
+          
+          // Clear the selected skill and targets
+          selectedSkill.value = null;
+          selectedTargets.value = [];
+          return;
+        }
+      }
       return;
     }
     
@@ -128,6 +172,7 @@ const handleSkillClick = (skill: any, event: MouseEvent) => {
   // If a skill is already selected, deselect it
   if (selectedSkill.value === skill) {
     selectedSkill.value = null;
+    selectedTargets.value = []; // Clear selected targets
     return;
   }
   
@@ -164,6 +209,7 @@ const handleSkillClick = (skill: any, event: MouseEvent) => {
   
   // For skills that require targets, select the skill for casting
   selectedSkill.value = skill;
+  selectedTargets.value = []; // Clear any previously selected targets
   
   // Update the mouse position when a skill is clicked
   mousePosition.value = {
@@ -173,38 +219,6 @@ const handleSkillClick = (skill: any, event: MouseEvent) => {
   
   // Hide the dropdown after selecting a skill
   showSkillsDropdown.value = false;
-};
-
-// Handle casting a selected skill on a working item
-const handleCastSkill = (targetItem: any) => {
-  if (!selectedSkill.value || !selectedToolItem.value) return;
-  
-  // Get the index of the skill in the tool's skills array
-  const toolSkillIndex = selectedToolItem.value.skills.findIndex(
-    (s: any) => s === selectedSkill.value
-  );
-  
-  if (toolSkillIndex === -1) {
-    console.error('Selected skill not found in tool skills');
-    return;
-  }
-  
-  // Emit the skill-invoked event before using the skill
-  gameStore.emitEvent('skill-invoked', {
-    skill: selectedSkill.value,
-    tool: selectedToolItem.value,
-    target: targetItem
-  });
-  
-  // Use the skill on the target item
-  gameStore.useSkill(
-    selectedToolItem.value.id,
-    toolSkillIndex,
-    [targetItem.id]
-  );
-  
-  // Clear the selected skill after casting
-  selectedSkill.value = null;
 };
 
 const handleItemMouseEnter = (event: MouseEvent, item: any) => {
@@ -360,6 +374,7 @@ const handleContextMenu = (e: MouseEvent) => {
   if (selectedSkill.value) {
     e.preventDefault(); // Prevent the default context menu
     selectedSkill.value = null;
+    selectedTargets.value = []; // Clear selected targets
   }
 };
 
@@ -491,7 +506,10 @@ watch(() => props.show, (newValue) => {
         <div class="working-grid">
           <div 
             class="inventory-slot working-slot" 
-            :class="{ 'has-item': item }" 
+            :class="{ 
+              'has-item': item,
+              'selected-target': selectedTargets.some(target => target.id === item?.id)
+            }" 
             v-for="(item, index) in workingItems" 
             :key="item ? item.id : 'working-'+index"
             @click="item && handleItemClick(item, 'working')"
@@ -835,8 +853,6 @@ watch(() => props.show, (newValue) => {
 }
 
 /* Skill cursor styling */
-
-/* Skill cursor styling */
 .skill-cursor {
   position: fixed;
   pointer-events: none; /* Allow clicking through the cursor */
@@ -862,5 +878,15 @@ watch(() => props.show, (newValue) => {
   font-size: 0.9em;
   font-weight: bold;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Add styles for selected targets */
+.inventory-slot.selected-target {
+  outline: 2px solid #4caf50;
+  outline-offset: 2px;
+}
+
+.inventory-slot.selected-target .item-container {
+  transform: scale(1.05);
 }
 </style>
