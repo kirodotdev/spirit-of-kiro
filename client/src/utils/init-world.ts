@@ -6,6 +6,7 @@ import Wall from '../components/Wall.vue'
 import Chest from '../components/Chest.vue'
 import PullLever from '../components/PullLever.vue'
 import Garbage from '../components/Garbage.vue'
+import Computer from '../components/Computer.vue'
 import { PhysicsType } from './physics'
 
 export function setupGameObjects(gameStore: any, gridSize: number) {
@@ -319,5 +320,27 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
     depth: 2,
     height: 4,
     props: {}
+  })
+
+  // Add computer on the left side
+  gameStore.addObject({
+    id: 'computer1',
+    type: Computer,
+    row: 12.4,
+    col: 2.25,
+    width: 2.5,
+    depth: 1.9,
+    height: 4,
+    physics: {
+      active: false,
+      angle: 0,
+      velocity: 0,
+      friction: 1,
+      height: 0,
+      verticalVelocity: 0,
+      bounceStrength: 0,
+      mass: Infinity,
+      physicsType: PhysicsType.Static
+    },
   })
 }

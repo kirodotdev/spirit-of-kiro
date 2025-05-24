@@ -72,4 +72,11 @@ export interface FetchPersonaMessage {
   body: {};
 }
 
-export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | MoveItemMessage | UseSkillMessage | SellItemMessage | FetchPersonaMessage;
+export interface PeekDiscardedMessage {
+    type: 'peek-discarded';
+    body: {
+        numberOfItems: number;
+    };
+}
+
+export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | MoveItemMessage | UseSkillMessage | SellItemMessage | FetchPersonaMessage | PeekDiscardedMessage;

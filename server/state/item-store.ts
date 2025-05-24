@@ -8,7 +8,7 @@ const TABLE_NAME = 'Items';
 const INVENTORY_TABLE = 'Inventory';
 const LOCATION_TABLE = 'Location';
 
-interface ItemResponse {
+export interface ItemResponse {
   id: string;
   [key: string]: any;
 }

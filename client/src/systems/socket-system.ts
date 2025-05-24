@@ -263,6 +263,22 @@ export class SocketSystem {
     this.ws.value.send(JSON.stringify(message))
   }
 
+  peekDiscarded(numberOfItems: number) {
+    if (!this.ws.value || !this.isAuthenticated.value) {
+      console.error('Cannot peek discarded items: not connected or not authenticated')
+      return
+    }
+
+    const message = {
+      type: 'peek-discarded',
+      body: {
+        numberOfItems
+      }
+    }
+
+    this.ws.value.send(JSON.stringify(message))
+  }
+
   fetchPersona() {
     if (!this.ws.value || !this.isAuthenticated.value) {
       console.error('Cannot fetch persona: not connected or not authenticated')
