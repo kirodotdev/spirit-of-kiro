@@ -75,6 +75,10 @@ function closeDialog() {
   hoveredItemId.value = null;
   visible.value = false;
   store.interactionLocked = false;
+  // Emit gold update event with the sale amount
+  if (result.value?.gold) {
+    store.emitEvent('gold-update', { gold: result.value.gold });
+  }
 }
 
 // Handle keydown events
@@ -141,7 +145,7 @@ function getHappinessText(happiness: number): string {
 
 function getAppraiserImage(happiness: number): string {
   if (happiness > 50) return happyImage;
-  if (happiness < -50) return unhappyImage;
+  if (happiness < -20) return unhappyImage;
   return neutralImage;
 }
 
@@ -373,6 +377,29 @@ function getAppraiserComment(happiness: number): string {
   transform: perspective(2000px) rotateX(-25deg) rotateZ(2deg);
   transform-style: preserve-3d;
   backface-visibility: hidden;
+}
+
+/* Add animation for loading state */
+.loading-content .item-wrapper {
+  animation: itemFloat 3s ease-in-out infinite;
+}
+
+@keyframes itemFloat {
+  0% {
+    transform: perspective(2000px) rotateX(-25deg) rotateZ(2deg);
+  }
+  25% {
+    transform: perspective(2000px) rotateX(25deg) rotateZ(-2deg);
+  }
+  50% {
+    transform: perspective(2000px) rotateX(-25deg) rotateZ(2deg) rotateY(180deg);
+  }
+  75% {
+    transform: perspective(2000px) rotateX(25deg) rotateZ(-2deg) rotateY(180deg);
+  }
+  100% {
+    transform: perspective(2000px) rotateX(-25deg) rotateZ(2deg);
+  }
 }
 
 .item-image {

@@ -15,7 +15,7 @@ export class PersonaSystem {
 
     // Subscribe to relevant events
     this.socketSystem.addEventListener('persona-details', this.handlePersonaDetails.bind(this))
-    this.socketSystem.addEventListener('item-sold', this.handleItemSold.bind(this))
+    this.socketSystem.addEventListener('gold-update', this.handleGoldUpdate.bind(this))
   }
 
   /**
@@ -48,9 +48,9 @@ export class PersonaSystem {
   }
 
   /**
-   * Handle item sold events to update gold
+   * Handle gold update events
    */
-  private handleItemSold(data: { gold: number }) {
+  private handleGoldUpdate(data: { gold: number }) {
     if (data.gold !== undefined) {
       this.personaData.value.set('gold', data.gold.toString())
     }
