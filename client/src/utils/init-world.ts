@@ -177,6 +177,28 @@ export function setupGameObjects(gameStore: any, gridSize: number) {
   })
 
   gameStore.addObject({
+    id: 'door-field',
+    type: Wall,
+    row: gridSize - 1.5,
+    col: 9,
+    width: 4,
+    depth: 2,
+    height: 1,
+    physics: {
+      active: false,
+      angle: 0,
+      velocity: 0,
+      friction: 1,
+      height: 0,
+      verticalVelocity: 0,
+      bounceStrength: 0,
+      event: 'near-door',
+      physicsType: PhysicsType.Field
+    },
+    props: {}
+  })
+
+  gameStore.addObject({
     id: 'sell-field',
     type: Wall,
     row: gridSize + .5,

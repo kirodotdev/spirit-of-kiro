@@ -9,6 +9,7 @@
       <GameObjects :gameObjects="gameStore.objects" :tileSize="tileSize" />
       <HintDisplay />
       <HUD />
+      <RandomChat />
     </div>
     <div class="connection-status" :class="{ connected: gameStore.wsConnected }" />
     <!-- Dialogs are not constantly visible, but will appear as needed -->
@@ -30,6 +31,7 @@ import SellDialog from '../components/SellDialog.vue'
 import DiscardDialog from '../components/DiscardDialog.vue'
 import SkillResultDialog from '../components/SkillResultDialog.vue'
 import HUD from '../components/HUD.vue'
+import RandomChat from '../components/RandomChat.vue'
 import { setupGameObjects } from '../utils/init-world'
 import { storeToRefs } from 'pinia'
 

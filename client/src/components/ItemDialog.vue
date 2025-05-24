@@ -138,6 +138,11 @@ onUnmounted(() => {
                     {{ formatOutcome(outcome) }}
                   </span>
                 </div>
+                <div class="skill-targets" v-if="skill.targets !== undefined">
+                  <span class="target-tag">
+                    {{ skill.targets === 0 ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets' }}
+                  </span>
+                </div>
               </div>
               <div class="skill-description">{{ skill.description }}</div>
             </div>
@@ -428,5 +433,16 @@ onUnmounted(() => {
 .outcome-custom {
   background-color: #607d8b;
   color: white;
+}
+
+/* Add styles for the target tag */
+.target-tag {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: bold;
+  background-color: #607d8b;
+  color: white;
+  white-space: nowrap;
 }
 </style>
