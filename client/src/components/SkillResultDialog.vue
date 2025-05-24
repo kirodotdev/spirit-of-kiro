@@ -86,7 +86,8 @@ function closeDialog() {
   store.emitEvent('clean-workbench-results');
   visible.value = false;
   store.interactionLocked = false;
-  store.popFocus();
+  store.popFocus(); // Remove skill-result-dialog from focus stack
+  store.pushFocus('workbench'); // Restore focus to workbench
 }
 
 // Function to handle keydown events
@@ -161,7 +162,8 @@ onUnmounted(() => {
   
   // Always ensure focus and interaction lock are reset on unmount
   store.interactionLocked = false;
-  store.popFocus();
+  store.popFocus(); // Remove skill-result-dialog from focus stack
+  store.pushFocus('workbench'); // Restore focus to workbench
 });
 </script>
 
