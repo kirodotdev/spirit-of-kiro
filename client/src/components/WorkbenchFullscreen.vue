@@ -131,7 +131,38 @@ const handleSkillClick = (skill: any, event: MouseEvent) => {
     return;
   }
   
-  // Select the skill for casting
+  // If the skill has 0 targets (self-targeting), cast it immediately
+  if (skill.targets === 0) {
+    // Get the index of the skill in the tool's skills array
+    const toolSkillIndex = selectedToolItem.value.skills.findIndex(
+      (s: any) => s === skill
+    );
+    
+    if (toolSkillIndex === -1) {
+      console.error('Selected skill not found in tool skills');
+      return;
+    }
+    
+    // Emit the skill-invoked event before using the skill
+    gameStore.emitEvent('skill-invoked', {
+      skill: skill,
+      tool: selectedToolItem.value,
+      target: selectedToolItem.value // For self-targeting skills, the tool is also the target
+    });
+    
+    // Use the skill on the tool itself
+    gameStore.useSkill(
+      selectedToolItem.value.id,
+      toolSkillIndex,
+      [] // Empty array since it's self-targeting
+    );
+    
+    // Hide the dropdown after casting
+    showSkillsDropdown.value = false;
+    return;
+  }
+  
+  // For skills that require targets, select the skill for casting
   selectedSkill.value = skill;
   
   // Update the mouse position when a skill is clicked
