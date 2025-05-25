@@ -34,17 +34,15 @@ const hoveredItem = computed(() => {
 });
 
 const handleItemClick = (itemId: string) => {
-  const targetInventory = `${gameStore.userId}:main`;
-
   // Clear the hovered item preview immediately when an item is clicked
   hoveredItemId.value = null;
 
-  // Set up a one-time listener for the 'item-moved' event
-  const listenerId = gameStore.addEventListener('item-moved', (data) => {
-    // Check if this is the item we just moved
-    if (data && data.itemId === itemId && data.targetInventoryId === targetInventory) {
+  // Set up a one-time listener for the 'buy-results' event
+  const listenerId = gameStore.addEventListener('buy-results', (data) => {
+    // Check if this is the item we just bought
+    if (data && data.itemId === itemId) {
       // Remove the listener since we only need it once
-      gameStore.removeEventListener('item-moved', listenerId);
+      gameStore.removeEventListener('buy-results', listenerId);
       
       // Close the computer fullscreen view
       emit('close');
@@ -56,8 +54,8 @@ const handleItemClick = (itemId: string) => {
     }
   });
 
-  // Move the item from computer to main inventory
-  gameStore.moveItem(itemId, targetInventory);
+  // Buy the item from the discarded inventory
+  gameStore.buyDiscarded(itemId);
 };
 
 const handleItemMouseEnter = (itemId: string, event: MouseEvent) => {
@@ -84,8 +82,6 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown);
-  // Emit peek-discarded event to fetch 21 items
-  gameStore.peekDiscarded(21);
 });
 
 onUnmounted(() => {

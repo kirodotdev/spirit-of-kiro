@@ -79,4 +79,11 @@ export interface PeekDiscardedMessage {
     };
 }
 
-export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | MoveItemMessage | UseSkillMessage | SellItemMessage | FetchPersonaMessage | PeekDiscardedMessage;
+export interface BuyDiscardedMessage {
+    type: 'buy-discarded';
+    body: {
+        itemId: string;
+    };
+}
+
+export type WebSocketMessage = SignupMessage | SigninMessage | PullItemMessage | ListInventoryMessage | DiscardItemMessage | MoveItemMessage | UseSkillMessage | SellItemMessage | FetchPersonaMessage | PeekDiscardedMessage | BuyDiscardedMessage;

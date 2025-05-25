@@ -3,7 +3,6 @@ import computerImage from '../assets/computer.png';
 import computerZoomImage from '../assets/computer-zoom.png';
 import { useGameStore } from '../stores/game';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { storeToRefs } from 'pinia';
 import ComputerFullscreen from './ComputerFullscreen.vue';
 import { getRarityClass } from '../utils/items';
 

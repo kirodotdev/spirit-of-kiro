@@ -11,8 +11,9 @@ import handleUseSkill from './handlers/use-skill';
 import handleSellItem from './handlers/sell-item';
 import handleFetchPersona from './handlers/fetch-persona';
 import handlePeekDiscarded from './handlers/peek-discarded';
+import handleBuyDiscarded from './handlers/buy-discarded';
 import { formatMessage } from './utils/message';
-import { WebSocketMessage, SignupMessage, SigninMessage, PullItemMessage, ListInventoryMessage, DiscardItemMessage, MoveItemMessage, UseSkillMessage, SellItemMessage, FetchPersonaMessage, PeekDiscardedMessage, ConnectionState } from './types';
+import { WebSocketMessage, SignupMessage, SigninMessage, PullItemMessage, ListInventoryMessage, DiscardItemMessage, MoveItemMessage, UseSkillMessage, SellItemMessage, FetchPersonaMessage, PeekDiscardedMessage, BuyDiscardedMessage, ConnectionState } from './types';
 import * as config from './config';
 
 interface WebSocketData {
@@ -123,6 +124,10 @@ export default {
           break;
         case 'peek-discarded':
           result = await handlePeekDiscarded(ws.data.state, data as PeekDiscardedMessage);
+          ws.send(formatMessage(result.type, result.body));
+          break;
+        case 'buy-discarded':
+          result = await handleBuyDiscarded(ws.data.state, data as BuyDiscardedMessage);
           ws.send(formatMessage(result.type, result.body));
           break;
         default:
