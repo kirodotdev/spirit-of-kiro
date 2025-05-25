@@ -222,8 +222,6 @@ function getOutcomeClass(outcome: string): string {
   margin-bottom: 10px;
   line-height: 1.4;
   font-size: 0.9rem;
-  max-height: 80px;
-  overflow-y: auto;
 }
 
 .tag {
