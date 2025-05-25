@@ -176,8 +176,8 @@ const handleSkillClick = (skill: any, event: MouseEvent) => {
     return;
   }
   
-  // If the skill has 0 targets (self-targeting), cast it immediately
-  if (skill.targets === 0) {
+  // If the skill has invalid targets (not 1 or 2), treat it as self-targeting
+  if (!skill.targets || typeof skill.targets !== 'number' || skill.targets < 0 || skill.targets > 2) {
     // Get the index of the skill in the tool's skills array
     const toolSkillIndex = selectedToolItem.value.skills.findIndex(
       (s: any) => s === skill
@@ -483,9 +483,11 @@ watch(() => props.show, (newValue) => {
               <div class="skill-text">
                 <div class="skill-header">
                   <div class="skill-name">{{ skill.name }}</div>
-                  <div v-if="skill.targets !== undefined" class="skill-targets">
+                  <div class="skill-targets">
                     <span class="target-tag">
-                      {{ skill.targets === 0 ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets' }}
+                      {{ typeof skill.targets === 'number' && skill.targets >= 0 && skill.targets <= 2 
+                         ? (skill.targets === 0 ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets')
+                         : 'Self' }}
                     </span>
                   </div>
                 </div>

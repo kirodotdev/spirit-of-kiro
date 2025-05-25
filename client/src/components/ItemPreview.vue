@@ -101,9 +101,11 @@ function getOutcomeClass(outcome: string): string {
                   {{ formatOutcome(outcome) }}
                 </span>
               </div>
-              <div class="skill-targets" v-if="skill.targets !== undefined">
+              <div class="skill-targets">
                 <span class="target-tag">
-                  {{ skill.targets === 0 ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets' }}
+                  {{ typeof skill.targets === 'number' && skill.targets >= 0 && skill.targets <= 2 
+                     ? (skill.targets === 0 ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets')
+                     : 'Self' }}
                 </span>
               </div>
             </div>

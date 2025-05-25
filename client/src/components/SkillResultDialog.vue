@@ -183,7 +183,6 @@ onUnmounted(() => {
         <!-- Skill name in the center -->
         <div class="fusion-skill">
           <div class="skill-name">{{ skillInvocationData?.skill?.name || 'Skill' }}</div>
-          <div class="fusion-label">Skill</div>
         </div>
         
         <!-- Target items on the right -->
@@ -452,14 +451,29 @@ onUnmounted(() => {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
   background-color: rgba(33, 150, 243, 0.4);
-  border: 2px solid #2196f3;
-  border-radius: 8px;
-  padding: 8px 15px;
+  border: 3px solid #2196f3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   color: white;
   font-weight: bold;
   z-index: 3;
-  animation: skill-pulse 3s ease-in-out infinite;
+  animation: skill-rotate 3s linear infinite;
+  box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
+}
+
+.skill-name {
+  font-size: 1rem;
+  text-shadow: 0 0 8px rgba(33, 150, 243, 0.7);
+  color: white;
+  text-align: center;
+  padding: 0 10px;
+  transform: rotate(-360deg);
+  animation: counter-rotate 3s linear infinite;
 }
 
 .fusion-effect {
@@ -497,16 +511,21 @@ onUnmounted(() => {
   }
 }
 
-@keyframes skill-pulse {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    box-shadow: 0 0 20px rgba(33, 150, 243, 0.5);
-    background-color: rgba(33, 150, 243, 0.4);
+@keyframes skill-rotate {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
   }
-  50% {
-    transform: translate(-50%, -50%) scale(1.1);
-    box-shadow: 0 0 30px rgba(33, 150, 243, 0.7);
-    background-color: rgba(33, 150, 243, 0.9);
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes counter-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
   }
 }
 
@@ -527,12 +546,6 @@ onUnmounted(() => {
   color: #aaa;
   text-align: center;
   text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
-}
-
-.skill-name {
-  font-size: 1.2rem;
-  text-shadow: 0 0 8px rgba(33, 150, 243, 0.7);
-  color: white;
 }
 
 .processing-text {
