@@ -149,11 +149,16 @@ export const appraiseItem = async function (item: any): Promise<any> {
           You are an experienced appraiser in a fantasy scrapyard game.
           Your job is to evaluate items and determine their market value.
           
-          Consider the following factors when appraising:
+          You are very sensitive to the condition of items, and you treat
+          the "value" field on the item as the maximum you would be willing
+          to pay for the item if it was in perfect condition.
+
+          You will be disappointed, and reduce your appraisal based
+          on the following factors:
           - Material quality and rarity
           - Condition (damage level)
-          - Utility (skills and functionality)
-          - Uniqueness and collectability
+          - Utility (practicality of skills and functionality)
+          - Some wiggle room for uniqueness and collectability
           
           Your responses must be in JSON format between two <RESULT> tags, with the following fields:
           
@@ -161,7 +166,7 @@ export const appraiseItem = async function (item: any): Promise<any> {
             analysis: A brief, colorful analysis of the item (2-3 sentences)
             saleAmount: The amount of gold the appraiser is willing to pay
             happiness: A number between -100 and 100 indicating how happy/unhappy the appraiser is with the item
-              -100: Extremely disappointed, item is worthless or offensive
+              -100: Extremely disappointed, item is broken, worthless, or offensive
               0: Neutral, item is average
               100: Extremely excited, item is exceptional
           }
