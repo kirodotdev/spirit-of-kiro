@@ -6,16 +6,16 @@ Parameters:
     Type: String
     Description: Domain name for the CloudFront distribution
     Default: example.com
+  WebSocketEndpoint:
+    Type: String
+    Description: The WebSocket server endpoint (e.g., api.example.com:8080)
+    Default: localhost:8080
 
 Resources:
   # S3 Bucket for website hosting
   WebsiteBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub ${AWS::StackName}-website-bucket
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: index.html
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
@@ -46,6 +46,12 @@ Resources:
             OriginAccessControlId: !GetAtt CloudFrontOAC.Id
             S3OriginConfig:
               OriginAccessIdentity: ''
+          - DomainName: !Select [0, !Split [':', !Ref WebSocketEndpoint]]
+            Id: WebSocketOrigin
+            CustomOriginConfig:
+              HTTPPort: !Select [1, !Split [':', !Ref WebSocketEndpoint]]
+              HTTPSPort: !Select [1, !Split [':', !Ref WebSocketEndpoint]]
+              OriginProtocolPolicy: http-only
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https
@@ -62,6 +68,39 @@ Resources:
             Cookies:
               Forward: none
           Compress: true
+          LambdaFunctionAssociations:
+            - EventType: viewer-request
+              LambdaFunctionARN: !GetAtt BasicAuthFunctionVersion.FunctionArn
+        CacheBehaviors:
+          - PathPattern: /ws*
+            TargetOriginId: WebSocketOrigin
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - POST
+              - PATCH
+              - DELETE
+            CachedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+            ForwardedValues:
+              QueryString: true
+              Headers:
+                - Origin
+                - Access-Control-Request-Headers
+                - Access-Control-Request-Method
+                - Sec-WebSocket-Key
+                - Sec-WebSocket-Version
+                - Sec-WebSocket-Protocol
+                - Sec-WebSocket-Accept
+                - Sec-WebSocket-Extensions
+              Cookies:
+                Forward: none
+            Compress: true
         CustomErrorResponses:
           - ErrorCode: 403
             ResponseCode: 200
@@ -120,6 +159,13 @@ Resources:
       Runtime: nodejs18.x
       Timeout: 5
 
+  # Lambda function version
+  BasicAuthFunctionVersion:
+    Type: AWS::Lambda::Version
+    Properties:
+      FunctionName: !Ref BasicAuthFunction
+      Description: "Initial version for basic auth"
+
   # IAM Role for Lambda@Edge
   BasicAuthFunctionRole:
     Type: AWS::IAM::Role
@@ -129,7 +175,9 @@ Resources:
         Statement:
           - Effect: Allow
             Principal:
-              Service: lambda.amazonaws.com
+              Service: 
+                - lambda.amazonaws.com
+                - edgelambda.amazonaws.com
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole

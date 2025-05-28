@@ -34,7 +34,15 @@ export class SocketSystem {
       this.reconnectTimeoutId = null;
     }
 
-    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8080'
+    // Allow override via environment variable, otherwise use current protocol, host, and port
+    const wsUrl = import.meta.env.VITE_WS_URL || (
+      (() => {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+        const host = window.location.hostname
+        const port = window.location.port ? `:${window.location.port}` : ''
+        return `${protocol}//${host}${port}/ws`
+      })()
+    )
     this.ws.value = new WebSocket(wsUrl)
 
     this.ws.value.onopen = () => {
