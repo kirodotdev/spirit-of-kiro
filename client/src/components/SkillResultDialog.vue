@@ -44,7 +44,9 @@ const removedItems = computed(() => {
 
 // Get the actual item objects from the workbench-results inventory IDs
 const workbenchResultItems = computed(() => {
-  return workbenchResultsIds.value.map(itemId => store.itemsById.get(itemId)).filter(Boolean);
+  return workbenchResultsIds.value
+    .map(itemId => store.itemsById.get(itemId))
+    .filter((item): item is NonNullable<typeof item> => item !== undefined);
 });
 
 // Get the currently hovered item object

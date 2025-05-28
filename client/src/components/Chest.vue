@@ -38,6 +38,9 @@ const capacityDots = computed(() => {
   // Fill dots with items that exist in inventory
   for (let i = 0; i < Math.min(items.length, maxCapacity); i++) {
     const item = items[i];
+    if (!item) {
+      continue;
+    }
     const rarityClass = getRarityClass(item.value);
     dots.push({
       filled: true,

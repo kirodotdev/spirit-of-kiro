@@ -9,3 +9,4 @@ docker
 *.spec.md
 *.code-workspace
 dev.env
+dist

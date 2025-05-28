@@ -19,7 +19,7 @@ export const useGameStore = defineStore('game', () => {
   const items = ref<Item[]>([])
   const tileSize = ref(50)
   const heldItemId = ref<string | null>(null)
-  const inventories = ref<Map<string, Map<string, Item>>>(new Map())
+  const inventories = ref<Map<string, string[]>>(new Map())
   const personaData = ref<Map<string, string>>(new Map())
   const focusedComponent = ref<string | null>(null)
 

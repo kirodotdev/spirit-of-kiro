@@ -53,6 +53,9 @@ const workingCapacityDots = computed(() => {
   // Fill dots with items that exist in inventory
   for (let i = 0; i < Math.min(workingInventory.value.length, workingMaxCapacity); i++) {
     const item = workingInventory.value[i];
+    if (!item) {
+      continue;
+    }
     const rarityClass = getRarityClass(item.value);
     dots.push({
       filled: true,
@@ -78,6 +81,9 @@ const toolsCapacityDots = computed(() => {
   // Fill dots with items that exist in inventory
   for (let i = 0; i < Math.min(toolsInventory.value.length, toolsMaxCapacity); i++) {
     const item = toolsInventory.value[i];
+    if (!item) {
+      continue;
+    }
     const rarityClass = getRarityClass(item.value);
     dots.push({
       filled: true,

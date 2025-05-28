@@ -25,7 +25,7 @@ const rarityClass = computed(() => {
 // Compute the positioning style based on props without defaults
 const positionStyle = computed(() => {
   return {
-    position: props.position,
+    position: props.position as 'static' | 'relative' | 'absolute' | 'fixed' | 'sticky' | undefined,
     top: props.top,
     right: props.right,
     bottom: props.bottom,
