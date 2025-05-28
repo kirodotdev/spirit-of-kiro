@@ -35,7 +35,8 @@ export default async function handleSignup(state: ConnectionState, data: SignupM
     state.username = username;
 
     return {
-      type: "signup_success"
+      type: "signup_success",
+      body: { username, userId: result.userId }
     };
   } catch (error) {
     return {
