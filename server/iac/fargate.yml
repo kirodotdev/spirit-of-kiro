@@ -250,11 +250,11 @@ Resources:
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
-          SourcePrefixListId: pl-58a04531  # CloudFront's managed prefix list
+          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
-          SourcePrefixListId: pl-58a04531  # CloudFront's managed prefix list
+          CidrIp: 0.0.0.0/0
 
   # Application Load Balancer
   LoadBalancer:
