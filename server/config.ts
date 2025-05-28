@@ -31,6 +31,14 @@ const getEnv = (key) => {
 
 export const DYNAMODB_CONFIG = {
   endpoint: getEnv('DYNAMODB_ENDPOINT') || 'http://localhost:8000',
+  tables: {
+    items: getEnv('DYNAMODB_TABLE_ITEMS') || 'Items',
+    inventory: getEnv('DYNAMODB_TABLE_INVENTORY') || 'Inventory',
+    location: getEnv('DYNAMODB_TABLE_LOCATION') || 'Location',
+    users: getEnv('DYNAMODB_TABLE_USERS') || 'Users',
+    usernames: getEnv('DYNAMODB_TABLE_USERNAMES') || 'Usernames',
+    persona: getEnv('DYNAMODB_TABLE_PERSONA') || 'Persona'
+  }
 };
 
 export const S3_CONFIG = {

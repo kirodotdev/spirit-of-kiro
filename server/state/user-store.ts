@@ -5,8 +5,9 @@ import { DYNAMODB_CONFIG } from '../config';
 const client = new DynamoDBClient(DYNAMODB_CONFIG);
 const docClient = DynamoDBDocumentClient.from(client);
 
-const USERS_TABLE = 'Users';
-const USERNAMES_TABLE = 'Usernames';
+const USERS_TABLE = DYNAMODB_CONFIG.tables.users;
+const USERNAMES_TABLE = DYNAMODB_CONFIG.tables.usernames;
+const PERSONA_TABLE = DYNAMODB_CONFIG.tables.persona;
 
 export async function createUser(userId: string, username: string, hashedPassword: string) {
   // First check if username exists
@@ -78,7 +79,7 @@ export async function getUser(username: string) {
 
 export async function savePersonaDetail(userId: string, detail: string, value: string) {
   const command = new PutCommand({
-    TableName: 'Persona',
+    TableName: PERSONA_TABLE,
     Item: {
       userId,
       detail,
@@ -93,7 +94,7 @@ export async function savePersonaDetail(userId: string, detail: string, value: s
 
 export async function incrementPersonaDetail(userId: string, detail: string, amount: number): Promise<number> {
   const command = new UpdateCommand({
-    TableName: 'Persona',
+    TableName: PERSONA_TABLE,
     Key: {
       userId,
       detail
@@ -115,7 +116,7 @@ export async function incrementPersonaDetail(userId: string, detail: string, amo
 
 export async function getPersonaDetails(userId: string): Promise<Record<string, string>> {
   const command = new QueryCommand({
-    TableName: 'Persona',
+    TableName: PERSONA_TABLE,
     KeyConditionExpression: 'userId = :userId',
     ExpressionAttributeValues: {
       ':userId': userId

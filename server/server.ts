@@ -48,7 +48,12 @@ export default {
       return new Response('Upgrade failed', { status: 500 });
     }
 
-    return new Response("404!");
+    // Return 200 for root path
+    if (req.url.endsWith('/')) {
+      return new Response('OK', { status: 200 });
+    }
+
+    return new Response("404!", { status: 404 });
   },
   websocket: {
     open(ws: ServerWebSocket<WebSocketData>) {

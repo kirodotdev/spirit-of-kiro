@@ -4,9 +4,9 @@ import { DYNAMODB_CONFIG } from '../config';
 
 const client = new DynamoDBClient(DYNAMODB_CONFIG);
 const docClient = DynamoDBDocumentClient.from(client);
-const TABLE_NAME = 'Items';
-const INVENTORY_TABLE = 'Inventory';
-const LOCATION_TABLE = 'Location';
+const TABLE_NAME = DYNAMODB_CONFIG.tables.items;
+const INVENTORY_TABLE = DYNAMODB_CONFIG.tables.inventory;
+const LOCATION_TABLE = DYNAMODB_CONFIG.tables.location;
 
 export interface ItemResponse {
   id: string;

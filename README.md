@@ -73,7 +73,7 @@ Running this project relies on the following dependencies:
 * A local installation of Docker Desktop or Podman.
 * An AWS account, and local credentials to access that account
    - AWS Bedrock access to the following models
-     - Amazon Nova Lite
+     - Amazon Nova Pro
      - Amazon Nova Canvas
 
 The game stack is launched using one of the following commands, depending on

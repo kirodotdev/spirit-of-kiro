@@ -1,0 +1,137 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template for DynamoDB tables used by the server service
+
+Resources:
+  # DynamoDB Tables
+  ItemsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Items
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  InventoryTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Inventory
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: itemId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: itemId
+          KeyType: RANGE
+
+  LocationTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Location
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: itemId
+          AttributeType: S
+        - AttributeName: location
+          AttributeType: S
+      KeySchema:
+        - AttributeName: itemId
+          KeyType: HASH
+        - AttributeName: location
+          KeyType: RANGE
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Users
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+
+  UsernamesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Usernames
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: username
+          AttributeType: S
+      KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+
+  PersonaTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Persona
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: detail
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: detail
+          KeyType: RANGE
+
+Outputs:
+  ItemsTableName:
+    Description: Name of the Items DynamoDB table
+    Value: !Ref ItemsTable
+
+  ItemsTableArn:
+    Description: ARN of the Items DynamoDB table
+    Value: !GetAtt ItemsTable.Arn
+
+  InventoryTableName:
+    Description: Name of the Inventory DynamoDB table
+    Value: !Ref InventoryTable
+
+  InventoryTableArn:
+    Description: ARN of the Inventory DynamoDB table
+    Value: !GetAtt InventoryTable.Arn
+
+  LocationTableName:
+    Description: Name of the Location DynamoDB table
+    Value: !Ref LocationTable
+
+  LocationTableArn:
+    Description: ARN of the Location DynamoDB table
+    Value: !GetAtt LocationTable.Arn
+
+  UsersTableName:
+    Description: Name of the Users DynamoDB table
+    Value: !Ref UsersTable
+
+  UsersTableArn:
+    Description: ARN of the Users DynamoDB table
+    Value: !GetAtt UsersTable.Arn
+
+  UsernamesTableName:
+    Description: Name of the Usernames DynamoDB table
+    Value: !Ref UsernamesTable
+
+  UsernamesTableArn:
+    Description: ARN of the Usernames DynamoDB table
+    Value: !GetAtt UsernamesTable.Arn
+
+  PersonaTableName:
+    Description: Name of the Persona DynamoDB table
+    Value: !Ref PersonaTable
+
+  PersonaTableArn:
+    Description: ARN of the Persona DynamoDB table
+    Value: !GetAtt PersonaTable.Arn 
