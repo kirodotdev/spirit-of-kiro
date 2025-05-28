@@ -26,14 +26,17 @@ export default async function handlePeekDiscarded(state: ConnectionState, data: 
     const { numberOfItems } = data.body;
     const items: ItemResponse[] = [];
     const seenItemIds = new Set<string>();
+    let attempts = 0;
+    const MAX_ATTEMPTS = 30;
 
     // Find the requested number of items
-    while (items.length < numberOfItems) {
+    while (items.length < numberOfItems && attempts < MAX_ATTEMPTS) {
       const item = await findJunkItem();
       if (item && !seenItemIds.has(item.id)) {
         items.push(item);
         seenItemIds.add(item.id);
       }
+      attempts++;
     }
 
     return {
