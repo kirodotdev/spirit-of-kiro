@@ -1,4 +1,4 @@
-import { type Ref, ref, computed } from 'vue'
+import { type Ref, computed } from 'vue'
 import type { SocketSystem } from './socket-system'
 
 export class PersonaSystem {

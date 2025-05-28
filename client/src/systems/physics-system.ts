@@ -1,4 +1,4 @@
-import { computed, watch } from 'vue';
+import { computed, watch, type Ref } from 'vue';
 import type { GameObject } from './game-object-system';
 import { useGameStore } from '../stores/game';
 import { 
@@ -6,7 +6,6 @@ import {
   checkCollision, 
   handleCollision, 
   handleWallCollision,
-  detectAndFixStuckObjects,
   PhysicsType
 } from '../utils/physics';
 
@@ -18,7 +17,7 @@ export class PhysicsSystem {
 
   private physicsObjects = computed(() => this.objects.value.filter(obj => obj.physics))
   private walls = computed(() => this.objects.value.filter(obj => obj.physics && obj.physics.mass == Infinity))
-  private activeObjects = computed(() => this.physicsObjects.value.filter(obj => obj.physics.active == true))
+  private activeObjects = computed(() => this.physicsObjects.value.filter(obj => obj.physics && obj.physics.active == true))
   private gameStore;
 
   constructor(objects: Ref<GameObject[]>, hasActivePhysics: Ref<boolean>) {
@@ -75,6 +74,10 @@ export class PhysicsSystem {
     const self = this;
     // Update positions based on physics properties
     for (const obj of this.physicsObjects.value) {
+      if (!obj.physics) {
+        continue;
+      }
+
       if (obj.physics.physicsType == PhysicsType.Static || obj.physics.physicsType == PhysicsType.Field) {
         // These items don't collide with each other
         continue;
@@ -128,6 +131,10 @@ export class PhysicsSystem {
 
         const obj1 = this.physicsObjects.value[i];
         const obj2 = this.physicsObjects.value[j];
+
+        if (!obj1.physics || !obj2.physics) {
+          continue;
+        }
 
         if (obj1.physics.physicsType == PhysicsType.Static || obj2.physics.physicsType == PhysicsType.Static) {
           // Static type collisions were handled already

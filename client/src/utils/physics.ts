@@ -9,6 +9,7 @@ export interface PhysicsProperties {
   velocity: number;  // Velocity in tiles per second
   friction: number;  // Friction coefficient between 0 and 1
   active: boolean;
+  event?: string; // Event to emit when this item collides with another item
   height: number;  // Current height above ground in tile units
   verticalVelocity: number;  // Vertical velocity in tile units per second
   bounceStrength: number;  // How much velocity is retained on bounce (0-1)

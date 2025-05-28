@@ -4,7 +4,7 @@ export class SocketSystem {
   private ws: Ref<WebSocket | null>
   private wsConnected: Ref<boolean>
   private isAuthenticated: Ref<boolean>
-  private eventListeners: Map<string, Map<string, (data?: any) => void>>
+  private eventListeners: Map<string, Map<string, (data?: any, eventType?: string) => void>>
 
   // Reconnection properties
   private reconnectAttempts: number = 0
@@ -83,7 +83,7 @@ export class SocketSystem {
    * @param callback - The callback function to execute when the event is emitted
    * @returns A unique listener ID that can be used to remove the listener
    */
-  addEventListener(eventType: string, callback: (data?: any) => void): string {
+  addEventListener(eventType: string, callback: (data?: any, eventType?: string) => void): string {
     const listenerId = crypto.randomUUID()
 
     if (!this.eventListeners.has(eventType)) {
