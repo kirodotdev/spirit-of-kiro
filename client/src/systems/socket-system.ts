@@ -13,6 +13,10 @@ export class SocketSystem {
   private maxReconnectDelay: number = 30000 // 30 seconds
   private reconnectTimeoutId: number | null = null
 
+  // Ping properties
+  private pingIntervalId: number | null = null
+  private readonly PING_INTERVAL = 10000 // 10 seconds
+
   // Wildcard character for event pattern matching
   private readonly wildcardChar: string = '*'
 
@@ -51,12 +55,18 @@ export class SocketSystem {
 
       // Reset reconnect attempts on successful connection
       this.reconnectAttempts = 0
+
+      // Start ping interval
+      this.startPingInterval()
     }
 
     this.ws.value.onclose = (event) => {
       this.wsConnected.value = false
       this.isAuthenticated.value = false
       console.log('WebSocket disconnected', event)
+
+      // Clear ping interval
+      this.clearPingInterval()
 
       // Attempt to reconnect
       this.scheduleReconnect()
@@ -372,6 +382,34 @@ export class SocketSystem {
   }
 
   /**
+   * Start sending periodic ping messages
+   */
+  private startPingInterval() {
+    // Clear any existing interval
+    this.clearPingInterval()
+
+    // Set up new interval
+    this.pingIntervalId = window.setInterval(() => {
+      if (this.ws.value && this.ws.value.readyState === WebSocket.OPEN) {
+        const message = {
+          type: 'ping'
+        }
+        this.ws.value.send(JSON.stringify(message))
+      }
+    }, this.PING_INTERVAL)
+  }
+
+  /**
+   * Clear the ping interval
+   */
+  private clearPingInterval() {
+    if (this.pingIntervalId !== null) {
+      clearInterval(this.pingIntervalId)
+      this.pingIntervalId = null
+    }
+  }
+
+  /**
    * Clean up resources when the component is unmounted
    */
   cleanup() {
@@ -379,6 +417,8 @@ export class SocketSystem {
       clearTimeout(this.reconnectTimeoutId)
       this.reconnectTimeoutId = null
     }
+
+    this.clearPingInterval()
 
     if (this.ws.value) {
       this.ws.value.close()
