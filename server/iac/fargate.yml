@@ -36,7 +36,7 @@ Parameters:
 
   ContainerPort:
     Type: Number
-    Default: 3000
+    Default: 8080
     Description: Port exposed by the container
 
   ContainerCpu:
@@ -278,7 +278,7 @@ Resources:
       Protocol: HTTP
       VpcId: !Ref VpcId
       TargetType: ip
-      HealthCheckPath: /health
+      HealthCheckPath: /
       HealthCheckIntervalSeconds: 30
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2

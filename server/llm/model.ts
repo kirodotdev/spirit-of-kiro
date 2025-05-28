@@ -2,7 +2,7 @@ import { BedrockRuntimeClient, ConverseCommand } from '@aws-sdk/client-bedrock-r
 
 // Initialize the Bedrock client
 const bedrockClient = new BedrockRuntimeClient({
-  region: 'us-east-1', // Update with your preferred AWS region
+  region: 'us-west-2', // Update with your preferred AWS region
 });
 
 export const invoke = async (prompt: object): Promise<string | undefined> => {
@@ -11,7 +11,6 @@ export const invoke = async (prompt: object): Promise<string | undefined> => {
     const command = new ConverseCommand({
       //modelId: 'us.amazon.nova-pro-v1:0', 
       //modelId: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0', 
-      //modelId: 'us.anthropic.claude-3-5-haiku-20241022-v1:0',
       modelId: 'us.anthropic.claude-sonnet-4-20250514-v1:0',
       ...prompt
     });
