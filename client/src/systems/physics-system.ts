@@ -136,6 +136,10 @@ export class PhysicsSystem {
           continue;
         }
 
+        /*if (!obj1.physics || !obj2.physics) {
+          continue;
+        }*/
+
         if (obj1.physics.physicsType == PhysicsType.Static || obj2.physics.physicsType == PhysicsType.Static) {
           // Static type collisions were handled already
           continue;

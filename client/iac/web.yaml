@@ -71,6 +71,9 @@ Resources:
           LambdaFunctionAssociations:
             - EventType: viewer-request
               LambdaFunctionARN: !GetAtt BasicAuthFunctionVersion.FunctionArn
+          MinTTL: 3600
+          DefaultTTL: 86400
+          MaxTTL: 31536000
         CacheBehaviors:
           - PathPattern: /ws*
             TargetOriginId: WebSocketOrigin

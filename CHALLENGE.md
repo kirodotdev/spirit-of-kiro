@@ -23,6 +23,10 @@ player character actively moving, and colliding with an object)
 then if you tab out of the game, wait a few seconds, and tab
 back in, you will see a tremendous bounce that goes haywire!
 
+Easy reproduction is to pull the lever, switch browser tabs for
+at least 20-30 seconds so that the item is dispensed while the
+tab is backgrounded, then switch back to the game tab. 
+
 Can AI figure out the cause of this bug and then fix it?
 
 _Extra credit: There are multiple potential solutions to this problem. Be sure to ask the AI to dig deeper and suggest alternate solutions. Think about the various potential solutions, and use your strengths as a human to select the right one._

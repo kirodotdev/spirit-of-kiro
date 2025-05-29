@@ -43,6 +43,7 @@ BUCKET_NAME=$(aws cloudformation describe-stacks \
 echo "Uploading files to S3 bucket: $BUCKET_NAME"
 aws s3 sync dist/ s3://$BUCKET_NAME/ \
   --delete \
+  --cache-control "public, max-age=31536000" \
   --region $REGION
 
 # Get the CloudFront distribution domain name

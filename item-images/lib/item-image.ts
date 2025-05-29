@@ -62,7 +62,8 @@ export async function uploadToS3(imageData, fileName) {
     Bucket: IMAGES_BUCKET_NAME,
     Key: fileName,
     Body: resizedImageBuffer,
-    ContentType: "image/png"
+    ContentType: "image/png",
+    CacheControl: "public, max-age=31536000"
   };
 
   try {
