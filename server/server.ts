@@ -62,7 +62,6 @@ export default {
       console.log('A client connected');
     },
     async message(ws: ServerWebSocket<WebSocketData>, message: string | Buffer) {
-      console.log("Server got message", message);
       if (typeof message !== 'string') {
         ws.send(formatMessage('error', 'Invalid message format'));
         return;
@@ -85,6 +84,8 @@ export default {
         type: string;
         body?: any;
       };
+
+      console.log(`> ${ws.data.state.userId} - ${data.type}`);
 
       switch (data.type) {
         case 'ping':

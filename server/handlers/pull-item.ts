@@ -53,8 +53,6 @@ export default async function handlePullItem(state: ConnectionState, _data: Pull
     // Generate a GUID for the item
     const id = crypto.randomUUID();
 
-    console.log('Created item', itemData);
-
     // Fetch image from the item-images service
     try {
       const imageServiceUrl = `${ITEM_IMAGES_SERVICE_CONFIG.url}/image`;
@@ -66,8 +64,6 @@ export default async function handlePullItem(state: ConnectionState, _data: Pull
       }
 
       const imageData = await response.json();
-
-      console.log("Got item image", imageData);
 
       // Update the item with the image URL from the service
       itemData.imageUrl = imageData.imageUrl;

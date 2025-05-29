@@ -180,7 +180,6 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
               if (response.ok) {
                 const imageData = await response.json();
                 item.imageUrl = imageData.imageUrl;
-                console.log("Got item image for new item", imageData);
               }
             } catch (error) {
               console.error('Error fetching image from item-images service:', error);

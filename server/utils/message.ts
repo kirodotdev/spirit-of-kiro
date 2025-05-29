@@ -3,7 +3,10 @@ export function formatMessage(messageType, params?: any) {
     type: messageType,
     body: params
   };
+  const body = JSON.stringify(outgoing);
 
-  console.log("Server sent", outgoing)
-  return JSON.stringify(outgoing)
+  if (messageType != 'pong') { 
+    console.log(`< ${messageType} - ${body.length}`);
+  }
+  return body;
 }
