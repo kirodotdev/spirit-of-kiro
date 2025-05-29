@@ -106,6 +106,25 @@ onUnmounted(() => {
            zIndex: 999
          }">
     </div>
+    <!-- Debug information display -->
+    <div v-if="store.debug && physics" 
+         class="debug-info"
+         :style="{
+           position: 'absolute',
+           top: '-30px',
+           left: '0',
+           color: 'white',
+           backgroundColor: 'rgba(0, 0, 0, 0.7)',
+           padding: '2px 4px',
+           fontSize: '10px',
+           zIndex: 1000,
+           display: 'flex',
+           gap: '4px'
+         }">
+      <span>H:{{ physics.height.toFixed(1) }}</span>
+      <span>V:{{ physics.velocity.toFixed(1) }}</span>
+      <span>VV:{{ physics.verticalVelocity?.toFixed(1) || '0.0' }}</span>
+    </div>
     <div v-if="store.debug && physics?.active" 
          class="debug-vector"
          :style="{
