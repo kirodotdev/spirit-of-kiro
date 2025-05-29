@@ -97,7 +97,7 @@ export function updatePhysicsPosition(
     newVelocity = 0;
   }
 
-  if (newHeight < .1 && Math.abs(newVerticalVelocity) < .1) {
+  if (newHeight < .05 && Math.abs(newVerticalVelocity) < .05) {
     newHeight = 0;
     newVerticalVelocity = 0;
   }
