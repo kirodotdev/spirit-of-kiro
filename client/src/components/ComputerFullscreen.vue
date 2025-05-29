@@ -37,26 +37,23 @@ const handleItemClick = (itemId: string) => {
   // Clear the hovered item preview immediately when an item is clicked
   hoveredItemId.value = null;
 
-  // Set up a one-time listener for the 'buy-results' event
-  const listenerId = gameStore.addEventListener('buy-results', (data) => {
-    // Check if this is the item we just bought
-    if (data && data.itemId === itemId) {
-      // Remove the listener since we only need it once
-      gameStore.removeEventListener('buy-results', listenerId);
-      
-      // Close the computer fullscreen view
-      emit('close');
-      
-      // Put the item in the player's hands
-      gameStore.emitEvent('item-pickup', {
-        id: data.itemId
-      })
-    }
-  });
-
   // Buy the item from the discarded inventory
   gameStore.buyDiscarded(itemId);
 };
+
+const handleBuyResults = (data: any) => {
+  if (!data || !data.itemId) return;
+  
+  // Close the computer fullscreen view
+  emit('close');
+  
+  // Put the item in the player's hands
+  gameStore.emitEvent('item-pickup', {
+    id: data.itemId
+  });
+};
+
+let buyResultsListenerId: string;
 
 const handleItemMouseEnter = (itemId: string, event: MouseEvent) => {
   hoveredItemId.value = itemId;
@@ -82,10 +79,12 @@ const handleKeydown = (e: KeyboardEvent) => {
 
 onMounted(() => {
   window.addEventListener('keydown', handleKeydown);
+  buyResultsListenerId = gameStore.addEventListener('buy-results', handleBuyResults);
 });
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown);
+  gameStore.removeEventListener('buy-results', buyResultsListenerId);
   // Ensure interaction is unlocked when component unmounts
   if (props.show) {
     gameStore.interactionLocked = false;
