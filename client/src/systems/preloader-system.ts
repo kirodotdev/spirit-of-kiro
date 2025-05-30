@@ -2,6 +2,7 @@ import { type Ref, computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import type { SocketSystem } from './socket-system'
 import type { Item } from './item-system'
+import { staticAssets } from '../assets'
 
 export interface PreloadProgress {
   total: number
@@ -11,34 +12,7 @@ export interface PreloadProgress {
 }
 
 // List of static assets to preload
-const STATIC_ASSETS = [
-  // Main game assets
-  '/src/assets/background.png',
-  '/src/assets/computer.png',
-  '/src/assets/computer-zoom.png',
-  '/src/assets/happy.png',
-  '/src/assets/neutral.png',
-  '/src/assets/unhappy.png',
-  '/src/assets/sell-table.png',
-  '/src/assets/appraising.png',
-  '/src/assets/chest.png',
-  '/src/assets/chest-open.png',
-  '/src/assets/generic.png',
-  '/src/assets/workbench.png',
-  '/src/assets/workbench-zoom.png',
-  '/src/assets/shelf.png',
-  '/src/assets/panel-background.png',
-  '/src/assets/lever.png',
-  '/src/assets/garbage.png',
-  '/src/assets/dispenser.png',
-  '/src/assets/chute.png',
-  // Ghost assets
-  '/src/assets/kiro-ghost/southwest.png',
-  '/src/assets/kiro-ghost/south.png',
-  '/src/assets/kiro-ghost/northeast.png',
-  '/src/assets/kiro-ghost/north.png',
-  '/src/assets/kiro-ghost/east.png'
-]
+const STATIC_ASSETS = Object.values(staticAssets)
 
 export class PreloaderSystem {
   private socketSystem: SocketSystem
