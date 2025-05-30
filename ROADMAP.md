@@ -8,6 +8,22 @@
   you should be able to grant other players access to the workbench in exchange for a fee. The secure workbench
   sharing feature allows guests to use your tools to craft on their own items.
 
+## Enhanced persona system
+- Right now the only character persona data being tracked is how much money the character has
+- Consider adding AI generated passives that get leveled up based on your usage
+  of item quirks. For example, if interacting with many "gothic" themed items you might gain a
+  "vampire" passive and level it up each time you interact with a "gothic" item.
+- Consider passives in the crafting outcome. (Additional token burden might require faster models)
+- Add a mirror / vanity table for player character to inspect their stats and passives.
+
+## Basic progression system
+- Consider using the persona system to keep track of purchasable upgrades.
+- Maybe tool bench starts out with only a few item slots, can purchase upgraded tool benches?
+- Ability to buy another storage chest?
+- Ability to upgrade "computer" from old model to a sleek modern laptop that lets you "order"
+  AI generated items from specific themes and categories rather than pulling
+  completely randomly.
+
 ## AI Shop System
 - Expand the basic "item appraisal" system into a full shop. You should be able to walk through the door at the bottom
   to access your shop. Implement display cases for showcasing items for sale.
@@ -32,8 +48,15 @@
 - Add contest history and leaderboards
 - Implement contest notifications and reminders
 
-## Battle System
+## Fashion Show
+- Submit a set of stylish, whacky, or otherwise interesting themed clothing
+- AI matches you to another player, and judges your outfit relative to the other
+  players outfit, somewhat like Infinity Nikki.
+- Range of different AI generated judge personas. You must analyze the set of
+  judges and then pick and choose your best items to try to impress them based
+  on the judge personas.
 
+## Battle System
 - Hire an AI champion, and equip them with your unique crafted
   items as armor or weapons.
 - Dispatch your warrior to fight randomly generated AI monsters.
