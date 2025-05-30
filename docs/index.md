@@ -12,7 +12,7 @@ graph TB
         Store[Pinia Store]
         subgraph Systems
             Physics[Physics System]
-            Socket[Socket System]
+            Socket[Socket + Event System]
             GameObject[Game Object System]
             Item[Item System]
             Inventory[Inventory System]

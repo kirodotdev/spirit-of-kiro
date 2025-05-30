@@ -60,9 +60,9 @@ able to build into the game using Kiro.
 Open source contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md)
 for instructions on how to contribute.
 
-### Setup and Dependencies
+## Setup and Dependencies
 
-## 1. Clone repo
+### 1. Clone repo
 
 To get started:
 
@@ -70,7 +70,7 @@ To get started:
 git clone git@github.com:kirodotdev/kiro-demo-game.git
 ```
 
-## 2. Setup your environment and install dependencies
+### 2. Setup your environment and install dependencies
 
 Running this project relies on the following dependencies:
 
@@ -89,7 +89,7 @@ Run the following script to verify that the dependencies are fulfilled:
 ./scripts/check-dependencies.sh
 ```
 
-## 3. Launch the game stack
+### 3. Launch the game stack
 
 The game stack is launched using one of the following commands, depending on
 which container runtime is setup on your machine:
@@ -99,7 +99,7 @@ podman compose build && podman compose up --watch
 ```
 _(You can substitute `docker` for `podman`)_
 
-## 4. Bootstrap the DynamoDB tables
+### 4. Bootstrap the DynamoDB tables
 
 The first time you run the stack, the local DynamoDB will be
 empty, with no tables. Run the following commands to create the required tables:
