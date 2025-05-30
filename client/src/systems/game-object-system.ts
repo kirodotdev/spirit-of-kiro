@@ -12,6 +12,7 @@ export interface GameObject {
   depth?: number
   playerIsNear?: boolean
   physics?: PhysicsProperties
+  interactive?: boolean
   props: any
 }
 
@@ -57,15 +58,20 @@ export class GameObjectSystem {
   updatePlayerProximity(playerRow: number, playerCol: number) {
     const proximityThreshold = 3 // Now in tile units instead of pixels
     let closestDistance = Infinity
-    let closestObjectId: string | null = null
+    let closestInteractiveId: string | null = null
 
-    // Find the closest object based on tile distance
+    // Reset all playerIsNear flags
     this.objects.value.forEach(obj => {
-      if (obj.id == 'player') {
+      if (obj.id !== 'player') {
+        obj.playerIsNear = false
+      }
+    })
+
+    // Find the closest interactive object based on tile distance
+    this.objects.value.forEach(obj => {
+      if (obj.id === 'player' || !obj.interactive) {
         return
       }
-
-      obj.playerIsNear = false
 
       const objRow = obj.row - 1
       const objCol = obj.col - 1
@@ -82,16 +88,16 @@ export class GameObjectSystem {
         Math.pow(closestRow - playerRow, 2)
       )
 
-      // Update closest object if this one is closer
+      // Update closest interactive object if this one is closer
       if (distance < closestDistance) {
         closestDistance = distance
-        closestObjectId = obj.id
+        closestInteractiveId = obj.id
       }
     })
 
-    // Mark only the closest object as near if it's within threshold
-    if (closestObjectId && closestDistance < proximityThreshold) {
-      const closestObject = this.objects.value.find(obj => obj.id === closestObjectId)
+    // Mark only the closest interactive object as near if it's within threshold
+    if (closestInteractiveId && closestDistance < proximityThreshold) {
+      const closestObject = this.objects.value.find(obj => obj.id === closestInteractiveId)
       if (closestObject) {
         closestObject.playerIsNear = true
       }

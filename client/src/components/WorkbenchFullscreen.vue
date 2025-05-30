@@ -73,98 +73,117 @@ const handleItemClick = (item: any, sourceArea: 'tools' | 'working', event?: Mou
   // Clear the hovered item preview immediately when an item is clicked
   hoveredItem.value = null;
   
+  // Handle tool area clicks
   if (sourceArea === 'tools') {
-    // If clicking on a tool item, show/hide skills dropdown
-    if (selectedToolItem.value === item) {
-      // Toggle dropdown visibility
-      showSkillsDropdown.value = !showSkillsDropdown.value;
-      
-      if (showSkillsDropdown.value && event) {
-        positionSkillsDropdown(event);
-      }
-    } else {
-      // Select the new tool and show its skills
-      selectedToolItem.value = item;
-      // Clear any selected skill when changing tools
-      selectedSkill.value = null;
-      // Show the dropdown
-      showSkillsDropdown.value = true;
-      
-      if (event) {
-        positionSkillsDropdown(event);
-      }
-    }
-  } else {
-    // If a skill is selected, handle target selection
-    if (selectedSkill.value) {
-      // Check if this item is already selected
-      const isAlreadySelected = selectedTargets.value.some(target => target.id === item.id);
-      
-      if (isAlreadySelected) {
-        // Deselect the item
-        selectedTargets.value = selectedTargets.value.filter(target => target.id !== item.id);
-      } else {
-        // Add the item to selected targets
-        selectedTargets.value.push(item);
-        
-        // If we have enough targets, cast the skill
-        if (selectedTargets.value.length >= selectedSkill.value.targets) {
-          // Get the index of the skill in the tool's skills array
-          const toolSkillIndex = selectedToolItem.value.skills.findIndex(
-            (s: any) => s === selectedSkill.value
-          );
-          
-          if (toolSkillIndex === -1) {
-            console.error('Selected skill not found in tool skills');
-            return;
-          }
-          
-          // Emit the skill-invoked event before using the skill
-          gameStore.emitEvent('skill-invoked', {
-            skill: selectedSkill.value,
-            tool: selectedToolItem.value,
-            targets: selectedTargets.value
-          });
-          
-          // Use the skill with all selected targets
-          gameStore.useSkill(
-            selectedToolItem.value.id,
-            toolSkillIndex,
-            selectedTargets.value.map(target => target.id)
-          );
-          
-          // Clear the selected skill and targets
-          selectedSkill.value = null;
-          selectedTargets.value = [];
-          return;
-        }
-      }
-      return;
-    }
-    
-    // Otherwise, move to inventory as before
-    const targetInventory = `${gameStore.userId}:main`;
-    
-    // Set up a one-time listener for the 'item-moved' event
-    const listenerId = gameStore.addEventListener('item-moved', (data) => {
-      // Check if this is the item we just moved
-      if (data && data.itemId === item.id && data.targetInventoryId === targetInventory) {
-        // Remove the listener since we only need it once
-        gameStore.removeEventListener('item-moved', listenerId);
-        
-        // Close the workbench fullscreen view
-        emit('close');
-        
-        // Put the item in the player's hands
-        gameStore.emitEvent('item-pickup', {
-          id: data.itemId
-        });
-      }
-    });
-
-    // Move the item from workbench to main inventory
-    gameStore.moveItem(item.id, targetInventory);
+    handleToolItemClick(item, event);
+    return;
   }
+  
+  // Handle working area clicks
+  
+  // If a skill is selected, handle target selection
+  if (selectedSkill.value) {
+    handleSkillTargetSelection(item);
+    return;
+  }
+  
+  // Otherwise, move to inventory
+  moveItemToMainInventory(item);
+};
+
+// Helper function to handle tool item clicks
+const handleToolItemClick = (item: any, event?: MouseEvent) => {
+  // If clicking on already selected tool item, toggle dropdown visibility
+  if (selectedToolItem.value === item) {
+    showSkillsDropdown.value = !showSkillsDropdown.value;
+    
+    if (showSkillsDropdown.value && event) {
+      positionSkillsDropdown(event);
+    }
+    return;
+  }
+  
+  // Select the new tool and show its skills
+  selectedToolItem.value = item;
+  selectedSkill.value = null; // Clear any selected skill when changing tools
+  showSkillsDropdown.value = true;
+  
+  if (event) {
+    positionSkillsDropdown(event);
+  }
+};
+
+// Helper function to handle skill target selection
+const handleSkillTargetSelection = (item: any) => {
+  // Check if this item is already selected
+  const isAlreadySelected = selectedTargets.value.some(target => target.id === item.id);
+  
+  if (isAlreadySelected) {
+    // Deselect the item
+    selectedTargets.value = selectedTargets.value.filter(target => target.id !== item.id);
+    return;
+  }
+  
+  // Add the item to selected targets
+  selectedTargets.value.push(item);
+  
+  // If we don't have enough targets yet, return
+  if (selectedTargets.value.length < selectedSkill.value.targets) {
+    return;
+  }
+  
+  // Get the index of the skill in the tool's skills array
+  const toolSkillIndex = selectedToolItem.value.skills.findIndex(
+    (s: any) => s === selectedSkill.value
+  );
+  
+  if (toolSkillIndex === -1) {
+    console.error('Selected skill not found in tool skills');
+    return;
+  }
+  
+  // Emit the skill-invoked event before using the skill
+  gameStore.emitEvent('skill-invoked', {
+    skill: selectedSkill.value,
+    tool: selectedToolItem.value,
+    targets: selectedTargets.value
+  });
+  
+  // Use the skill with all selected targets
+  gameStore.useSkill(
+    selectedToolItem.value.id,
+    toolSkillIndex,
+    selectedTargets.value.map(target => target.id)
+  );
+  
+  // Clear the selected skill and targets
+  selectedSkill.value = null;
+  selectedTargets.value = [];
+};
+
+// Helper function to move item to main inventory
+const moveItemToMainInventory = (item: any) => {
+  const targetInventory = `${gameStore.userId}:main`;
+  
+  // Set up a one-time listener for the 'item-moved' event
+  const listenerId = gameStore.addEventListener('item-moved', (data) => {
+    // Check if this is the item we just moved
+    if (data && data.itemId === item.id && data.targetInventoryId === targetInventory) {
+      // Remove the listener since we only need it once
+      gameStore.removeEventListener('item-moved', listenerId);
+      
+      // Close the workbench fullscreen view
+      emit('close');
+      
+      // Put the item in the player's hands
+      gameStore.emitEvent('item-pickup', {
+        id: data.itemId
+      });
+    }
+  });
+
+  // Move the item from workbench to main inventory
+  gameStore.moveItem(item.id, targetInventory);
 };
 
 // Handle skill button click
@@ -178,32 +197,7 @@ const handleSkillClick = (skill: any, event: MouseEvent) => {
   
   // If the skill has invalid targets (not 1 or 2), treat it as self-targeting
   if (!skill.targets || typeof skill.targets !== 'number' || skill.targets < 0 || skill.targets > 2) {
-    // Get the index of the skill in the tool's skills array
-    const toolSkillIndex = selectedToolItem.value.skills.findIndex(
-      (s: any) => s === skill
-    );
-    
-    if (toolSkillIndex === -1) {
-      console.error('Selected skill not found in tool skills');
-      return;
-    }
-    
-    // Emit the skill-invoked event before using the skill
-    gameStore.emitEvent('skill-invoked', {
-      skill: skill,
-      tool: selectedToolItem.value,
-      target: selectedToolItem.value // For self-targeting skills, the tool is also the target
-    });
-    
-    // Use the skill on the tool itself
-    gameStore.useSkill(
-      selectedToolItem.value.id,
-      toolSkillIndex,
-      [] // Empty array since it's self-targeting
-    );
-    
-    // Hide the dropdown after casting
-    showSkillsDropdown.value = false;
+    handleSelfTargetingSkill(skill);
     return;
   }
   
@@ -221,36 +215,75 @@ const handleSkillClick = (skill: any, event: MouseEvent) => {
   showSkillsDropdown.value = false;
 };
 
+// Helper function to handle self-targeting skills
+const handleSelfTargetingSkill = (skill: any) => {
+  // Get the index of the skill in the tool's skills array
+  const toolSkillIndex = selectedToolItem.value.skills.findIndex(
+    (s: any) => s === skill
+  );
+  
+  if (toolSkillIndex === -1) {
+    console.error('Selected skill not found in tool skills');
+    return;
+  }
+  
+  // Emit the skill-invoked event before using the skill
+  gameStore.emitEvent('skill-invoked', {
+    skill: skill,
+    tool: selectedToolItem.value,
+    target: selectedToolItem.value // For self-targeting skills, the tool is also the target
+  });
+  
+  // Use the skill on the tool itself
+  gameStore.useSkill(
+    selectedToolItem.value.id,
+    toolSkillIndex,
+    [] // Empty array since it's self-targeting
+  );
+  
+  // Hide the dropdown after casting
+  showSkillsDropdown.value = false;
+};
+
 const handleItemMouseEnter = (event: MouseEvent, item: any) => {
   hoveredItem.value = item;
   
   // Capture the position of the hovered item
   const target = event.currentTarget as HTMLElement;
-  if (target) {
-    const rect = target.getBoundingClientRect();
-    const tooltipWidth = 600; // Approximate width of tooltip
+  if (!target) {
+    return;
+  }
+  
+  const rect = target.getBoundingClientRect();
+  const tooltipWidth = 600; // Approximate width of tooltip
+  const tooltipHeight = 400; // Approximate height of tooltip
 
-    hoveredItemPosition.value = {
-      x: rect.left - (tooltipWidth / 2) - 10, // Centered under the item
-      y: rect.bottom + 10 // Align with the bottom of the item
-    };
-    
-    // Check if tooltip would go off-screen to the right
-    if (hoveredItemPosition.value.x + tooltipWidth > window.innerWidth) {
-      hoveredItemPosition.value.x = window.innerWidth - tooltipWidth - 10;
-    }
+  // Initial position - centered under the item
+  hoveredItemPosition.value = {
+    x: rect.left - (tooltipWidth / 2) - 10,
+    y: rect.bottom + 10
+  };
+  
+  // Adjust position if tooltip would go off-screen
+  adjustTooltipPosition(tooltipWidth, tooltipHeight, rect);
+};
 
-    // Check if tooltip would go off-screen to the left
-    if (hoveredItemPosition.value.x < 0) {
-      hoveredItemPosition.value.x = 10;
-    }
-    
-    // Check if tooltip would go off-screen at the bottom
-    const tooltipHeight = 400; // Approximate height of tooltip
-    if (hoveredItemPosition.value.y + tooltipHeight > window.innerHeight) {
-      // Adjust y position to keep tooltip on screen
-      hoveredItemPosition.value.y = rect.top - tooltipHeight - 10;
-    }
+// Helper function to adjust tooltip position to stay on screen
+const adjustTooltipPosition = (tooltipWidth: number, tooltipHeight: number, rect: DOMRect) => {
+  // Check if tooltip would go off-screen to the right
+  if (hoveredItemPosition.value.x + tooltipWidth > window.innerWidth) {
+    hoveredItemPosition.value.x = window.innerWidth - tooltipWidth - 10;
+  }
+
+  // Check if tooltip would go off-screen to the left
+  if (hoveredItemPosition.value.x < 0) {
+    hoveredItemPosition.value.x = 10;
+  }
+  
+  // Check if tooltip would go off-screen at the bottom
+  if (hoveredItemPosition.value.y + tooltipHeight > window.innerHeight) {
+    // Adjust y position to keep tooltip on screen
+    hoveredItemPosition.value.y = rect.top - tooltipHeight - 10;
   }
 };
 
@@ -325,18 +358,25 @@ const handleDrop = (event: DragEvent, targetArea: 'tools' | 'working') => {
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Escape' && props.show && gameStore.hasFocus('workbench')) {
-    if (selectedSkill.value) {
-      // First cancel any selected skill
-      selectedSkill.value = null;
-    } else if (showSkillsDropdown.value) {
-      // Close the skills dropdown if it's open
-      showSkillsDropdown.value = false;
-    } else {
-      // Then close the workbench if no skill is selected and dropdown is closed
-      emit('close');
-    }
+  if (e.key !== 'Escape' || !props.show || !gameStore.hasFocus('workbench')) {
+    return;
   }
+  
+  // Handle Escape key press in priority order
+  if (selectedSkill.value) {
+    // First cancel any selected skill
+    selectedSkill.value = null;
+    return;
+  }
+  
+  if (showSkillsDropdown.value) {
+    // Close the skills dropdown if it's open
+    showSkillsDropdown.value = false;
+    return;
+  }
+  
+  // Then close the workbench if no skill is selected and dropdown is closed
+  emit('close');
 };
 
 // Track mouse position for skill casting

@@ -39,6 +39,20 @@ export class PhysicsSystem {
         self.stop();
       }
     })
+    
+    // Add page visibility event listener to handle tab switching
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        // Tab is hidden, pause physics
+        this.stop();
+      } else {
+        // Tab is visible again, reset timestamp and restart if needed
+        this.lastTimestamp = performance.now();
+        if (this.hasActivePhysics.value && this.animationFrameId === null) {
+          this.start();
+        }
+      }
+    });
   }
 
   start() {

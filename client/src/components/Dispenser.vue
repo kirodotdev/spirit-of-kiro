@@ -89,6 +89,7 @@ function spawnItemGameObject(data: any) {
       type: GameItem,
       row: itemRow,
       col: itemCol,
+      interactive: true,
       width: 1,
       depth: 1,
       height: 1,
