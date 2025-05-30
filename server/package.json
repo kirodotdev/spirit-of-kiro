@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "bun server.js",
-    "test": "bun test --bail --reporter=junit --reporter-outfile=./bun-tests.xml"
+    "test": "bun test --bail --reporter=junit --reporter-outfile=./bun-tests.xml",
+    "bootstrap-dynamodb": "bun scripts/bootstrap-local-dynamodb.ts"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.0.0",
@@ -17,7 +18,8 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-    "@types/bun": "^1.1.14"
+    "@types/bun": "^1.1.14",
+    "yaml": "^2.3.4"
   },
   "aiEditorAgent": {
     "testConfig": {

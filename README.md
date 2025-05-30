@@ -62,11 +62,15 @@ for instructions on how to contribute.
 
 ### Setup and Dependencies
 
+## 1. Clone repo
+
 To get started:
 
-```
+```sh
 git clone git@github.com:kirodotdev/kiro-demo-game.git
 ```
+
+## 2. Setup your environment and install dependencies
 
 Running this project relies on the following dependencies:
 
@@ -74,33 +78,59 @@ Running this project relies on the following dependencies:
 * An AWS account, and local credentials to access that account
    - AWS Bedrock access to the following models
      - Amazon Nova Pro
-     - Amazon Nova Canvas
+     - Anthropic Claude Sonnet 3.7
+     - Anthropic Claude Sonnet 4
+     - Amazon Titan Text Embeddings v2 (if you want to generate item images yourself)
+     - Amazon Nova Canvas (only if you want to generate item images yourself)
+
+Run the following script to verify that the dependencies are fulfilled:
+
+```sh
+./scripts/check-dependencies.sh
+```
+
+## 3. Launch the game stack
 
 The game stack is launched using one of the following commands, depending on
-which dev tool is setup on your machine:
+which container runtime is setup on your machine:
 
+```sh
+podman compose build && podman compose up --watch
 ```
-podman compose up --watch
-```
+_(You can substitute `docker` for `podman`)_
 
-or
+## 4. Bootstrap the DynamoDB tables
 
-```
-docker compose up --watch
-```
+The first time you run the stack, the local DynamoDB will be
+empty, with no tables. Run the following commands to create the required tables:
 
-It is also possible to run the project outside of it's intended Docker Compose stack. However, this will require that you have the following dependencies:
+```sh
+podman exec server mkdir -p /app/server/iac &&
+podman cp scripts/bootstrap-local-dynamodb.js server:/app/ &&
+podman cp server/iac/dynamodb.yml server:/app/server/iac/ &&
+podman exec server bun run /app/bootstrap-local-dynamodb.js
+```
+_(You can substitute `docker` for `podman`)_
+
+Note: If you add a new table to the infrastructure as code, or modify a table structure
+then you should delete `docker/dynamodb/shared-local-instance.db` and rerun the command above.
+
+### Don't like containers?
+
+It is also possible to run the project outside of the Docker Compose stack if you prefer to run all the dependencies locally. You will 
+need to install the following tools:
 
 * [Bun](https://bun.sh/) - JavaScript runtime
 * [DynamoDB Local](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.html)
+
+Then:
 * You will need to run `bun install` in the root of the project, as well as inside the `client` and `server` folders.
+* You will need to run `bun ./scripts/bootstrap-local-dynamodb.js` script to setup the DynamoDB tables
 
-You can then launch the game by running the following command in the root of the project:
+You can then launch the components of the stack locally, directly on your host:
 
-```
-bun start
-```
-
+- Client: `cd client && bun run dev`
+- Server: `cd server && bun --watch server.ts`
 
 ## Security
 

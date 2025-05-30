@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "description": "AI-powered scrapyard game with client and server components",
   "scripts": {
-    "dev": "op run --env-file=./dev.env -- bun launch.ts",
-    "id": "op run --env-file=./dev.env -- aws sts get-caller-identity"
+    "dev": "bun launch.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.821.0",
     "@types/uuid": "^10.0.0",
     "bun": "^1.0.0",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "yaml": "^2.8.0"
   }
 }

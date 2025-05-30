@@ -1,4 +1,3 @@
-
 networks:
   # This special network is configured so that the local metadata
   # service can bind to the specific IP address that ECS uses
@@ -40,17 +39,15 @@ services:
    environment:
      AWS_REGION: us-east-1
      DYNAMODB_ENDPOINT: http://dynamodb-local:8000
-     REDIS_HOST: redis
-     # This ENV VAR enables credentials
-     # Set it to "/creds" or "/role/<role name>"
-     AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: "/creds"
-     # Enables V3 Metadata
-     ECS_CONTAINER_METADATA_URI: "http://169.254.170.2/v3"
+     # Fake AWS credentials for local development
+     AWS_ACCESS_KEY_ID: "AKIAIOSFODNN7EXAMPLE"
+     AWS_SECRET_ACCESS_KEY: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+     AWS_SESSION_TOKEN: "FakeSessionToken123456789"
    networks:
      - credentials_network
    develop:
      watch:
-       - action: sync
+       - action: sync+restart
          path: ./server
          target: /app
          ignore:

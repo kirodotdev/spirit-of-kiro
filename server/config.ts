@@ -32,7 +32,7 @@ const getEnv = (key) => {
 export const DYNAMODB_CONFIG = {
   // If we are passing a real table name then we are in a live environment,
   // just use the normal DynamoDB endpoint, otherwise use the local endpoint
-  endpoint: getEnv('DYNAMODB_TABLE_ITEMS') ? undefined : 'http://localhost:8000',
+  endpoint: getEnv('DYNAMODB_ENDPOINT') || (getEnv('DYNAMODB_TABLE_ITEMS') ? undefined : 'http://localhost:8000'),
   tables: {
     items: getEnv('DYNAMODB_TABLE_ITEMS') || 'Items',
     inventory: getEnv('DYNAMODB_TABLE_INVENTORY') || 'Inventory',
