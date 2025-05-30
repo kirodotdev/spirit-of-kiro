@@ -1,5 +1,8 @@
 <template>
   <div class="app">
+    <LoadingScreen 
+      :progress="gameStore.preloadProgress" 
+    />
     <div class="control-buttons">
       <button class="debug-button" @click="gameStore.debug = !gameStore.debug">Toggle Debug</button>
       <div class="physics-indicator" :class="{ active: hasActivePhysics }">Physics</div>
@@ -34,6 +37,7 @@ import HUD from '../components/HUD.vue'
 import RandomChat from '../components/RandomChat.vue'
 import { setupGameObjects } from '../utils/init-world'
 import { storeToRefs } from 'pinia'
+import LoadingScreen from '../components/LoadingScreen.vue'
 
 const gridSize = ref(20)
 const gameStore = useGameStore()

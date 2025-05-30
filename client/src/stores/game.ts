@@ -7,6 +7,7 @@ import { GameObjectSystem, type GameObject } from '../systems/game-object-system
 import { ItemSystem, type Item } from '../systems/item-system'
 import { InventorySystem } from '../systems/inventory-system'
 import { PersonaSystem } from '../systems/persona-system'
+import { PreloaderSystem, type PreloadProgress } from '../systems/preloader-system'
 
 export const useGameStore = defineStore('game', () => {
   // Reactive state variables that are used by front facing
@@ -28,6 +29,15 @@ export const useGameStore = defineStore('game', () => {
   const interactionLocked = ref(false)
   const hasActivePhysics = ref(false)
 
+  // Preloader state
+  const preloadProgress = ref<PreloadProgress>({
+    total: 0,
+    loaded: 0,
+    failed: 0,
+    pending: 0
+  })
+  const isInitialLoadComplete = ref(false)
+
   // Logic layers that interact with aspects of the
   // shared reactive state
   new PhysicsSystem(objects, hasActivePhysics);
@@ -37,6 +47,9 @@ export const useGameStore = defineStore('game', () => {
   const inventorySystem = new InventorySystem(inventories, socketSystem, userId);
   const personaSystem = new PersonaSystem(personaData, socketSystem);
   
+  // Initialize preloader system
+  const preloaderSystem = new PreloaderSystem(socketSystem, preloadProgress, isInitialLoadComplete)
+
   // Focus management functions
   function pushFocus(componentId: string) {
     focusedComponent.value = componentId;
@@ -109,5 +122,12 @@ export const useGameStore = defineStore('game', () => {
 
     // Persona system actions
     usePersona: personaSystem.usePersona.bind(personaSystem),
+
+    // Preloader state
+    preloadProgress,
+    isInitialLoadComplete,
+
+    // Preloader actions
+    preloadStaticAssets: preloaderSystem.preloadStaticAssets.bind(preloaderSystem),
   }
 })
