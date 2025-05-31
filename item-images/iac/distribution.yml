@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template for CloudFront distribution
+Description: Sets up a CloudFront distribution to serve item images from the S3 bucket with global edge caching. This distribution provides fast, secure, and reliable delivery of game item images to players worldwide, with HTTPS enforcement and optimized caching policies.
 
 Parameters:
   ImagesBucketName:
@@ -71,4 +71,7 @@ Outputs:
     Value: !GetAtt CloudFrontDistribution.DomainName
     Export:
       Name: !Sub "${AWS::StackName}-DistributionDomainName"
+  PlaceholderOutput:
+    Description: Placeholder output value
+    Value: "placeholder-cloudfront-distribution-value"
 

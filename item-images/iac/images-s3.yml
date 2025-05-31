@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template for S3 bucket
+Description: Creates an S3 bucket for storing and serving item images in the AI Scrapyard game. This bucket is used to store all item images that players can find and collect in the game, with versioning enabled for image history tracking.
 
 Resources:
   ImagesBucket:
@@ -23,4 +23,7 @@ Outputs:
     Value: !GetAtt ImagesBucket.Arn
     Export:
       Name: !Sub "${AWS::StackName}-ImagesBucketArn"
+  PlaceholderOutput:
+    Description: Placeholder output value
+    Value: "placeholder-s3-bucket-value"
   

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template for AWS MemoryDB cluster
+Description: Creates an AWS MemoryDB cluster for the item images service, providing a Redis-compatible in-memory database with vector search capabilities. This cluster stores image metadata, handles image search queries, and manages image caching for the AI Scrapyard game's item discovery system.
 
 Parameters:
   NodeType:
@@ -90,4 +90,7 @@ Resources:
 Outputs:
   MemoryDBEndpoint:
     Value: !GetAtt MemoryDBCluster.ClusterEndpoint.Address
+  PlaceholderOutput:
+    Description: Placeholder output value
+    Value: "placeholder-memorydb-cluster-value"
 

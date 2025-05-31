@@ -41,14 +41,36 @@ Before deploying the infrastructure, ensure you have:
 
 ## Deployment Steps
 
-### 1. Clone and Prepare the Repository
+### Clone and Prepare the Repository
 
 ```bash
 git clone git@github.com:kirodotdev/kiro-demo-game.git
 cd kiro-demo-game
 ```
 
-### 2. Deploy the Server Infrastructure
+### Production Deployment
+
+For production deployments, use the automated deployment script that handles all components in the correct order:
+
+```bash
+./scripts/prod-deploy.sh
+```
+
+This script will:
+1. Deploy the item-images service to us-west-2
+2. Deploy the server to us-west-2
+3. Deploy the client to us-east-1
+4. Configure all necessary connections between components
+
+The script uses predefined stack prefixes:
+- Item Images: `kiro-demo-images`
+- Server: `game-server`
+
+### Manual Deployment Steps
+
+If you need to deploy components individually, follow these steps:
+
+#### Deploy the Server Infrastructure
 
 The server deployment process is automated using a deployment script. The script will:
 1. Create DynamoDB tables
@@ -71,7 +93,7 @@ The script will:
 - Build and push the container image
 - Deploy the CloudFormation templates
 
-### 3. Deploy the Item Images Service
+#### Deploy the Item Images Service
 
 The item images service deployment will:
 1. Create an S3 bucket for image storage
@@ -92,7 +114,7 @@ The script will:
 - Build and push the container image
 - Deploy the CloudFormation templates
 
-### 4. Deploy the Client Application
+#### Deploy the Client Application
 
 The client deployment will:
 1. Build the Vue.js application
@@ -108,7 +130,7 @@ cd client/iac
 
 Replace `<websocket-server-address>` with the address of your deployed server (e.g., `alb-123456.us-east-1.elb.amazonaws.com:8080`).
 
-### 5. Verify the Deployment
+### Verify the Deployment
 
 After deployment completes, you can verify each component:
 

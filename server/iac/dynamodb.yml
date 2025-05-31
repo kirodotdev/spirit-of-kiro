@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template for DynamoDB tables used by the server service
+Description: Creates the core DynamoDB tables for the AI Scrapyard game server, including tables for game items, player inventories, item locations, user accounts, and player personas. These tables store all game state and player data with pay-per-request billing for optimal cost efficiency.
 
 Resources:
   # DynamoDB Tables
@@ -134,4 +134,8 @@ Outputs:
 
   PersonaTableArn:
     Description: ARN of the Persona DynamoDB table
-    Value: !GetAtt PersonaTable.Arn 
+    Value: !GetAtt PersonaTable.Arn
+
+  PlaceholderOutput:
+    Description: Placeholder output value
+    Value: "placeholder-dynamodb-tables-value" 

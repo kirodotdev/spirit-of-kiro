@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: CloudFormation template for deploying the item-images service to AWS Fargate
+Description: Deploys the item-images microservice to AWS Fargate, which handles image generation, storage, and retrieval for the AI Scrapyard game. This service integrates with Amazon Bedrock for AI image generation, S3 for storage, CloudFront for delivery, and MemoryDB for vector search capabilities.
 
 Parameters:
   Environment:
@@ -316,3 +316,7 @@ Outputs:
     Value: !GetAtt LoadBalancer.DNSName
     Export:
       Name: !Sub "${AWS::StackName}-LoadBalancerDNS"
+
+  PlaceholderOutput:
+    Description: Placeholder output value
+    Value: "placeholder-fargate-service-value"

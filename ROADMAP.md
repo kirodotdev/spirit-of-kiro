@@ -16,6 +16,11 @@
 - Consider passives in the crafting outcome. (Additional token burden might require faster models)
 - Add a mirror / vanity table for player character to inspect their stats and passives.
 
+## Image conditioning
+- Rather than having the image generator create a new image from scratch when
+  and item's appearance changes, supply the original image as a reference, thereby
+  increasing the similarity between the newly modified item's image and the existing image.
+
 ## Basic progression system
 - Consider using the persona system to keep track of purchasable upgrades.
 - Maybe tool bench starts out with only a few item slots, can purchase upgraded tool benches?
