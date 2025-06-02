@@ -7,6 +7,13 @@ graph LR
     Client[Game Client in Browser] -->|WebSocket|Server[Game Server in AWS Fargate] -->|HTTP|Images[Item Images Service in AWS Fargate]
 ```
 
+## Known Issues
+
+1. In preview there is no domain name yet therefore there is no HTTPS. The CloudFront distribution
+   has default HTTPS, however the backend services (game server and item images service) do not have HTTPS on their Application Load Balancers. This means that there is an insecure connection from CloudFront to the backend services. This will be corrected once there is a domain name.
+2. Game Server currently accepts traffic directly to it's ALB, bypassing CloudFront. While this
+   isn't necessarily a risk, we can and should implement a restriction such as this: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html
+
 ## Game Client
 
 The Game Client is a Vue.js 3 single page application that provides the user interface and game experience in the user's browser. It maintains real-time state synchronization with the server through a WebSocket connection to the game server.
