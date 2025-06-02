@@ -1,33 +1,29 @@
 # Kiro Demo Game Roadmap
 
 ## Player-to-Player Trading System
-- Implement a basic player marketplace where users can list their crafted items for sale to other players
+- Implement a basic player marketplace where users can list their crafted items for sale to other players, and see other players items to buy
 
 ## Player Workbench Sharing
 - If you have a great workbench full of powerful tools
-  you should be able to grant other players access to the workbench in exchange for a fee. The secure workbench
-  sharing feature allows guests to use your tools to craft on their own items.
+  you should be able to grant other players access to your workbench in exchange for a fee. The secure workbench sharing feature allows other players to use your tools to craft on their own items.
 
 ## Enhanced persona system
 - Right now the only character persona data being tracked is how much money the character has
-- Consider adding AI generated passives that get leveled up based on your usage
+- Add AI generated passives that get leveled up based on your usage
   of item quirks. For example, if interacting with many "gothic" themed items you might gain a
   "vampire" passive and level it up each time you interact with a "gothic" item.
-- Consider passives in the crafting outcome. (Additional token burden might require faster models)
+- Consider player passives for the crafting outcome. (Additional token burden might require faster models)
 - Add a mirror / vanity table for player character to inspect their stats and passives.
 
 ## Image conditioning
 - Rather than having the image generator create a new image from scratch when
-  and item's appearance changes, supply the original image as a reference, thereby
-  increasing the similarity between the newly modified item's image and the existing image.
+  and item's appearance changes, supply the original image as a reference, thereby increasing the similarity between the newly modified item's image and the existing image.
 
 ## Basic progression system
 - Consider using the persona system to keep track of purchasable upgrades.
-- Maybe tool bench starts out with only a few item slots, can purchase upgraded tool benches?
+- Maybe tool bench starts out with only a few item slots, can purchase upgraded tool benches with more slots and more power?
 - Ability to buy another storage chest?
-- Ability to upgrade "computer" from old model to a sleek modern laptop that lets you "order"
-  AI generated items from specific themes and categories rather than pulling
-  completely randomly.
+- Ability to upgrade "computer" from old model to a sleek modern laptop that lets you "order" AI generated items from specific themes and categories rather than pulling completely randomly.
 
 ## AI Shop System
 - Expand the basic "item appraisal" system into a full shop. You should be able to walk through the door at the bottom

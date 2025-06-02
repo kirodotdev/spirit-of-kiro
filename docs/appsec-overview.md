@@ -1,8 +1,10 @@
 # Application Security and Architecture Documentation
 
+High level overview of the components and how they talk to each other:
+
 ```mermaid
 graph LR
-    Client[Game Client] --> Server[Game Server] --> Images[Item Images Service]
+    Client[Game Client in Browser] -->|WebSocket|Server[Game Server in AWS Fargate] -->|HTTP|Images[Item Images Service in AWS Fargate]
 ```
 
 ## Game Client
@@ -11,21 +13,32 @@ The Game Client is a Vue.js 3 single page application that provides the user int
 
 ```mermaid
 graph TB
-    subgraph Client
-        UI[Vue.js Client]
+    subgraph Player Browser
+        UI[Running Game Client]
         Store[Pinia Store]
         Systems[Game Systems]
         UI --> Store
         Store <--> Systems
+        
     end
 
-    subgraph External
+    subgraph Out
         WS[Game Server]
-        CDN[CloudFront]
+        ImageDist[Images CloudFront]
+        FrontendDist[Frontend CloudFront with Lambda@Edge basic auth]
     end
 
-    Systems <--> WS
-    CDN --> UI
+    subgraph Build
+       Repo[Client Source Code]
+       viteBuild[vite build]
+       static[Static HTML, JS, and Image Assets]
+       S3[S3 Bucket]
+       Repo --> viteBuild --> static --> S3
+    end
+
+    Systems <-->|Sync state with server|WS
+    UI -->|Loads dynamic item images|ImageDist
+    UI -->|Loads static client logic and assets|FrontendDist -->|Origin Access Control|S3
 ```
 
 ### Technology Stack
@@ -34,18 +47,21 @@ graph TB
 - **Language**: TypeScript
 - **State Management**: Pinia
 - **Routing**: Vue Router
+- **Hosting**: S3, accessed via CloudFront
+
+The game client is built using Vite, and hosted as static HTML, JS, CSS, and image assets in an S3 bucket. Browsers fetch from the S3 bucket via CloudFront.
 
 ### Inbound Connections
-- WebSocket connection from Game Server for real-time updates
-- HTTP connection from CloudFront for static assets and images
+- The player's browser loads the game client as static prebuilt assets delivered by CloudFront, using the S3 bucket as an origin. CloudFront uses an Origin Access Control policy to fetch from the S3 bucket. In preview, CloudFront also has a Lambda@Edge function that implements HTTP basic auth to restrict public access.
 
 ### Outbound Connections
-- WebSocket connection to Game Server for:
+- Browser running client connects to a WebSocket based game server via CloudFront in order to sync various forms of state:
   - Authentication (signin/signup)
-  - Item operations (pull, move, discard)
-  - Inventory management
-  - Game state synchronization
+  - Item operations (pull, move, discard, appraise, buy)
+  - Inventory queries and synchronization
   - Periodic ping/pong for connection health
+-  Browser running client connects to a CloudFront distribution that hosts dynamically generated item images
+-  Browser running client connects to it's own CloudFront distribution to load in additional static, prebuilt assets in the background as the user accesses new screens
 
 ## Game Server
 
@@ -54,13 +70,16 @@ The Game Server is a Bun-based WebSocket server that manages game state, player 
 ```mermaid
 graph TB
     subgraph Server
-        WS[WebSocket Server]
+        WS[WebSocket Server in AWS Fargate]
         Handlers[Message Handlers]
         State[State Management]
     end
 
-    subgraph External
+    subgraph In
         Client[Game Clients]
+    end
+
+    subgraph Out
         DB[DynamoDB]
         Bedrock[AWS Bedrock]
         Images[Item Images Service]
@@ -69,9 +88,9 @@ graph TB
     Client <--> WS
     WS --> Handlers
     Handlers --> State
-    State --> DB
-    Handlers --> Bedrock
-    Handlers --> Images
+    State -->|IAM|DB
+    Handlers -->|IAM|Bedrock
+    Handlers -->Images
 ```
 
 ### Technology Stack
@@ -79,28 +98,29 @@ graph TB
 - **Language**: TypeScript
 - **WebSocket**: Native Bun WebSocket server
 - **Database**: Amazon DynamoDB
-- **AI Services**: AWS Bedrock (for item generation)
+- **Hosting:** AWS Fargate, orchestrated by Amazon ECS
+- **AI Services**: AWS Bedrock
 
 ### Inbound Connections
-- WebSocket connections from Game Clients
-- HTTP connections from Item Images Service for image generation
+- WebSocket connections from Game Clients, via **CloudFront**
 
 ### Outbound Connections
-1. **DynamoDB**
-   - Users Table: User account management
-   - Usernames Table: Username uniqueness
-   - Items Table: Game item metadata
-   - Inventory Table: Item ownership
-   - Location Table: Item placement
-   - Persona Table: Player character data
+1. The game server persists data in **DynamoDB**. The game server uses an ECS task IAM role to grant it permissions to communicate with the following tables:
+   - `Users` Table: User account metadata
+   - `Usernames` Table: Maps usernames to user ID's
+   - `Items` Table: Game item metadata
+   - `Inventory` Table: Inventory ID to item mapping
+   - `Location` Table: Item ID to inventory ID mapping
+   - `Persona` Table: Metadata about player characters
 
-2. **Item Images Service**
-   - HTTP requests for image generation
-   - Image metadata retrieval
+2. The game server requests image URL's from **Item Images Service**
+   - HTTPS requests to Application Load Balancer fronting the server
+   - Simple REST server that returns a JSON response
 
-3. **AWS Bedrock**
-   - AI-powered item generation
-   - Story generation for items
+3. The game server uses **AWS Bedrock**
+   - The game server uses an ECS task IAM role to grant it permissions to make Bedrock API calls.
+   - LLM is used to generate new items, model dynamic interactions between items, and appraise items for sale.
+   - Server implements and retry and fallback through the following models, in order: Anthropic Sonnet 4, Anthropic Sonnet 3.7, and Amazon Nova Pro
 
 ## Item Images Service
 
@@ -108,33 +128,40 @@ The Item Images Service is a specialized microservice that handles the generatio
 
 ```mermaid
 graph TB
-    subgraph ItemImages
+    subgraph ItemImages[Item Images Service]
+        ALB[Application Load Balancer]
         HTTP[HTTP Server]
         Vector[Vector Search]
         ImageGen[Image Generation]
+        ALB -->|Security Group|HTTP
+        HTTP --> Vector
+        HTTP --> ImageGen
     end
 
-    subgraph External
+    subgraph In
         Server[Game Server]
+    end
+
+    subgraph Out
         MemoryDB[MemoryDB]
         S3[S3]
         CloudFront[CloudFront]
-        AI[Titan/Nova]
+        Embeddings[Titan Text Embeddings]
+        ImageModel[Nova Canvas]
     end
 
-    Server --> HTTP
-    HTTP --> Vector
-    HTTP --> ImageGen
-    Vector --> MemoryDB
-    Vector --> AI
-    ImageGen --> AI
-    ImageGen --> S3
-    S3 --> CloudFront
+    Server -->|Security Group|ALB
+    Vector -->|Security Group|MemoryDB
+    Vector -->|IAM|Embeddings
+    ImageGen -->|IAM|ImageModel
+    ImageGen -->|IAM|S3
+    S3 -->|Origin Access Control|CloudFront
 ```
 
 ### Technology Stack
 - **Runtime**: Bun
 - **Language**: TypeScript
+- **Hosting:** AWS Fargate, orchestrated by Amazon ECS
 - **Database**: AWS MemoryDB (Redis-compatible)
 - **Storage**: Amazon S3
 - **CDN**: CloudFront
@@ -143,24 +170,23 @@ graph TB
   - Amazon Nova Canvas
 
 ### Inbound Connections
-- HTTP requests from Game Server for image generation
-- CloudFront requests for image delivery
+
+- HTTP requests from Game Server for image generation. Requests ingress via an HTTPS Application Load Balancer, and are distributed across Bun containers hosted in AWS Fargate.
 
 ### Outbound Connections
 1. **MemoryDB**
-   - Vector storage for image search
-   - Image metadata caching
-   - Search query processing
+   - Vector database to search for similar generated images
+   - MemoryDB has a security group that only allows inbound connections
+     from the security group of this service.
 
 2. **S3**
-   - Image storage
-   - Metadata storage
-
-3. **CloudFront**
-   - Image delivery to clients
-   - Content caching
+   - Storage for generated images
+   - Item images service has an IAM role that grants it permission to
+     add items to the S3 bucket
+   - No public ACL, CloudFront accesses the bucket via ab Origin Access Control policy.
 
 4. **AI Services**
-   - Titan Text Embeddings for vector generation
+   - Titan Text Embeddings for embeddings that can be stored in vector database
    - Nova Canvas for image generation
+   - Item images service has an IAM role that grants it permission to talk to Bedrock
 

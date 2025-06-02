@@ -57,41 +57,14 @@ For production deployments, use the automated deployment script that handles all
 ```
 
 This script will:
-1. Deploy the item-images service to us-west-2
-2. Deploy the server to us-west-2
-3. Deploy the client to us-east-1
+1. Deploy the item-images service to `us-west-2`
+2. Deploy the server to `us-west-2`
+3. Deploy the client to `us-east-1` (Necessary for Lamdbda@Edge)
 4. Configure all necessary connections between components
-
-The script uses predefined stack prefixes:
-- Item Images: `kiro-demo-images`
-- Server: `game-server`
 
 ### Manual Deployment Steps
 
 If you need to deploy components individually, follow these steps:
-
-#### Deploy the Server Infrastructure
-
-The server deployment process is automated using a deployment script. The script will:
-1. Create DynamoDB tables
-2. Set up an ECR repository
-3. Build and push the container image
-4. Deploy the Fargate service
-
-To deploy, run:
-
-```bash
-cd server/iac
-./deploy.sh <stack-name-prefix>
-```
-
-Replace `<stack-name-prefix>` with a unique identifier for your deployment (e.g., `kiro-game-prod`).
-
-The script will:
-- Use the default VPC and subnets
-- Create an ECR repository
-- Build and push the container image
-- Deploy the CloudFormation templates
 
 #### Deploy the Item Images Service
 
@@ -106,6 +79,29 @@ To deploy, run:
 ```bash
 cd item-images/iac
 ./deploy.sh <stack-name-prefix>
+```
+
+_The demo deployment uses stack name `kiro-game-images`_
+
+The script will:
+- Use the default VPC and subnets
+- Create an ECR repository
+- Build and push the container image
+- Deploy the CloudFormation templates
+
+#### Deploy the Server Infrastructure
+
+The server deployment process is automated using a deployment script. The script will:
+1. Create DynamoDB tables
+2. Set up an ECR repository
+3. Build and push the container image
+4. Deploy the Fargate service
+
+To deploy, run:
+
+```bash
+cd server/iac
+./deploy.sh <address of item image server>
 ```
 
 The script will:
@@ -127,6 +123,8 @@ To deploy, run:
 cd client/iac
 ./deploy.sh <websocket-server-address>
 ```
+
+_The demo deployment uses stack name `web-app`_
 
 Replace `<websocket-server-address>` with the address of your deployed server (e.g., `alb-123456.us-east-1.elb.amazonaws.com:8080`).
 
