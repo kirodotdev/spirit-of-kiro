@@ -178,7 +178,9 @@ aws cloudformation deploy \
     UsernamesTableName=$USERNAMES_TABLE_NAME \
     UsernamesTableArn=$USERNAMES_TABLE_ARN \
     PersonaTableName=$PERSONA_TABLE_NAME \
-    PersonaTableArn=$PERSONA_TABLE_ARN
+    PersonaTableArn=$PERSONA_TABLE_ARN \
+    DomainName="game-server.nathanpeck.gg" \
+    CertificateArn="arn:aws:acm:us-west-2:784059518401:certificate/14770f21-c779-4947-aeb9-df15e77c549e" 
 
 # Check if deployment was successful
 if [ $? -ne 0 ]; then

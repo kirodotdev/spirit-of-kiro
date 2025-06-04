@@ -66,9 +66,9 @@ Resources:
           - DomainName: !Select [0, !Split [':', !Ref WebSocketEndpoint]]
             Id: WebSocketOrigin
             CustomOriginConfig:
-              HTTPPort: !Select [1, !Split [':', !Ref WebSocketEndpoint]]
               HTTPSPort: !Select [1, !Split [':', !Ref WebSocketEndpoint]]
-              OriginProtocolPolicy: http-only
+              OriginKeepaliveTimeout: 15
+              OriginProtocolPolicy: https-only
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https

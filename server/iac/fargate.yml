@@ -104,6 +104,16 @@ Parameters:
     Type: String
     Description: ARN of the Persona DynamoDB table
 
+  DomainName:
+    Type: String
+    Default: game-server.nathanpeck.gg
+    Description: Domain name for the ALB
+
+  CertificateArn:
+    Type: String
+    Default: arn:aws:acm:us-west-2:784059518401:certificate/14770f21-c779-4947-aeb9-df15e77c549e
+    Description: ARN of the ACM certificate
+
 Resources:
   # ECS Cluster
   ECSCluster:
@@ -284,7 +294,7 @@ Resources:
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 3
 
-  # HTTP Listener
+  # HTTP Listener (redirects to HTTPS)
   HTTPListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -292,13 +302,34 @@ Resources:
       Port: 80
       Protocol: HTTP
       DefaultActions:
+        - Type: redirect
+          RedirectConfig:
+            Protocol: HTTPS
+            Port: '443'
+            Host: !Ref DomainName
+            Path: '/#{path}'
+            Query: '#{query}'
+            StatusCode: HTTP_301
+
+  # HTTPS Listener
+  HTTPSListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 443
+      Protocol: HTTPS
+      Certificates:
+        - CertificateArn: !Ref CertificateArn
+      DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref TargetGroup
 
   # ECS Service
   Service:
     Type: AWS::ECS::Service
-    DependsOn: HTTPListener
+    DependsOn:
+      - HTTPListener
+      - HTTPSListener
     Properties:
       ServiceName: !Sub "${AWS::StackName}-service"
       Cluster: !Ref ECSCluster

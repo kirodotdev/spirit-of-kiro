@@ -10,10 +10,10 @@ WEST_REGION="us-west-2"
 EAST_REGION="us-east-1"
 
 # Deploy item-images
-echo "📸 Deploying item-images..."
-cd item-images/iac
-AWS_REGION=$WEST_REGION ./deploy.sh "$ITEM_IMAGES_PREFIX"
-cd ../..
+#echo "📸 Deploying item-images..."
+#cd item-images/iac
+#AWS_REGION=$WEST_REGION ./deploy.sh "$ITEM_IMAGES_PREFIX"
+#cd ../..
 
 # Deploy server
 echo "🖥️ Deploying server..."
@@ -24,12 +24,12 @@ cd ../..
 # Get the server's load balancer DNS
 echo "Getting server load balancer DNS..."
 SERVER_DNS=$(AWS_REGION=$WEST_REGION aws cloudformation describe-stacks --stack-name "$SERVER_PREFIX" --query "Stacks[0].Outputs[?OutputKey=='LoadBalancerDNS'].OutputValue" --output text)
-SERVER_ENDPOINT="${SERVER_DNS}:80"
+SERVER_ENDPOINT="game-server.nathanpeck.gg:443"
 
 # Deploy client
 echo "🌐 Deploying client..."
 cd client/iac
-AWS_REGION=$EAST_REGION ./deploy.sh "$SERVER_ENDPOINT" "nathanpeck.gg" "arn:aws:acm:us-west-2:784059518401:certificate/14770f21-c779-4947-aeb9-df15e77c549e"
+AWS_REGION=$EAST_REGION ./deploy.sh "$SERVER_ENDPOINT" "nathanpeck.gg" "arn:aws:acm:us-east-1:784059518401:certificate/94e1f477-2af7-4f9a-a547-5f4ddd59474b"
 cd ../..
 
 echo "✅ Production deployment completed successfully!" 

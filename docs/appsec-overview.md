@@ -4,15 +4,8 @@ High level overview of the components and how they talk to each other:
 
 ```mermaid
 graph LR
-    Client[Game Client in Browser] -->|WebSocket|Server[Game Server in AWS Fargate] -->|HTTP|Images[Item Images Service in AWS Fargate]
+    Client[Game Client in Browser] -->|WSS|Server[Game Server in AWS Fargate] -->|HTTPS|Images[Item Images Service in AWS Fargate]
 ```
-
-## Known Issues
-
-1. In preview there is no domain name yet therefore there is no HTTPS. The CloudFront distribution
-   has default HTTPS, however the backend services (game server and item images service) do not have HTTPS on their Application Load Balancers. This means that there is an insecure connection from CloudFront to the backend services. This will be corrected once there is a domain name.
-2. Game Server currently accepts traffic directly to it's ALB, bypassing CloudFront. While this
-   isn't necessarily a risk, we can and should implement a restriction such as this: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/restrict-access-to-load-balancer.html
 
 ## Game Client
 
@@ -43,9 +36,9 @@ graph TB
        Repo --> viteBuild --> static --> S3
     end
 
-    Systems <-->|Sync state with server|WS
-    UI -->|Loads dynamic item images|ImageDist
-    UI -->|Loads static client logic and assets|FrontendDist -->|Origin Access Control|S3
+    Systems <-->|WSS|WS
+    UI -->|HTTPS|ImageDist
+    UI -->|HTTPS|FrontendDist -->|Origin Access Control|S3
 ```
 
 ### Technology Stack
@@ -62,13 +55,13 @@ The game client is built using Vite, and hosted as static HTML, JS, CSS, and ima
 - The player's browser loads the game client as static prebuilt assets delivered by CloudFront, using the S3 bucket as an origin. CloudFront uses an Origin Access Control policy to fetch from the S3 bucket. In preview, CloudFront also has a Lambda@Edge function that implements HTTP basic auth to restrict public access.
 
 ### Outbound Connections
-- Browser running client connects to a WebSocket based game server via CloudFront in order to sync various forms of state:
+- Browser running client connects via WSS to a WebSocket based game server via CloudFront in order to sync various forms of state:
   - Authentication (signin/signup)
   - Item operations (pull, move, discard, appraise, buy)
   - Inventory queries and synchronization
   - Periodic ping/pong for connection health
--  Browser running client connects to a CloudFront distribution that hosts dynamically generated item images
--  Browser running client connects to it's own CloudFront distribution to load in additional static, prebuilt assets in the background as the user accesses new screens
+-  Browser running client connects via HTTPS to a CloudFront distribution that hosts dynamically generated item images
+-  Browser running client connects via HTTPS to it's own CloudFront distribution to load in additional static, prebuilt assets in the background as the user accesses new screens
 
 ## Game Server
 
@@ -97,7 +90,7 @@ graph TB
     Handlers --> State
     State -->|IAM|DB
     Handlers -->|IAM|Bedrock
-    Handlers -->Images
+    Handlers -->|HTTPS|Images
 ```
 
 ### Technology Stack
@@ -178,7 +171,7 @@ graph TB
 
 ### Inbound Connections
 
-- HTTP requests from Game Server for image generation. Requests ingress via an HTTPS Application Load Balancer, and are distributed across Bun containers hosted in AWS Fargate.
+- HTTPS requests from Game Server for image generation. Requests ingress via an HTTPS Application Load Balancer, and are distributed across Bun containers hosted in AWS Fargate.
 
 ### Outbound Connections
 1. **MemoryDB**

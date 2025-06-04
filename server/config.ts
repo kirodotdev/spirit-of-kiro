@@ -57,5 +57,5 @@ export const REDIS_CONFIG = {
 };
 
 export const ITEM_IMAGES_SERVICE_CONFIG = {
-  url: getEnv('ITEM_IMAGES_SERVICE_URL') || 'http://kiro-game-images-service-alb-559009974.us-west-2.elb.amazonaws.com',
+  url: getEnv('ITEM_IMAGES_SERVICE_URL') || 'https://item-images.nathanpeck.gg',
 };
