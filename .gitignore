@@ -10,3 +10,4 @@ docker
 *.code-workspace
 dev.env
 dist
+ash_output

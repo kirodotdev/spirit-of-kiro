@@ -36,9 +36,5 @@ yarn-error.log*
 ehthumbs.db
 Thumbs.db
 
-# Uploaded images (optional, uncomment if you want to ignore uploaded images)
-# *.jpg
-# *.jpeg
-# *.png
-# *.gif
-# *.webp
+# Scan artifacts
+ash_output

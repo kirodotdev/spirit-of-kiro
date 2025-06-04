@@ -1,12 +1,10 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Creates an S3 bucket for storing and serving item images in the AI Scrapyard game. This bucket is used to store all item images that players can find and collect in the game, with versioning enabled for image history tracking.
+Description: Creates an S3 bucket for storing and serving item images in the AI Scrapyard game. This bucket is used to store all item images that players can find and collect in the game.
 
 Resources:
   ImagesBucket:
     Type: AWS::S3::Bucket
     Properties:
-      VersioningConfiguration:
-        Status: Enabled
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
         BlockPublicPolicy: true
