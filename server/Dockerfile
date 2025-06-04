@@ -1,4 +1,4 @@
-FROM oven/bun:latest
+FROM oven/bun:1.2.15
 
 WORKDIR /app
 
@@ -13,6 +13,9 @@ COPY . .
 
 # Expose port 3000
 EXPOSE 3000
+
+# Switch to non-root user
+USER bun
 
 # Set the command to run the server
 CMD ["bun","--watch", "server.ts"]

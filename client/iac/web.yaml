@@ -39,6 +39,24 @@ Resources:
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
 
+  # S3 Bucket for CloudFront logging
+  CloudFrontLoggingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-cf-logs-${AWS::AccountId}"
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+
   # CloudFront Origin Access Control
   CloudFrontOAC:
     Type: AWS::CloudFront::OriginAccessControl
@@ -57,6 +75,10 @@ Resources:
         Enabled: true
         DefaultRootObject: index.html
         HttpVersion: http3
+        Logging:
+          Bucket: !Sub "${CloudFrontLoggingBucket.DomainName}"
+          Prefix: cf-logs/
+          IncludeCookies: false
         Origins:
           - DomainName: !GetAtt WebsiteBucket.RegionalDomainName
             Id: S3Origin
@@ -189,7 +211,7 @@ Resources:
             
             callback(null, request);
           };
-      Runtime: nodejs18.x
+      Runtime: nodejs20.x
       Timeout: 5
 
   # Lambda function version
@@ -214,6 +236,34 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  # CloudFront logging bucket policy
+  CloudFrontLoggingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref CloudFrontLoggingBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: 
+              - s3:PutObject
+              - s3:PutObjectAcl
+            Resource: !Sub "${CloudFrontLoggingBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
+          - Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource: 
+              - !GetAtt CloudFrontLoggingBucket.Arn
+              - !Sub "${CloudFrontLoggingBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
 
 Outputs:
   DistributionDomainName:

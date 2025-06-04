@@ -55,6 +55,7 @@ Resources:
           FromPort: 6379
           ToPort: 6379
           CidrIp: 10.0.0.0/16  # Restrict to VPC CIDR - adjust as needed
+          Description: Allow inbound Redis traffic from VPC CIDR
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-memorydb-sg"

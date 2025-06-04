@@ -1,4 +1,4 @@
-FROM oven/bun:latest
+FROM oven/bun:1.2.15
 
 WORKDIR /app
 
@@ -13,6 +13,9 @@ COPY . .
 
 # Expose port 5173 (the default Vite dev server port)
 EXPOSE 5173
+
+# Switch to non-root user
+USER bun
 
 # Set the command to run "bun run dev" with host set to 0.0.0.0 to allow external access
 CMD ["bun", "run", "dev", "--host", "0.0.0.0"]

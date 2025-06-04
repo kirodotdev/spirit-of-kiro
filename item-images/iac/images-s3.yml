@@ -16,6 +16,23 @@ Resources:
         DestinationBucketName: !Ref ImagesLoggingBucket
         LogFilePrefix: images-access-logs/
 
+  ImagesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ImagesBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource: 
+              - !GetAtt ImagesBucket.Arn
+              - !Sub "${ImagesBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
+
   ImagesLoggingBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -24,6 +41,23 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+
+  ImagesLoggingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ImagesLoggingBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Deny
+            Principal: "*"
+            Action: "s3:*"
+            Resource: 
+              - !GetAtt ImagesLoggingBucket.Arn
+              - !Sub "${ImagesLoggingBucket.Arn}/*"
+            Condition:
+              Bool:
+                aws:SecureTransport: "false"
 
 Outputs:
   ImagesBucketName:
