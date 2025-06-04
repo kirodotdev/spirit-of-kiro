@@ -182,20 +182,7 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
       Policies:
-        - PolicyName: !Sub "${AWS::StackName}-cloudwatch-policy"
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                  - logs:DescribeLogStreams
-                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/${AWS::StackName}:*"
         - PolicyName: !Sub "${AWS::StackName}-task-policy"
           PolicyDocument:
             Version: '2012-10-17'
@@ -350,6 +337,8 @@ Resources:
             Condition:
               ArnLike:
                 aws:SourceArn: !Sub "arn:aws:elasticloadbalancing:${AWS::Region}:${AWS::AccountId}:loadbalancer/*"
+              Bool:
+                aws:SecureTransport: "true"
           - Effect: Allow
             Principal:
               Service: logdelivery.elasticloadbalancing.amazonaws.com
@@ -358,6 +347,8 @@ Resources:
             Condition:
               ArnLike:
                 aws:SourceArn: !Sub "arn:aws:elasticloadbalancing:${AWS::Region}:${AWS::AccountId}:loadbalancer/*"
+              Bool:
+                aws:SecureTransport: "true"
 
   # Application Load Balancer
   LoadBalancer:

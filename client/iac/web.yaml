@@ -174,15 +174,8 @@ Resources:
             Condition:
               StringEquals:
                 'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
-          - Effect: Deny
-            Principal: "*"
-            Action: "s3:*"
-            Resource: 
-              - !Sub "arn:aws:s3:::${WebsiteBucket}"
-              - !Sub "arn:aws:s3:::${WebsiteBucket}/*"
-            Condition:
               Bool:
-                aws:SecureTransport: "false"
+                aws:SecureTransport: "true"
 
   # Lambda@Edge function for basic auth
   BasicAuthFunction:
@@ -264,15 +257,27 @@ Resources:
             Condition:
               StringEquals:
                 'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
-          - Effect: Deny
-            Principal: "*"
-            Action: "s3:*"
-            Resource: 
-              - !GetAtt CloudFrontLoggingBucket.Arn
-              - !Sub "${CloudFrontLoggingBucket.Arn}/*"
-            Condition:
               Bool:
-                aws:SecureTransport: "false"
+                aws:SecureTransport: "true"
+
+  WebsiteLoggingBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteLoggingBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: 
+              - s3:PutObject
+            Resource: !Sub "${WebsiteLoggingBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                'AWS:SourceAccount': !Ref AWS::AccountId
+              Bool:
+                aws:SecureTransport: "true"
 
 Outputs:
   DistributionDomainName:

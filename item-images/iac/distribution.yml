@@ -51,15 +51,8 @@ Resources:
             Condition:
               StringEquals:
                 'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
-          - Effect: Deny
-            Principal: "*"
-            Action: "s3:*"
-            Resource: 
-              - !GetAtt CloudFrontLoggingBucket.Arn
-              - !Sub "${CloudFrontLoggingBucket.Arn}/*"
-            Condition:
               Bool:
-                aws:SecureTransport: "false"
+                aws:SecureTransport: "true"
 
   ImagesBucketPolicy:
     Type: AWS::S3::BucketPolicy 
@@ -76,15 +69,8 @@ Resources:
             Condition:
               StringEquals:
                 'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
-          - Effect: Deny
-            Principal: "*"
-            Action: "s3:*"
-            Resource: 
-              - !Ref ImagesBucketArn
-              - !Sub '${ImagesBucketArn}/*'
-            Condition:
               Bool:
-                aws:SecureTransport: "false"
+                aws:SecureTransport: "true"
 
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution

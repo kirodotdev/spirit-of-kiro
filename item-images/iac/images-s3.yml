@@ -21,15 +21,17 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          - Effect: Deny
-            Principal: "*"
-            Action: "s3:*"
-            Resource: 
-              - !GetAtt ImagesBucket.Arn
-              - !Sub "${ImagesBucket.Arn}/*"
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: 
+              - s3:PutObject
+            Resource: !Sub "${ImagesBucket.Arn}/*"
             Condition:
+              StringEquals:
+                'AWS:SourceAccount': !Ref AWS::AccountId
               Bool:
-                aws:SecureTransport: "false"
+                aws:SecureTransport: "true"
 
   ImagesLoggingBucket:
     Type: AWS::S3::Bucket
@@ -47,15 +49,17 @@ Resources:
       PolicyDocument:
         Version: '2012-10-17'
         Statement:
-          - Effect: Deny
-            Principal: "*"
-            Action: "s3:*"
-            Resource: 
-              - !GetAtt ImagesLoggingBucket.Arn
-              - !Sub "${ImagesLoggingBucket.Arn}/*"
+          - Effect: Allow
+            Principal:
+              Service: s3.amazonaws.com
+            Action: 
+              - s3:PutObject
+            Resource: !Sub "${ImagesLoggingBucket.Arn}/*"
             Condition:
+              StringEquals:
+                'AWS:SourceAccount': !Ref AWS::AccountId
               Bool:
-                aws:SecureTransport: "false"
+                aws:SecureTransport: "true"
 
 Outputs:
   ImagesBucketName:

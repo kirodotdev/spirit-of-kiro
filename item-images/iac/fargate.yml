@@ -148,8 +148,6 @@ Resources:
             Principal:
               Service: ecs-tasks.amazonaws.com
             Action: sts:AssumeRole
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/CloudWatchLogsFullAccess
       Policies:
         - PolicyName: !Sub "${AWS::StackName}-task-policy"
           PolicyDocument:
@@ -168,11 +166,6 @@ Resources:
               - Effect: Allow
                 Action:
                   - bedrock:InvokeModel
-                Resource: "*"
-              # CloudFront permissions for invalidations
-              - Effect: Allow
-                Action:
-                  - cloudfront:CreateInvalidation
                 Resource: "*"
 
   # Task Definition
@@ -302,6 +295,8 @@ Resources:
             Condition:
               ArnLike:
                 aws:SourceArn: !Sub "arn:aws:elasticloadbalancing:${AWS::Region}:${AWS::AccountId}:loadbalancer/*"
+              Bool:
+                aws:SecureTransport: "true"
           - Effect: Allow
             Principal:
               Service: logdelivery.elasticloadbalancing.amazonaws.com
@@ -310,6 +305,8 @@ Resources:
             Condition:
               ArnLike:
                 aws:SourceArn: !Sub "arn:aws:elasticloadbalancing:${AWS::Region}:${AWS::AccountId}:loadbalancer/*"
+              Bool:
+                aws:SecureTransport: "true"
 
   # Application Load Balancer
   LoadBalancer:
