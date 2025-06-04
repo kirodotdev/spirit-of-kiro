@@ -12,6 +12,19 @@ Resources:
         BlockPublicPolicy: true
         IgnorePublicAcls: true
         RestrictPublicBuckets: true
+      LoggingConfiguration:
+        DestinationBucketName: !Ref ImagesLoggingBucket
+        LogFilePrefix: images-access-logs/
+
+  ImagesLoggingBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
 Outputs:
   ImagesBucketName:
     Description: Name of the images S3 bucket
@@ -23,6 +36,11 @@ Outputs:
     Value: !GetAtt ImagesBucket.Arn
     Export:
       Name: !Sub "${AWS::StackName}-ImagesBucketArn"
+  ImagesLoggingBucketName:
+    Description: Name of the images logging S3 bucket
+    Value: !Ref ImagesLoggingBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-ImagesLoggingBucketName"
   PlaceholderOutput:
     Description: Placeholder output value
     Value: "placeholder-s3-bucket-value"

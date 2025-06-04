@@ -51,7 +51,8 @@ aws cloudformation deploy \
   --capabilities CAPABILITY_IAM \
   --parameter-overrides \
     ImagesBucketName=$IMAGES_BUCKET_NAME \
-    ImagesBucketArn=$IMAGES_BUCKET_ARN
+    ImagesBucketArn=$IMAGES_BUCKET_ARN \
+    DomainName="images.${STACK_PREFIX}.example.com"
 
 # Check if deployment was successful
 if [ $? -ne 0 ]; then
