@@ -29,7 +29,7 @@ SERVER_ENDPOINT="${SERVER_DNS}:80"
 # Deploy client
 echo "🌐 Deploying client..."
 cd client/iac
-AWS_REGION=$EAST_REGION ./deploy.sh "$SERVER_ENDPOINT"
+AWS_REGION=$EAST_REGION ./deploy.sh "$SERVER_ENDPOINT" "nathanpeck.gg" "arn:aws:acm:us-west-2:784059518401:certificate/14770f21-c779-4947-aeb9-df15e77c549e"
 cd ../..
 
 echo "✅ Production deployment completed successfully!" 

@@ -5,7 +5,11 @@ Parameters:
   DomainName:
     Type: String
     Description: Domain name for the CloudFront distribution
-    Default: example.com
+    Default: nathanpeck.gg
+  CertificateArn:
+    Type: String
+    Description: ARN of the ACM certificate
+    Default: arn:aws:acm:us-east-1:784059518401:certificate/94e1f477-2af7-4f9a-a547-5f4ddd59474b
   WebSocketEndpoint:
     Type: String
     Description: The WebSocket server endpoint (e.g., api.example.com:8080)
@@ -125,8 +129,12 @@ Resources:
             ResponseCode: 200
             ResponsePagePath: /index.html
         PriceClass: PriceClass_100
+        Aliases:
+          - !Ref DomainName
         ViewerCertificate:
-          CloudFrontDefaultCertificate: true
+          AcmCertificateArn: !Ref CertificateArn
+          MinimumProtocolVersion: TLSv1.2_2021
+          SslSupportMethod: sni-only
 
   # Bucket Policy
   WebsiteBucketPolicy:

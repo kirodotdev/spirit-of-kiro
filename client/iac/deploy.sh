@@ -12,6 +12,10 @@ else
   WS_ENDPOINT=$1
 fi
 
+# Get domain name and certificate ARN
+DOMAIN_NAME=${2:-"nathanpeck.gg"}
+CERT_ARN=${3:-"arn:aws:acm:us-east-1:784059518401:certificate/94e1f477-2af7-4f9a-a547-5f4ddd59474b"}
+
 # Validate WebSocket endpoint format
 if ! [[ $WS_ENDPOINT =~ ^[^:]+:[0-9]+$ ]]; then
   echo "Error: WebSocket endpoint must be in format hostname:port"
@@ -30,7 +34,10 @@ aws cloudformation deploy \
   --stack-name $STACK_NAME \
   --capabilities CAPABILITY_IAM \
   --region $REGION \
-  --parameter-overrides WebSocketEndpoint=$WS_ENDPOINT
+  --parameter-overrides \
+    WebSocketEndpoint=$WS_ENDPOINT \
+    DomainName=$DOMAIN_NAME \
+    CertificateArn=$CERT_ARN
 
 # Get the S3 bucket name from CloudFormation outputs
 BUCKET_NAME=$(aws cloudformation describe-stacks \
