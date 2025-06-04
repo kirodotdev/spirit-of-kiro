@@ -8,6 +8,14 @@ Parameters:
   ImagesBucketArn:
     Type: String
     Description: ARN of the S3 bucket containing images
+  DomainName:
+    Type: String
+    Description: Domain name for the CloudFront distribution
+    Default: item-images.nathanpeck.gg
+  CertificateArn:
+    Type: String
+    Description: ARN of the ACM certificate
+    Default: arn:aws:acm:us-east-1:784059518401:certificate/94e1f477-2af7-4f9a-a547-5f4ddd59474b
 
 Resources:
   CloudFrontOriginAccessControl:
@@ -93,6 +101,8 @@ Resources:
             MinimumProtocolVersion: TLSv1.2_2021
         Enabled: true
         HttpVersion: http3
+        Aliases:
+          - !Ref DomainName
         Logging:
           Bucket: !Sub "${CloudFrontLoggingBucket.DomainName}"
           Prefix: cf-logs/

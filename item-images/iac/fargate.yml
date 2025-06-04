@@ -131,11 +131,6 @@ Resources:
                   - logs:CreateLogStream
                   - logs:PutLogEvents
                 Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/ecs/${AWS::StackName}:*"
-              - Effect: Allow
-                Action:
-                  - ssm:GetParameters
-                  - secretsmanager:GetSecretValue
-                Resource: "*"
 
   # Task Role (for application permissions)
   TaskRole:
