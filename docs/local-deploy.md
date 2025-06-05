@@ -41,6 +41,15 @@ podman compose build && podman compose up --watch --remove-orphans --timeout 0 -
 ```
 _(You can substitute `docker` for `podman` if you choose to use Docker Desktop)_
 
+On some systems the virtual machine can experience a time desync
+issue on system sleep. This will cause issues with
+credentials. If you encounter this you can fix it with the following
+command:
+
+```sh
+podman machine ssh sudo systemctl restart chronyd.service
+```
+
 ## 4. Bootstrap the DynamoDB tables
 
 The first time you run the stack, the local DynamoDB will be

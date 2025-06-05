@@ -1,6 +1,6 @@
 import { ConnectionState } from '../types';
 import { getItemById, locationForItemId, createItem, moveItemLocation, updateItem } from '../state/item-store';
-import { useSkill } from '../llm/prompts';
+import { useSkillStream } from '../llm/prompts';
 import { ITEM_IMAGES_SERVICE_CONFIG } from '../config';
 import { ServerWebSocket } from 'bun';
 import { formatMessage } from '../utils/message';
@@ -115,56 +115,63 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
       targetItems.push(targetItem);
     }
 
-    // Use the skill
-    const result = await useSkill(toolItem, toolSkillIndex, targetItems);
-
-    if (!result) {
-      return {
-        type: 'error',
-        body: 'Failed to use skill: No result from LLM'
-      };
-    }
-    
-    // Send the story early via WebSocket
-    if (result.story) {
-      ws.send(formatMessage('skill-use-story', { story: result.story }));
-    }
-
-    // Process the updated tool item
-    const updatedTool = result.tool;
-    if (updatedTool && updatedTool.id === toolId) {
-      // Check if the tool's icon has changed
-      if (updatedTool.icon && toolItem.icon !== updatedTool.icon) {
-        // Regenerate the image for the tool with the new icon
-        try {
-          const imageServiceUrl = `${ITEM_IMAGES_SERVICE_CONFIG.url}/image`;
-          const description = updatedTool.icon;
-          const response = await fetch(`${imageServiceUrl}?description=${encodeURIComponent(description)}`);
-
-          if (response.ok) {
-            const imageData = await response.json();
-            updatedTool.imageUrl = imageData.imageUrl;
-            console.log("Regenerated tool image due to icon change", imageData);
-          }
-        } catch (error) {
-          console.error('Error fetching updated image from item-images service:', error);
-          // Continue without updating the image if fetching fails
-        }
-      }
-
-      if (!updatedTool.imageUrl) {
-        // Fallback to keeping the same tool image
-        updatedTool.imageUrl = toolItem.imageUrl;
-      }
-
-      // Update the tool item in the database
-      await updateItem(toolId, updatedTool);
-    }
-
-    // Process output items
+    // Track processed items and removed items
     const processedItems = [];
-    if (result.outputItems && Array.isArray(result.outputItems)) {
-      for (const item of result.outputItems) {
+    const removedItemIds = [];
+    let updatedTool = null;
+    let story = '';
+
+    // Use the skill with streaming response
+    await useSkillStream(toolItem, toolSkillIndex, targetItems, {
+      // Handle story chunks as they arrive
+      onStory: async (storyChunk) => {
+        console.log('STORY', storyChunk);
+        story = storyChunk;
+        // Send the story immediately to the client
+        ws.send(formatMessage('skill-use-story', { story: storyChunk }));
+      },
+      
+      // Handle tool updates as they arrive
+      onTool: async (toolUpdate) => {
+        console.log('TOOL', toolUpdate);
+        if (toolUpdate && toolUpdate.id === toolId) {
+          updatedTool = toolUpdate;
+          
+          // Check if the tool's icon has changed
+          if (updatedTool.icon && toolItem.icon !== updatedTool.icon) {
+            // Regenerate the image for the tool with the new icon
+            try {
+              const imageServiceUrl = `${ITEM_IMAGES_SERVICE_CONFIG.url}/image`;
+              const description = updatedTool.icon;
+              const response = await fetch(`${imageServiceUrl}?description=${encodeURIComponent(description)}`);
+
+              if (response.ok) {
+                const imageData = await response.json();
+                updatedTool.imageUrl = imageData.imageUrl;
+                console.log("Regenerated tool image due to icon change", imageData);
+              }
+            } catch (error) {
+              console.error('Error fetching updated image from item-images service:', error);
+              // Continue without updating the image if fetching fails
+            }
+          }
+
+          if (!updatedTool.imageUrl) {
+            // Fallback to keeping the same tool image
+            updatedTool.imageUrl = toolItem.imageUrl;
+          }
+
+          // Update the tool item in the database
+          await updateItem(toolId, updatedTool);
+          
+          // Send tool update to client
+          ws.send(formatMessage('skill-use-tool-update', { tool: updatedTool }));
+        }
+      },
+      
+      // Handle output items as they arrive
+      onOutputItem: async (item) => {
+        console.log('OUTPUT', item)
         if (item.id === 'new-item') {
           // Create a new item
           const id = crypto.randomUUID();
@@ -189,6 +196,9 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
 
           const savedItem = await createItem(id, state.userId, item, `workbench-results`);
           processedItems.push(savedItem);
+          
+          // Send new item to client
+          ws.send(formatMessage('skill-use-new-item', { item: savedItem }));
         } else {
           // Update existing item
           const updatedItem = await updateItem(item.id, item);
@@ -200,13 +210,17 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
           }
 
           processedItems.push(updatedItem);
+          
+          // Send updated item to client
+          ws.send(formatMessage('skill-use-updated-item', { item: updatedItem }));
         }
-      }
-    }
-
-    // Process removed items
-    if (result.removedItemIds && Array.isArray(result.removedItemIds)) {
-      for (const itemId of result.removedItemIds) {
+      },
+      
+      // Handle removed items as they arrive
+      onRemovedItemId: async (itemId) => {
+        console.log('REMOVED', itemId);
+        removedItemIds.push(itemId);
+        
         // Set the lastOwner field to the current user's ID
         await updateItem(itemId, { lastOwner: state.userId });
         
@@ -215,17 +229,23 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
         if (itemLocation) {
           await moveItemLocation(itemId, itemLocation, 'discarded');
         }
+        
+        // Send removed item ID to client
+        ws.send(formatMessage('skill-use-removed-item', { itemId }));
+      },
+      
+      // Handle completion of the entire process
+      onComplete: async (result) => {
+        console.log("DONE", result);
       }
-    }
+    });
 
-    // Return the results to the client
+    // Return a response to acknowledge the request was received
+    // The actual results will be sent via WebSocket messages
     return {
-      type: 'skill-results',
+      type: 'skill-use-started',
       body: {
-        story: result.story,
-        tool: updatedTool,
-        outputItems: processedItems,
-        removedItemIds: result.removedItemIds || []
+        message: 'Skill use started, results will be streamed via WebSocket'
       }
     };
   } catch (error) {

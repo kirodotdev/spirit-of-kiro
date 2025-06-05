@@ -1,5 +1,5 @@
 import { randomInspiration } from './word-lists';
-import { invoke } from './model';
+import { invoke, invokeStream } from './model';
 
 // Generates a random item that might be found in a scrapyard.
 export const generateItems = async function (itemCount: number): Promise<any> {
@@ -35,7 +35,7 @@ export const generateItems = async function (itemCount: number): Promise<any> {
             skills[] - length 1 to 3 depending on item usefulness
               "name": Verb-like action performed by this item on another item, capitalized (e.g., "Absorb", "Deploy", "Smash")
               "description": Corny, adventurous, describes how the verb is performed on it's target
-              "targets": Number of targets. Either 0 (target's self), 1 (target's one other item), or 2 (joins two other items)
+              "targets": Number of targets. Either 0 (targets self), 1 (targets one other item), or 2 (joins two other items)
                   
           `
       },
@@ -198,8 +198,22 @@ export const appraiseItem = async function (item: any): Promise<any> {
   return JSON.parse(resultContent);
 };
 
-// Use one item's skill one or more other items.
-export const useSkill = async function (toolItem: any, skillIndex: any, targetItems: any): Promise<any> {
+// Interface for streaming skill use callbacks
+export interface SkillStreamCallbacks {
+  onStory?: (story: string) => void;
+  onTool?: (tool: any) => void;
+  onOutputItem?: (item: any) => void;
+  onRemovedItemId?: (id: string) => void;
+  onComplete?: (result: any) => void;
+}
+
+// Use one item's skill on one or more other items with streaming response
+export const useSkillStream = async function (
+  toolItem: any,
+  skillIndex: any,
+  targetItems: any,
+  callbacks: SkillStreamCallbacks
+): Promise<void> {
   // Create ID mappings for tool item and target items
   const { idToShortId, shortIdToId } = createIdMapping(toolItem, targetItems);
 
@@ -244,14 +258,27 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
             but ID's are immutable and may not be reused for
             new items. New items get their own special ID "new-item".
             
-            You may think out loud, but responses must be in JSON format between
-            two <RESULT> tags, with the following fields:
-
-            story: A tiny story about the skill being used on any targets, and the outcome
-            tool: The tool item, including any changes to the tool
-            outputItems[]: The targeted item list is transformed into the outputItems list.
-            removedItemIds[]: List the ID's of items that were removed or replaced by new items.
-
+            You must structure your response using specific XML tags for each part:
+            
+            <STORY>A tiny story about the skill being used on any targets, and the outcome</STORY>
+            
+            <TOOL>
+            {
+              // JSON representation of the tool item, including any changes to the tool
+              // Include all required item properties
+            }
+            </TOOL>
+            
+            <OUTPUT_ITEM>
+            {
+              // JSON representation of an output item
+              // Include all required item properties
+              // Use one OUTPUT_ITEM tag per item
+            }
+            </OUTPUT_ITEM>
+            
+            <REMOVED_ITEM>itemId</REMOVED_ITEM>
+            
             Items must have the following format:            
               name: a descriptive name for the item, with fake brand names and model numbers where appropriate
               weight: Include unit (e.g., "2.5 kg")
@@ -287,31 +314,131 @@ export const useSkill = async function (toolItem: any, skillIndex: any, targetIt
     ]
   };
 
-  const result = await invoke(prompt);
-  if (!result) return null;
+  // Buffers to accumulate partial XML tags
+  let buffer = '';
+  let storyContent = '';
+  let toolContent = '';
+  const outputItems: any[] = [];
+  const removedItemIds: string[] = [];
 
-  const resultMatch = result.match(/<RESULT>([\s\S]*?)<\/RESULT>/);
-  const resultContent = resultMatch ? resultMatch[1].trim() : result;
+  // Process each chunk as it arrives
+  await invokeStream(prompt, (chunk) => {
 
-  // Parse the JSON response
-  const parsedResult = JSON.parse(resultContent);
+    // Add the new chunk to our buffer
+    buffer += chunk;
 
-  // Convert short IDs back to original IDs
-  if (parsedResult.tool) {
-    parsedResult.tool = replaceWithOriginalIds(parsedResult.tool, shortIdToId);
+    // Process any complete XML tags in the buffer
+    processBuffer();
+  }, (fullResponse) => {
+    // Process any remaining content in the buffer
+    buffer += ' '; // Add a space to help with regex matching
+    processBuffer(true);
+
+    // Construct the final result object
+    const result = {
+      story: storyContent,
+      tool: toolContent ? JSON.parse(toolContent) : null,
+      outputItems: outputItems.map(item => JSON.parse(item)),
+      removedItemIds: removedItemIds
+    };
+
+    // Convert short IDs back to original IDs
+    if (result.tool) {
+      result.tool = replaceWithOriginalIds(result.tool, shortIdToId);
+    }
+
+    if (result.outputItems && Array.isArray(result.outputItems)) {
+      result.outputItems = result.outputItems.map(item =>
+        replaceWithOriginalIds(item, shortIdToId)
+      );
+    }
+
+    if (result.removedItemIds && Array.isArray(result.removedItemIds)) {
+      result.removedItemIds = result.removedItemIds.map(id =>
+        shortIdToId[id] || id
+      );
+    }
+
+    // Call the completion callback with the final result
+    if (callbacks.onComplete) {
+      callbacks.onComplete(result);
+    }
+  });
+
+  // Helper function to process the buffer for complete XML tags
+  function processBuffer(isFinal = false) {
+    // Process <STORY> tags
+    let storyMatch;
+    const storyRegex = /<STORY>([\s\S]*?)<\/STORY>/g;
+    while ((storyMatch = storyRegex.exec(buffer)) !== null) {
+      const story = storyMatch[1].trim();
+      storyContent = story; // Store the story content
+      if (callbacks.onStory) {
+        callbacks.onStory(story);
+      }
+      // Remove the processed tag from the buffer
+      buffer = buffer.replace(storyMatch[0], '');
+    }
+
+    // Process <TOOL> tags
+    let toolMatch;
+    const toolRegex = /<TOOL>([\s\S]*?)<\/TOOL>/g;
+    while ((toolMatch = toolRegex.exec(buffer)) !== null) {
+      const toolJson = toolMatch[1].trim();
+      toolContent = toolJson; // Store the tool JSON
+      if (callbacks.onTool) {
+        try {
+          const tool = JSON.parse(toolJson);
+          // Convert short IDs back to original IDs before callback
+          const toolWithOriginalIds = replaceWithOriginalIds(tool, shortIdToId);
+          callbacks.onTool(toolWithOriginalIds);
+        } catch (e) {
+          console.error('Error parsing tool JSON:', e);
+        }
+      }
+      // Remove the processed tag from the buffer
+      buffer = buffer.replace(toolMatch[0], '');
+    }
+
+    // Process <OUTPUT_ITEM> tags
+    let itemMatch;
+    const itemRegex = /<OUTPUT_ITEM>([\s\S]*?)<\/OUTPUT_ITEM>/g;
+    while ((itemMatch = itemRegex.exec(buffer)) !== null) {
+      const itemJson = itemMatch[1].trim();
+      outputItems.push(itemJson); // Store the output item JSON
+      if (callbacks.onOutputItem) {
+        try {
+          const item = JSON.parse(itemJson);
+          // Convert short IDs back to original IDs before callback
+          const itemWithOriginalIds = replaceWithOriginalIds(item, shortIdToId);
+          callbacks.onOutputItem(itemWithOriginalIds);
+        } catch (e) {
+          console.error('Error parsing output item JSON:', e);
+        }
+      }
+      // Remove the processed tag from the buffer
+      buffer = buffer.replace(itemMatch[0], '');
+    }
+
+    // Process <REMOVED_ITEM> tags
+    let removedMatch;
+    const removedRegex = /<REMOVED_ITEM>(.*?)<\/REMOVED_ITEM>/g;
+    while ((removedMatch = removedRegex.exec(buffer)) !== null) {
+      const itemId = removedMatch[1].trim();
+      removedItemIds.push(itemId); // Store the removed item ID
+      if (callbacks.onRemovedItemId) {
+        // Convert short ID back to original ID before callback
+        const originalId = shortIdToId[itemId] || itemId;
+        callbacks.onRemovedItemId(originalId);
+      }
+      // Remove the processed tag from the buffer
+      buffer = buffer.replace(removedMatch[0], '');
+    }
+
+    // If this is the final processing and we still have content in the buffer,
+    // try to extract any partial tags or remaining content
+    if (isFinal && buffer.trim()) {
+      console.log('Remaining buffer content:', buffer);
+    }
   }
-
-  if (parsedResult.outputItems && Array.isArray(parsedResult.outputItems)) {
-    parsedResult.outputItems = parsedResult.outputItems.map(item =>
-      replaceWithOriginalIds(item, shortIdToId)
-    );
-  }
-
-  if (parsedResult.removedItemIds && Array.isArray(parsedResult.removedItemIds)) {
-    parsedResult.removedItemIds = parsedResult.removedItemIds.map(id =>
-      shortIdToId[id] || id
-    );
-  }
-
-  return parsedResult;
 };
