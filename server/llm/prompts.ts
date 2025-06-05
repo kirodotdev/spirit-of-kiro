@@ -1,5 +1,6 @@
 import { randomInspiration } from './word-lists';
 import { invoke, invokeStream } from './model';
+import yaml from 'js-yaml';
 
 // Generates a random item that might be found in a scrapyard.
 export const generateItems = async function (itemCount: number): Promise<any> {
@@ -20,7 +21,7 @@ export const generateItems = async function (itemCount: number): Promise<any> {
       {
         "text": `
           You are running a dispenser that taps into a dimension full of discarded items.
-          Your responses must be in JSON format between two <RESULT> tags, with the following fields:
+          Your responses must be in YAML format between two <RESULT> tags, with the following fields:
 
           story: A tiny story about the item flying out of the dispenser
           items: An array (length 1) with one object describing the item, including:
@@ -32,10 +33,10 @@ export const generateItems = async function (itemCount: number): Promise<any> {
             icon: short description of item appearance
             materials: array of material types (e.g., ["Ceramic", "Metal"])
             damage: A short description of damaged or missing parts
-            skills[] - length 1 to 3 depending on item usefulness
-              "name": Verb-like action performed by this item on another item, capitalized (e.g., "Absorb", "Deploy", "Smash")
-              "description": Corny, adventurous, describes how the verb is performed on it's target
-              "targets": Number of targets. Either 0 (targets self), 1 (targets one other item), or 2 (joins two other items)
+            skills: array of length 1 to 3 depending on item usefulness, each containing:
+              name: Verb-like action performed by this item on another item, capitalized (e.g., "Absorb", "Deploy", "Smash")
+              description: Corny, adventurous, describes how the verb is performed on it's target
+              targets: Number of targets. Either 0 (targets self), 1 (targets one other item), or 2 (joins two other items)
                   
           `
       },
@@ -160,16 +161,15 @@ export const appraiseItem = async function (item: any): Promise<any> {
           - Utility (practicality of skills and functionality)
           - Some wiggle room for uniqueness and collectability
           
-          Your responses must be in JSON format between two <RESULT> tags, with the following fields:
+          Your responses must be in YAML format between two <RESULT> tags, with the following fields:
           
-          appraisal: {
+          appraisal:
             analysis: A brief, colorful analysis of the item (2-3 sentences)
             saleAmount: The amount of gold the appraiser is willing to pay
             happiness: A number between -100 and 100 indicating how happy/unhappy the appraiser is with the item
-              -100: Extremely disappointed, item is broken, worthless, or offensive
-              0: Neutral, item is average
-              100: Extremely excited, item is exceptional
-          }
+              # -100: Extremely disappointed, item is broken, worthless, or offensive
+              # 0: Neutral, item is average
+              # 100: Extremely excited, item is exceptional
         `
       },
       {
@@ -253,33 +253,28 @@ export const useSkillStream = async function (
             Skills may reveal new items, for example an "Open" skill might reveal a new item
             that was inside of an existing item, or a "Find" or "Identify" skill might
             discover some new aspect of a target object.
-
-            You may change the values of any item property (except ID) if that seems realistic,
-            but ID's are immutable and may not be reused for
-            new items. New items get their own special ID "new-item".
             
             You must structure your response using specific XML tags for each part:
             
             <STORY>A tiny story about the skill being used on any targets, and the outcome</STORY>
             
             <TOOL>
-            {
-              // JSON representation of the tool item, including any changes to the tool
-              // Include all required item properties
-            }
+            # YAML representation of the tool item, including any changes to the tool
+            # Include all required item properties
             </TOOL>
             
             <OUTPUT_ITEM>
-            {
-              // JSON representation of an output item
-              // Include all required item properties
-              // Use one OUTPUT_ITEM tag per item
-            }
+            # YAML representation of an output item
+            # Include all required item properties
+            # Use one OUTPUT_ITEM tag per item
             </OUTPUT_ITEM>
             
             <REMOVED_ITEM>itemId</REMOVED_ITEM>
             
             Items must have the following format:            
+              id: You may change the values of any item property (except ID) if that seems realistic,
+                  but ID's are immutable and may not be reused for
+                  new items. New items get their own special ID "new-item".
               name: a descriptive name for the item, with fake brand names and model numbers where appropriate
               weight: Include unit (e.g., "2.5 kg")
               value: A positive integer. Successful crafting interactions increase value
@@ -289,9 +284,9 @@ export const useSkillStream = async function (
               materials: array of material types (e.g., ["Ceramic", "Metal"])
               damage: A short description of damaged or missing parts
               skills[] - length 1 to 3 depending on item state. Add skills to items if they have none
-                "name": Verb-like action performed by this item on another item, capitalized (e.g., "Absorb", "Deploy", "Smash")
-                "description": Corny, adventurous, describes how the verb is performed on it's target
-                "targets": Number of targets. Either 0 (target's self), 1 (target's one other item), or 2 (joins two other items)
+                name: Verb-like action performed by this item on another item, capitalized (e.g., "Absorb", "Deploy", "Smash")
+                description: Corny, adventurous, describes how the verb is performed on it's target
+                targets: Number of targets. Either 0 (targets self), 1 (targets one other item), or 2 (joins two other items)
           `
       },
       {
@@ -337,8 +332,8 @@ export const useSkillStream = async function (
     // Construct the final result object
     const result = {
       story: storyContent,
-      tool: toolContent ? JSON.parse(toolContent) : null,
-      outputItems: outputItems.map(item => JSON.parse(item)),
+      tool: toolContent ? yaml.load(toolContent) : null,
+      outputItems: outputItems.map(item => yaml.load(item)),
       removedItemIds: removedItemIds
     };
 
@@ -384,16 +379,16 @@ export const useSkillStream = async function (
     let toolMatch;
     const toolRegex = /<TOOL>([\s\S]*?)<\/TOOL>/g;
     while ((toolMatch = toolRegex.exec(buffer)) !== null) {
-      const toolJson = toolMatch[1].trim();
-      toolContent = toolJson; // Store the tool JSON
+      const toolYaml = toolMatch[1].trim();
+      toolContent = toolYaml; // Store the tool YAML
       if (callbacks.onTool) {
         try {
-          const tool = JSON.parse(toolJson);
+          const tool = yaml.load(toolYaml);
           // Convert short IDs back to original IDs before callback
           const toolWithOriginalIds = replaceWithOriginalIds(tool, shortIdToId);
           callbacks.onTool(toolWithOriginalIds);
         } catch (e) {
-          console.error('Error parsing tool JSON:', e);
+          console.error('Error parsing tool YAML:', e);
         }
       }
       // Remove the processed tag from the buffer
@@ -404,16 +399,16 @@ export const useSkillStream = async function (
     let itemMatch;
     const itemRegex = /<OUTPUT_ITEM>([\s\S]*?)<\/OUTPUT_ITEM>/g;
     while ((itemMatch = itemRegex.exec(buffer)) !== null) {
-      const itemJson = itemMatch[1].trim();
-      outputItems.push(itemJson); // Store the output item JSON
+      const itemYaml = itemMatch[1].trim();
+      outputItems.push(itemYaml); // Store the output item YAML
       if (callbacks.onOutputItem) {
         try {
-          const item = JSON.parse(itemJson);
+          const item = yaml.load(itemYaml);
           // Convert short IDs back to original IDs before callback
           const itemWithOriginalIds = replaceWithOriginalIds(item, shortIdToId);
           callbacks.onOutputItem(itemWithOriginalIds);
         } catch (e) {
-          console.error('Error parsing output item JSON:', e);
+          console.error('Error parsing output item YAML:', e);
         }
       }
       // Remove the processed tag from the buffer
