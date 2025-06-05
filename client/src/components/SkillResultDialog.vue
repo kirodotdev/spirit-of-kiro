@@ -43,9 +43,9 @@ const removedItems = computed(() => {
     return [];
   }
   
-  return resultData.value.removedItemIds.map((itemId: string) => {
-    return store.itemsById.get(itemId);
-  }).filter(Boolean);
+  return resultData.value.removedItemIds
+    .map((itemId: string) => store.itemsById.get(itemId))
+    .filter((item): item is NonNullable<typeof item> => item !== undefined);
 });
 
 // Get the actual item objects from the workbench-results inventory IDs
@@ -660,21 +660,6 @@ onUnmounted(() => {
   padding: 8px;
   transition: all 0.2s;
   background-color: rgba(0, 0, 0, 0.2);
-}
-
-.item-wrapper.item-common {
-}
-
-.item-wrapper.item-uncommon {
-}
-
-.item-wrapper.item-rare {
-}
-
-.item-wrapper.item-epic {
-}
-
-.item-wrapper.item-legendary {
 }
 
 .item-image {
