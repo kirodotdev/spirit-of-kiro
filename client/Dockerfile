@@ -19,7 +19,6 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:5173/ || exit 1
 
 # Switch to non-root user
-USER bun
 
 # Set the command to run "bun run dev" with host set to 0.0.0.0 to allow external access
 CMD ["bun", "run", "dev", "--host", "0.0.0.0"]
