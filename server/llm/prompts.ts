@@ -63,7 +63,7 @@ export const generateItems = async function (itemCount: number): Promise<any> {
 
   const resultMatch = result.match(/<RESULT>([\s\S]*?)<\/RESULT>/);
   const resultContent = resultMatch ? resultMatch[1].trim() : result;
-  return JSON.parse(resultContent);
+  return yaml.load(resultContent);
 };
 
 // The only properties that the LLM should be seeing.
@@ -195,7 +195,7 @@ export const appraiseItem = async function (item: any): Promise<any> {
 
   const resultMatch = result.match(/<RESULT>([\s\S]*?)<\/RESULT>/);
   const resultContent = resultMatch ? resultMatch[1].trim() : result;
-  return JSON.parse(resultContent);
+  return yaml.load(resultContent);
 };
 
 // Interface for streaming skill use callbacks
@@ -256,7 +256,7 @@ export const useSkillStream = async function (
             
             You must structure your response using specific XML tags for each part:
             
-            <STORY>A tiny story about the skill being used on any targets, and the outcome</STORY>
+            <STORY>A three to four sentence, first person perspective story about the skill being used on any targets, and the outcome</STORY>
             
             <TOOL>
             # YAML representation of the tool item, including any changes to the tool

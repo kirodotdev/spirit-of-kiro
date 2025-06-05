@@ -239,15 +239,6 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
         console.log("DONE", result);
       }
     });
-
-    // Return a response to acknowledge the request was received
-    // The actual results will be sent via WebSocket messages
-    return {
-      type: 'skill-use-started',
-      body: {
-        message: 'Skill use started, results will be streamed via WebSocket'
-      }
-    };
   } catch (error) {
     console.error('Error using skill:', error);
     return {

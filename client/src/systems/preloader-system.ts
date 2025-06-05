@@ -27,15 +27,12 @@ export class PreloaderSystem {
     this.socketSystem = socketSystem
     this.progress = progress
     this.isInitialLoadComplete = isInitialLoadComplete
-
-    console.log('[PreloaderSystem] Initialized')
     
     // Subscribe to the same events as ItemSystem to preload item images
     this.eventListenerIds.push(this.socketSystem.addEventListener('inventory-items:*', this.handleInventoryItems.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('pulled-item', this.handlePulledItem.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('skill-results', this.handleSkillResults.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('discarded-results', this.handleDiscardedResults.bind(this)))
-    console.log('[PreloaderSystem] Subscribed to item events')
 
     // Automatically start loading static assets
     this.preloadStaticAssets(STATIC_ASSETS).catch(error => {
@@ -53,7 +50,6 @@ export class PreloaderSystem {
 
     this.loadingQueue.add(url)
     this.updateProgress()
-    console.log(`[PreloaderSystem] Starting to load image: ${url}`)
 
     try {
       const img = new Image()
@@ -63,7 +59,6 @@ export class PreloaderSystem {
         img.src = url
       })
       this.loadedImages.add(url)
-      console.log(`[PreloaderSystem] Successfully loaded image: ${url}`)
     } catch (error) {
       console.error(`[PreloaderSystem] Failed to load image: ${url}`, error)
       this.failedImages.add(url)
@@ -86,7 +81,7 @@ export class PreloaderSystem {
     this.progress.value = newProgress
     
     // Log progress update
-    console.log('[PreloaderSystem] Progress Update:', {
+    /*console.log('[PreloaderSystem] Progress Update:', {
       total: newProgress.total,
       loaded: newProgress.loaded,
       failed: newProgress.failed,
@@ -94,18 +89,16 @@ export class PreloaderSystem {
       percentComplete: newProgress.total > 0 
         ? Math.round((newProgress.loaded / newProgress.total) * 100) 
         : 0
-    })
+    })*/
   }
 
   /**
    * Preloads all static game assets
    */
   async preloadStaticAssets(staticAssets: string[]): Promise<void> {
-    console.log(`[PreloaderSystem] Starting to preload ${staticAssets.length} static assets`)
     const promises = staticAssets.map(url => this.preloadImage(url))
     await Promise.all(promises)
     this.isInitialLoadComplete.value = true
-    console.log('[PreloaderSystem] Initial static assets load complete')
   }
 
   /**
@@ -117,21 +110,18 @@ export class PreloaderSystem {
       .filter(url => url && !this.loadedImages.has(url) && !this.failedImages.has(url))
     
     if (imageUrls.length > 0) {
-      console.log(`[PreloaderSystem] Found ${imageUrls.length} new item images to preload`)
       await Promise.all(imageUrls.map(url => this.preloadImage(url)))
     }
   }
 
   private handleInventoryItems(data?: any) {
     if (Array.isArray(data)) {
-      console.log(`[PreloaderSystem] Received ${data.length} inventory items`)
       this.preloadItemImages(data)
     }
   }
 
   private handlePulledItem(data?: any) {
     if (data?.item) {
-      console.log('[PreloaderSystem] Received pulled item')
       this.preloadItemImages([data.item])
     }
   }
@@ -141,20 +131,17 @@ export class PreloaderSystem {
     if (data.tool) items.push(data.tool)
     if (data.outputItems) items.push(...data.outputItems)
     if (items.length > 0) {
-      console.log(`[PreloaderSystem] Received ${items.length} items from skill results`)
       this.preloadItemImages(items)
     }
   }
 
   private handleDiscardedResults(data?: any) {
     if (Array.isArray(data)) {
-      console.log(`[PreloaderSystem] Received ${data.length} discarded items`)
       this.preloadItemImages(data)
     }
   }
 
   cleanup() {
-    console.log('[PreloaderSystem] Cleaning up event listeners')
     this.eventListenerIds.forEach(id => {
       this.socketSystem.removeEventListener('discarded-results', id)
     })

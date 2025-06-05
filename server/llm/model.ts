@@ -9,7 +9,7 @@ const bedrockClient = new BedrockRuntimeClient({
 type ModelId = 'us.anthropic.claude-sonnet-4-20250514-v1:0' | 'us.anthropic.claude-3-7-sonnet-20250219-v1:0' | 'us.amazon.nova-pro-v1:0';
 const MODELS: ModelId[] = [
   //'us.anthropic.claude-sonnet-4-20250514-v1:0',
-  //'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
+  'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
   'us.amazon.nova-pro-v1:0'
 ];
 

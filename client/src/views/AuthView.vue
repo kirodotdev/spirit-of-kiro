@@ -51,8 +51,8 @@ import { useRouter } from 'vue-router'
 const gameStore = useGameStore()
 const router = useRouter()
 const isLogin = ref(true)
-const username = ref('')
-const password = ref('')
+const username = ref('test')
+const password = ref('test')
 const error = ref('')
 
 // Store listener IDs

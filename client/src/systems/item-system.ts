@@ -34,7 +34,7 @@ export class ItemSystem {
     // Subscribe to inventory-items:* events
     this.eventListenerIds.push(this.socketSystem.addEventListener('inventory-items:*', this.handleInventoryItems.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('pulled-item', this.handlePulledItem.bind(this)))
-    this.eventListenerIds.push(this.socketSystem.addEventListener('skill-results', this.handleSkillResults.bind(this)))
+    this.eventListenerIds.push(this.socketSystem.addEventListener('skill-use*', this.handleSkillResults.bind(this)))
     this.eventListenerIds.push(this.socketSystem.addEventListener('discarded-results', this.handleDiscardedResults.bind(this)))
   }
 
@@ -88,12 +88,9 @@ export class ItemSystem {
     if (data.tool) {
       this.addItem(data.tool)
     }
-    
-    // Add all output items to the local item store
-    if (data.outputItems && Array.isArray(data.outputItems)) {
-      data.outputItems.forEach((item: Item) => {
-        this.addItem(item)
-      })
+
+    if (data.item) {
+      this.addItem(data.item)
     }
     
     // Remove all items with IDs in the removedItemIds array
@@ -103,11 +100,6 @@ export class ItemSystem {
     // so that they don't add up and consume lots of memory on the client side
     // however retaining them until reload has minimal impact, while avoiding
     // UI bugs for now.
-    /*if (data.removedItemIds && Array.isArray(data.removedItemIds)) {
-      data.removedItemIds.forEach((itemId: string) => {
-        this.removeItem(itemId)
-      })
-    }*/
   }
 
   /**
