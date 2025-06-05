@@ -14,6 +14,7 @@
 - **Database**: Amazon DynamoDB
 - **Storage**: Amazon S3 (for AI-generated images)
 - **AI Services**: AWS Bedrock (for item generation)
+- **AWS SDK:** AWS SDK for JavaScript v3
 
 ## Infrastructure
 - **Containerization**: Docker and Docker Compose
