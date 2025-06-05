@@ -11,7 +11,16 @@ const visible = ref(false);
 const isLoading = ref(true);
 const hasStory = ref(false);
 const storyText = ref<string>('');
-const resultData = ref<any>(null);
+const isComplete = ref(false);
+const resultData = ref<{
+  tool: any;
+  removedItemIds: string[];
+  story: string;
+}>({
+  tool: null,
+  removedItemIds: [],
+  story: ''
+});
 
 // State to track skill invocation details for the loading animation
 const skillInvocationData = ref<{
@@ -19,9 +28,6 @@ const skillInvocationData = ref<{
   tool: any;
   targets: any[];
 } | null>(null);
-
-// Animation state for the smashing animation - using fixed values now
-// (animation speed increase functionality removed)
 
 // State to track which item is being hovered
 const hoveredItemId = ref<string | null>(null);
@@ -39,7 +45,7 @@ const removedItems = computed(() => {
   
   return resultData.value.removedItemIds.map((itemId: string) => {
     return store.itemsById.get(itemId);
-  }).filter(Boolean); // Filter out any undefined items
+  }).filter(Boolean);
 });
 
 // Get the actual item objects from the workbench-results inventory IDs
@@ -80,21 +86,19 @@ function handleToolMouseLeave() {
 }
 
 function closeDialog() {
-  // Prevent closing the dialog while loading
-  if (isLoading.value) {
+  if (isLoading.value || !isComplete.value) {
     return;
   }
-  // Emit clean-workbench-results event before closing
   store.emitEvent('clean-workbench-results');
   visible.value = false;
   store.interactionLocked = false;
-  store.popFocus(); // Remove skill-result-dialog from focus stack
-  store.pushFocus('workbench'); // Restore focus to workbench
+  store.popFocus();
+  store.pushFocus('workbench');
 }
 
 // Function to handle keydown events
 function handleKeyDown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && visible.value && !isLoading.value && store.hasFocus('skill-result-dialog')) {
+  if (event.key === 'Escape' && visible.value && !isLoading.value && isComplete.value && store.hasFocus('skill-result-dialog')) {
     closeDialog();
   }
 }
@@ -102,70 +106,78 @@ function handleKeyDown(event: KeyboardEvent) {
 // Listen for skill events
 let skillInvokedListenerId: string;
 let skillStoryListenerId: string;
-let skillResultListenerId: string;
-
-// Set fixed animation durations
-function setAnimationDurations() {
-  // Set fixed CSS variables for animation duration
-  document.documentElement.style.setProperty('--smash-tool-duration', '3s');
-  document.documentElement.style.setProperty('--smash-target-duration', '3s');
-  document.documentElement.style.setProperty('--smash-skill-duration', '3s');
-  document.documentElement.style.setProperty('--pulse-glow-duration', '2s');
-}
+let skillToolUpdateListenerId: string;
+let skillNewItemListenerId: string;
+let skillUpdatedItemListenerId: string;
+let skillRemovedItemListenerId: string;
+let useSkillDoneListenerId: string;
 
 onMounted(() => {
-  // Listen for skill-invoked event to show loading state
   skillInvokedListenerId = store.addEventListener('skill-invoked', (data) => {
     visible.value = true;
     isLoading.value = true;
     hasStory.value = false;
+    isComplete.value = false;
     storyText.value = '';
+    resultData.value = {
+      tool: null,
+      removedItemIds: [],
+      story: ''
+    };
     store.interactionLocked = true;
     store.pushFocus('skill-result-dialog');
-    
-    // Store the skill invocation data for the loading animation
     skillInvocationData.value = data;
-    
-    // Set fixed animation durations
-    setAnimationDurations();
   });
   
-  // Listen for skill-use-story event to show story state
   skillStoryListenerId = store.addEventListener('skill-use-story', (data) => {
-    console.log('skill-use-story data', data);
     storyText.value = data.story;
+    resultData.value.story = data.story;
     hasStory.value = true;
     isLoading.value = false;
   });
   
-  // Listen for skill-results event to show result state
-  skillResultListenerId = store.addEventListener('skill-results', (data) => {
-    console.log('skill-result data', data);
-    resultData.value = data;
+  skillToolUpdateListenerId = store.addEventListener('skill-use-tool-update', (data) => {
+    resultData.value.tool = data.tool;
     hasStory.value = false;
     isLoading.value = false;
   });
   
-  // Add event listener for keydown to handle Escape key
+  skillNewItemListenerId = store.addEventListener('skill-use-new-item', (data) => {
+    hasStory.value = false;
+    isLoading.value = false;
+  });
+  
+  skillUpdatedItemListenerId = store.addEventListener('skill-use-updated-item', (data) => {
+    hasStory.value = false;
+    isLoading.value = false;
+  });
+  
+  skillRemovedItemListenerId = store.addEventListener('skill-use-removed-item', (data) => {
+    resultData.value.removedItemIds.push(data.itemId);
+    hasStory.value = false;
+    isLoading.value = false;
+  });
+  
+  useSkillDoneListenerId = store.addEventListener('skill-use-done', () => {
+    isComplete.value = true;
+  });
+  
   window.addEventListener('keydown', handleKeyDown);
 });
 
 onUnmounted(() => {
   store.removeEventListener('skill-invoked', skillInvokedListenerId);
   store.removeEventListener('skill-use-story', skillStoryListenerId);
-  store.removeEventListener('skill-results', skillResultListenerId);
+  store.removeEventListener('skill-use-tool-update', skillToolUpdateListenerId);
+  store.removeEventListener('skill-use-new-item', skillNewItemListenerId);
+  store.removeEventListener('skill-use-updated-item', skillUpdatedItemListenerId);
+  store.removeEventListener('skill-use-removed-item', skillRemovedItemListenerId);
+  store.removeEventListener('use-skill-done', useSkillDoneListenerId);
   window.removeEventListener('keydown', handleKeyDown);
   
-  // Reset CSS variables
-  document.documentElement.style.removeProperty('--smash-tool-duration');
-  document.documentElement.style.removeProperty('--smash-target-duration');
-  document.documentElement.style.removeProperty('--smash-skill-duration');
-  document.documentElement.style.removeProperty('--pulse-glow-duration');
-  
-  // Always ensure focus and interaction lock are reset on unmount
   store.interactionLocked = false;
-  store.popFocus(); // Remove skill-result-dialog from focus stack
-  store.pushFocus('workbench'); // Restore focus to workbench
+  store.popFocus();
+  store.pushFocus('workbench');
 });
 </script>
 
@@ -212,74 +224,60 @@ onUnmounted(() => {
     
     <!-- Story state - mini dialog above animation -->
     <div v-else-if="hasStory" class="story-phase">
-      <div class="story-dialog">
+      <div class="story-dialog" :class="{ 'processing': !isComplete }">
         <p class="story-text">{{ storyText }}</p>
-        <div class="loading-footer">
-          <div class="small-spinner"></div>
-        </div>
       </div>
     </div>
     
     <!-- Result state - full dialog -->
-    <div v-else class="skill-result-dialog">
-      <div class="dialog-header">
-        <h2>Results</h2>
-        <button class="close-button" @click="closeDialog">×</button>
-      </div>
+    <div v-else class="skill-result-dialog" :class="{ 'processing': !isComplete }">
+      <button v-if="isComplete" class="close-button" @click="closeDialog">×</button>
       
       <div class="dialog-content">
         <!-- Story section -->
-        <p class="story-text">{{ resultData?.story || 'Something unexpected happened...' }}</p>
+        <div class="story-section">
+          <p class="story-text">{{ resultData?.story || 'Something unexpected happened...' }}</p>
+        </div>
 
-        <div class="results-grid">
+        <div class="results-container">
           <!-- Tool used section -->
-          <div v-if="resultData?.tool" class="tool-section">
-            <h3>Tool</h3>
-            <div class="items-grid">
-              <div 
-                class="item-container"
-                @mouseenter="handleToolMouseEnter"
-                @mouseleave="handleToolMouseLeave"
-              >
-                <div class="item-wrapper" :class="getRarityClass(resultData.tool.value)">
-                  <img :src="resultData.tool.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="resultData.tool.name" />
-                </div>
+          <div v-if="resultData?.tool" class="result-item">
+            <div class="item-label changed">Changed</div>
+            <div 
+              class="item-container"
+              @mouseenter="handleToolMouseEnter"
+              @mouseleave="handleToolMouseLeave"
+            >
+              <div class="item-wrapper" :class="getRarityClass(resultData.tool.value)">
+                <img :src="resultData.tool.imageUrl || '/src/assets/generic.png'" class="item-image" :alt="resultData.tool.name" />
               </div>
             </div>
           </div>
           
-          <!-- Lost section -->
-          <div v-if="removedItems.length > 0" class="lost-section">
-            <h3>Lost</h3>
-            <div class="items-grid">
-              <div 
-                v-for="item in removedItems" 
-                :key="item.id" 
-                class="item-container"
-                @mouseenter="handleItemMouseEnter(item.id)"
-                @mouseleave="handleItemMouseLeave"
-              >
-                <div class="item-wrapper" :class="getRarityClass(item.value)">
-                  <img :src="item.imageUrl" class="item-image" :alt="item.name" />
-                </div>
+          <!-- Lost items -->
+          <div v-for="item in removedItems" :key="item.id" class="result-item">
+            <div class="item-label lost">Lost</div>
+            <div 
+              class="item-container animate-in"
+              @mouseenter="handleItemMouseEnter(item.id)"
+              @mouseleave="handleItemMouseLeave"
+            >
+              <div class="item-wrapper" :class="getRarityClass(item.value)">
+                <img :src="item.imageUrl" class="item-image" :alt="item.name" />
               </div>
             </div>
           </div>
           
-          <!-- Results section -->
-          <div v-if="workbenchResultItems.length > 0" class="results-section">
-            <h3>Gained</h3>
-            <div class="items-grid">
-              <div 
-                v-for="item in workbenchResultItems" 
-                :key="item.id" 
-                class="item-container"
-                @mouseenter="handleItemMouseEnter(item.id)"
-                @mouseleave="handleItemMouseLeave"
-              >
-                <div class="item-wrapper" :class="getRarityClass(item.value)">
-                  <img :src="item.imageUrl" class="item-image" :alt="item.name" />
-                </div>
+          <!-- New items -->
+          <div v-for="item in workbenchResultItems" :key="item.id" class="result-item">
+            <div class="item-label new">New</div>
+            <div 
+              class="item-container animate-in"
+              @mouseenter="handleItemMouseEnter(item.id)"
+              @mouseleave="handleItemMouseLeave"
+            >
+              <div class="item-wrapper" :class="getRarityClass(item.value)">
+                <img :src="item.imageUrl" class="item-image" :alt="item.name" />
               </div>
             </div>
           </div>
@@ -294,11 +292,6 @@ onUnmounted(() => {
           transform="translate(-50%, -50%)"
           style="z-index: 10000;"
         />
-        
-        <!-- No items message -->
-        <div v-if="!removedItems.length && !workbenchResultItems.length" class="no-items">
-          <p>No items were affected by this skill.</p>
-        </div>
       </div>
     </div>
   </div>
@@ -342,6 +335,13 @@ onUnmounted(() => {
   width: 90%;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   border: 1px solid #333;
+  position: relative;
+}
+
+.story-dialog.processing {
+  border: 1px solid #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  animation: glow 2s ease-in-out infinite;
 }
 
 /* Result dialog styles */
@@ -351,47 +351,45 @@ onUnmounted(() => {
   width: 90%;
   max-width: 800px;
   max-height: 80vh;
-  overflow-y: auto;
+  overflow: hidden;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   border: 2px solid #333;
   position: relative;
-  top: -20%; /* Move the dialog up by 20% */
-}
-
-.dialog-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 20px;
-  border-bottom: 1px solid #333;
+  flex-direction: column;
 }
 
-.dialog-header h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  color: white;
+.skill-result-dialog.processing {
+  border: 2px solid #ffd700;
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+  animation: legendary-glow 2s ease-in-out infinite;
+  position: relative;
 }
 
-.close-button {
-  background: none;
-  border: none;
-  color: #aaa;
-  font-size: 1.8rem;
-  cursor: pointer;
-  padding: 0;
-  line-height: 1;
-}
-
-.close-button:hover {
-  color: white;
+.skill-result-dialog.processing::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 12px;
+  background: linear-gradient(45deg, #ffd700, #ff8c00, #ffd700);
+  z-index: -1;
+  animation: legendary-border 3s linear infinite;
+  opacity: 0.7;
 }
 
 .dialog-content {
   padding: 20px;
+  padding-top: 40px;
   color: #ddd;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+  position: relative;
+  height: 100%;
+  overflow-y: auto;
 }
 
 /* Loading state styles */
@@ -600,71 +598,44 @@ onUnmounted(() => {
   padding: 20px;
 }
 
-.story-section {
-  background-color: rgba(0, 0, 0, 0.2);
-  padding: 15px;
+.results-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 16px;
+  padding: 16px;
+  background-color: rgba(0, 0, 0, 0.15);
   border-radius: 8px;
-  border-left: 3px solid #2196f3;
 }
 
-.story-section h3 {
-  margin-top: 0;
-  color: #2196f3;
-  font-size: 1.2rem;
-}
-
-.story-text {
-  line-height: 1.6;
-  font-size: 1rem;
-  color: #ddd;
-  white-space: pre-line;
-  margin-bottom: 20px;
-}
-
-.results-grid {
-  display: flex;
-  gap: 20px;
-  justify-content: space-between;
-}
-
-.tool-section,
-.lost-section,
-.results-section {
-  flex: 1;
-  min-width: 0;
+.result-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 8px;
 }
 
-.tool-section h3,
-.lost-section h3,
-.results-section h3 {
-  margin-bottom: 15px;
-  font-size: 1.2rem;
-  text-align: center;
+.item-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.tool-section h3 {
+.item-label.changed {
+  background-color: rgba(33, 150, 243, 0.2);
   color: #2196f3;
 }
 
-.lost-section h3 {
+.item-label.lost {
+  background-color: rgba(255, 82, 82, 0.2);
   color: #ff5252;
 }
 
-.results-section h3 {
+.item-label.new {
+  background-color: rgba(76, 175, 80, 0.2);
   color: #4caf50;
-}
-
-.items-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  gap: 10px;
-  margin-top: 10px;
-  width: fit-content;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .item-container {
@@ -686,8 +657,9 @@ onUnmounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 0px;
+  padding: 8px;
   transition: all 0.2s;
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 .item-wrapper.item-common {
@@ -802,5 +774,140 @@ onUnmounted(() => {
 
 .close-appraisal-button:hover {
   color: white;
+}
+
+/* Animation styles */
+@keyframes pop-in {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Add animation delay based on item index */
+.items-grid .item-container:nth-child(1) { animation-delay: 0.1s; }
+.items-grid .item-container:nth-child(2) { animation-delay: 0.2s; }
+.items-grid .item-container:nth-child(3) { animation-delay: 0.3s; }
+.items-grid .item-container:nth-child(4) { animation-delay: 0.4s; }
+.items-grid .item-container:nth-child(5) { animation-delay: 0.5s; }
+.items-grid .item-container:nth-child(6) { animation-delay: 0.6s; }
+.items-grid .item-container:nth-child(7) { animation-delay: 0.7s; }
+.items-grid .item-container:nth-child(8) { animation-delay: 0.8s; }
+.items-grid .item-container:nth-child(9) { animation-delay: 0.9s; }
+.items-grid .item-container:nth-child(10) { animation-delay: 1.0s; }
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+  }
+}
+
+/* Remove old done button styles */
+.done-button-container,
+.done-button {
+  display: none;
+}
+
+/* Add new close button styles */
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #ddd;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 2;
+  padding: 0;
+}
+
+.close-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+.close-button:active {
+  transform: scale(0.95);
+}
+
+@keyframes legendary-glow {
+  0%, 100% {
+    box-shadow: 0 0 40px rgba(255, 215, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 60px rgba(255, 215, 0, 0.8);
+  }
+}
+
+@keyframes legendary-border {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Add loading indicator styles */
+.results-grid::after {
+  content: '...';
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 24px;
+  color: #ffd700;
+  animation: loading-dots 1.5s infinite;
+  opacity: 0;
+}
+
+.skill-result-dialog.processing .results-grid::after {
+  opacity: 1;
+}
+
+@keyframes loading-dots {
+  0%, 20% {
+    content: '.';
+  }
+  40% {
+    content: '..';
+  }
+  60%, 100% {
+    content: '...';
+  }
+}
+
+.story-text {
+  line-height: 1.6;
+  font-size: 1.1rem;
+  color: #fff;
+  white-space: pre-line;
+  margin: 0;
 }
 </style>

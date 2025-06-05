@@ -120,9 +120,10 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
     const removedItemIds = [];
     let updatedTool = null;
     let story = '';
+    let pendingImageCount = 0;
 
     // Use the skill with streaming response
-    await useSkillStream(toolItem, toolSkillIndex, targetItems, {
+    useSkillStream(toolItem, toolSkillIndex, targetItems, {
       // Handle story chunks as they arrive
       onStory: async (storyChunk) => {
         console.log('STORY', storyChunk);
@@ -141,6 +142,7 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
           if (updatedTool.icon && toolItem.icon !== updatedTool.icon) {
             // Regenerate the image for the tool with the new icon
             try {
+              pendingImageCount++;
               const imageServiceUrl = `${ITEM_IMAGES_SERVICE_CONFIG.url}/image`;
               const description = updatedTool.icon;
               const response = await fetch(`${imageServiceUrl}?description=${encodeURIComponent(description)}`);
@@ -153,6 +155,8 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
             } catch (error) {
               console.error('Error fetching updated image from item-images service:', error);
               // Continue without updating the image if fetching fails
+            } finally {
+              pendingImageCount--;
             }
           }
 
@@ -180,6 +184,7 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
           // Try to fetch an image for the new item if it has an icon
           if (item.icon) {
             try {
+              pendingImageCount++;
               const imageServiceUrl = `${ITEM_IMAGES_SERVICE_CONFIG.url}/image`;
               const description = item.icon;
               const response = await fetch(`${imageServiceUrl}?description=${encodeURIComponent(description)}`);
@@ -191,6 +196,8 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
             } catch (error) {
               console.error('Error fetching image from item-images service:', error);
               // Continue without image if fetching fails
+            } finally {
+              pendingImageCount--;
             }
           }
 
@@ -237,8 +244,31 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
       // Handle completion of the entire process
       onComplete: async (result) => {
         console.log("DONE", result);
+        
+        // Check if any images are still being generated
+        const checkPendingImages = async () => {
+          if (pendingImageCount > 0) {
+            console.log(`${pendingImageCount} images still pending, retrying in 1s`);
+            setTimeout(checkPendingImages, 1000);
+            return;
+          }
+          
+          // All images are ready, send completion event
+          console.log("All images ready, sending completion event");
+          ws.send(formatMessage('skill-use-done', { results: 'All done!'}));
+        };
+        
+        // Start checking for pending images
+        checkPendingImages();
       }
     });
+
+    return {
+      type: 'skill-use-started',
+      body: {
+        message: 'Skill results will be streamed via WebSocket'
+      }
+    }
   } catch (error) {
     console.error('Error using skill:', error);
     return {
