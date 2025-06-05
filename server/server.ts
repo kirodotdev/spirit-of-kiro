@@ -37,6 +37,13 @@ function logConfigForDebugging() {
 // Log all configuration values before starting the server
 logConfigForDebugging();
 
+// Handle graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received. Shutting down gracefully...');
+  // Close any open connections or cleanup here if needed
+  process.exit(0);
+});
+
 export default {
   port: 8080,
   async fetch(req, server) {

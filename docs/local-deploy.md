@@ -37,7 +37,7 @@ Run the following script to verify that the dependencies are fulfilled:
 Launch the game stack using the following command:
 
 ```sh
-podman compose build && podman compose up --watch
+podman compose build && podman compose up --watch --remove-orphans --timeout 0 --force-recreate
 ```
 _(You can substitute `docker` for `podman` if you choose to use Docker Desktop)_
 
