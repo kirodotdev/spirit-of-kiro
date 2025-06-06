@@ -34,7 +34,7 @@ export default async function handlePullItem(state: ConnectionState, _data: Pull
         return {
           type: 'pulled-item',
           body: {
-            story: 'You found a discarded item and restored it to working condition.',
+            story: `Whoosh! The ${junkItem.name} flies out in a gentle arc.`,
             item: junkItem
           }
         };
