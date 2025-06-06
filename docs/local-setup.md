@@ -32,7 +32,15 @@ Run the following script to verify that the dependencies are fulfilled:
 ./scripts/check-dependencies.sh
 ```
 
-## 3. Launch the game stack
+## 3. Deploy Cognito Resources to AWS
+
+This game uses Amazon Cognito for authentication. You must deploy the Cognito resources first, prior to launching the stack.
+
+```sh
+./scripts/deploy-cognito.sh
+```
+
+## 4. Launch the game stack
 
 Launch the game stack using the following command:
 
@@ -50,9 +58,9 @@ command:
 podman machine ssh sudo systemctl restart chronyd.service
 ```
 
-## 4. Bootstrap the DynamoDB tables
+## 5. Bootstrap the DynamoDB tables
 
-The first time you run the stack, the local DynamoDB will be
+The first time you run the stack, the local DynamoDB that starts up will be
 empty, with no tables. Run the following commands to create the required tables:
 
 ```sh
@@ -80,8 +88,11 @@ Then:
    2. `client` folder
    3. `server` folder
 * You will need to run `bun ./scripts/bootstrap-local-dynamodb.js` script to setup the DynamoDB tables
+* You will also still need to run `./scripts/deploy-cognito.sh` to deploy the Cognito resources to AWS. You will then need
+  to copy the `dev.env` file that is created in the root of the project, into the `server` directory so that
+  the server process can access the Cognito details it needs.
 
 You can then launch the components of the stack locally, directly on your host:
 
 - Client: `cd client && bun run dev`
-- Server: `cd server && bun --watch server.ts`
+- Server: `cd server && bun --watch server.ts` 

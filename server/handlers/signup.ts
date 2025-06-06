@@ -1,6 +1,10 @@
 import { SignupMessage, ConnectionState } from '../types';
 import { COGNITO_CONFIG } from '../config';
-import { SignUpCommand, CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+import { 
+  SignUpCommand, 
+  AdminConfirmSignUpCommand,
+  CognitoIdentityProviderClient 
+} from '@aws-sdk/client-cognito-identity-provider';
 
 const cognitoClient = new CognitoIdentityProviderClient({
   region: COGNITO_CONFIG.region
@@ -29,11 +33,16 @@ export default async function handleSignup(state: ConnectionState, data: SignupM
   }
 
   try {
-    const command = new SignUpCommand({
+    // First, sign up the user
+    const signUpCommand = new SignUpCommand({
       ClientId: COGNITO_CONFIG.clientId,
       Username: username,
       Password: password,
       UserAttributes: [
+        {
+          Name: 'email',
+          Value: username
+        },
         {
           Name: 'preferred_username',
           Value: username
@@ -41,17 +50,25 @@ export default async function handleSignup(state: ConnectionState, data: SignupM
       ]
     });
 
-    const result = await cognitoClient.send(command);
+    const signUpResult = await cognitoClient.send(signUpCommand);
 
-    state.userId = result.UserSub;
+    // Then, automatically confirm the user
+    const confirmCommand = new AdminConfirmSignUpCommand({
+      UserPoolId: COGNITO_CONFIG.userPoolId,
+      Username: username
+    });
+
+    await cognitoClient.send(confirmCommand);
+
+    state.userId = signUpResult.UserSub;
     state.username = username;
 
     return {
       type: "signup_success",
       body: { 
         username, 
-        userId: result.UserSub,
-        userConfirmed: result.UserConfirmed
+        userId: signUpResult.UserSub,
+        userConfirmed: true
       }
     };
   } catch (error: any) {
