@@ -71,6 +71,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
   
   if (key === 'e') {
     // Use for interaction only
+    clearPressedKeys();
     gameStore.emitEvent('player-interaction');
     return;
   }

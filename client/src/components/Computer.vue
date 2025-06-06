@@ -75,22 +75,9 @@ const handlePlayerInteraction = () => {
   
   // Check if player is holding an item
   if (gameStore.heldItemId) {
-    // Check if the computer is full before adding the item
-    if (usedCapacity.value >= maxCapacity) {
-      // Computer is full, emit drop-item event and open computer without adding item
-      gameStore.emitEvent('drop-item', { itemId: gameStore.heldItemId });
-      showFullscreen.value = true;
-      return;
-    }
-    
-    // Computer has space, move the held item to the computer inventory
-    gameStore.moveItem(
-      gameStore.heldItemId,
-      linkedInventory.value
-    );
-    
-    // Remove the held item
-    gameStore.heldItemId = null;
+    // Drop the held item and open computer
+    gameStore.emitEvent('drop-item', { itemId: gameStore.heldItemId });
+    showFullscreen.value = true;
   }
 };
 

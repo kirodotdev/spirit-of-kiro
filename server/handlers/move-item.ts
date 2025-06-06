@@ -47,7 +47,7 @@ export default async function handleMoveItem(state: ConnectionState, data: MoveI
   if (!VALID_DESTINATION_INVENTORIES.includes(targetInventoryName)) {
     return {
       type: 'error',
-      body: `Invalid target inventory \`${targetInventoryName}\`, only valid options are ${VALID_INVENTORIES}`
+      body: `Invalid target inventory \`${targetInventoryName}\`, only valid options are ${VALID_DESTINATION_INVENTORIES}`
     };
   }
 

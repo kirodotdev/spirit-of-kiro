@@ -126,7 +126,6 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
     useSkillStream(toolItem, toolSkillIndex, targetItems, {
       // Handle story chunks as they arrive
       onStory: async (storyChunk) => {
-        console.log('STORY', storyChunk);
         story = storyChunk;
         // Send the story immediately to the client
         ws.send(formatMessage('skill-use-story', { story: storyChunk }));
@@ -134,7 +133,6 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
       
       // Handle tool updates as they arrive
       onTool: async (toolUpdate) => {
-        console.log('TOOL', toolUpdate);
         if (toolUpdate && toolUpdate.id === toolId) {
           updatedTool = toolUpdate;
           
@@ -150,7 +148,6 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
               if (response.ok) {
                 const imageData = await response.json();
                 updatedTool.imageUrl = imageData.imageUrl;
-                console.log("Regenerated tool image due to icon change", imageData);
               }
             } catch (error) {
               console.error('Error fetching updated image from item-images service:', error);
@@ -175,7 +172,6 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
       
       // Handle output items as they arrive
       onOutputItem: async (item) => {
-        console.log('OUTPUT', item)
         if (item.id === 'new-item') {
           // Create a new item
           const id = crypto.randomUUID();
@@ -225,7 +221,6 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
       
       // Handle removed items as they arrive
       onRemovedItemId: async (itemId) => {
-        console.log('REMOVED', itemId);
         removedItemIds.push(itemId);
         
         // Set the lastOwner field to the current user's ID
@@ -243,18 +238,14 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
       
       // Handle completion of the entire process
       onComplete: async (result) => {
-        console.log("DONE", result);
-        
         // Check if any images are still being generated
         const checkPendingImages = async () => {
           if (pendingImageCount > 0) {
-            console.log(`${pendingImageCount} images still pending, retrying in 1s`);
             setTimeout(checkPendingImages, 1000);
             return;
           }
           
           // All images are ready, send completion event
-          console.log("All images ready, sending completion event");
           ws.send(formatMessage('skill-use-done', { results: 'All done!'}));
         };
         

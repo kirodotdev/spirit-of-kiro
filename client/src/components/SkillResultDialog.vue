@@ -12,6 +12,7 @@ const isLoading = ref(true);
 const hasStory = ref(false);
 const storyText = ref<string>('');
 const isComplete = ref(false);
+const displayedStoryText = ref<string>('');
 const resultData = ref<{
   tool: any;
   removedItemIds: string[];
@@ -112,6 +113,23 @@ let skillUpdatedItemListenerId: string;
 let skillRemovedItemListenerId: string;
 let useSkillDoneListenerId: string;
 
+// Add typing animation logic
+const startTypingAnimation = (text: string) => {
+  const words = text.split(' ');
+  let currentIndex = 0;
+  displayedStoryText.value = '';
+  
+  const typeNextWord = () => {
+    if (currentIndex < words.length) {
+      displayedStoryText.value += (currentIndex > 0 ? ' ' : '') + words[currentIndex];
+      currentIndex++;
+      setTimeout(typeNextWord, 50); // 20 words per second = 50ms per word
+    }
+  };
+  
+  typeNextWord();
+};
+
 onMounted(() => {
   skillInvokedListenerId = store.addEventListener('skill-invoked', (data) => {
     visible.value = true;
@@ -119,6 +137,7 @@ onMounted(() => {
     hasStory.value = false;
     isComplete.value = false;
     storyText.value = '';
+    displayedStoryText.value = '';
     resultData.value = {
       tool: null,
       removedItemIds: [],
@@ -134,6 +153,7 @@ onMounted(() => {
     resultData.value.story = data.story;
     hasStory.value = true;
     isLoading.value = false;
+    startTypingAnimation(data.story);
   });
   
   skillToolUpdateListenerId = store.addEventListener('skill-use-tool-update', (data) => {
@@ -225,7 +245,7 @@ onUnmounted(() => {
     <!-- Story state - mini dialog above animation -->
     <div v-else-if="hasStory" class="story-phase">
       <div class="story-dialog" :class="{ 'processing': !isComplete }">
-        <p class="story-text">{{ storyText }}</p>
+        <p class="story-text">{{ displayedStoryText }}</p>
       </div>
     </div>
     
@@ -236,7 +256,7 @@ onUnmounted(() => {
       <div class="dialog-content">
         <!-- Story section -->
         <div class="story-section">
-          <p class="story-text">{{ resultData?.story || 'Something unexpected happened...' }}</p>
+          <p class="story-text">{{ displayedStoryText }}</p>
         </div>
 
         <div class="results-container">
@@ -331,8 +351,8 @@ onUnmounted(() => {
   background-color: rgba(26, 26, 26, 0.9);
   border-radius: 8px;
   padding: 20px;
-  max-width: 600px;
-  width: 90%;
+  width: 800px;
+  min-width: 800px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   border: 1px solid #333;
   position: relative;
@@ -348,8 +368,8 @@ onUnmounted(() => {
 .skill-result-dialog {
   background-color: #1a1a1a;
   border-radius: 8px;
-  width: 90%;
-  max-width: 800px;
+  width: 800px;
+  min-width: 800px;
   max-height: 80vh;
   overflow: hidden;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
