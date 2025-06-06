@@ -174,7 +174,7 @@ onUnmounted(() => {
   background-color: #1a1a1a;
   border-radius: 8px;
   width: 90%;
-  max-width: 800px;
+  max-width: 650px;
   max-height: 80vh;
   overflow-y: auto;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
