@@ -99,6 +99,7 @@ function closeDialog() {
 // Function to handle keydown events
 function handleKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape' && visible.value && !isLoading.value && isComplete.value && store.hasFocus('skill-result-dialog')) {
+    event.stopPropagation();
     closeDialog();
   }
 }
@@ -248,7 +249,7 @@ onUnmounted(() => {
         <div class="results-container">
           <!-- Tool used section -->
           <div v-if="resultData?.tool" class="result-item">
-            <div class="item-label changed">Changed</div>
+            <div class="item-label changed">Used</div>
             <div 
               class="item-container"
               @mouseenter="handleToolMouseEnter"
@@ -779,6 +780,8 @@ onUnmounted(() => {
 .animate-in {
   animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+
 
 /* Add animation delay based on item index */
 .items-grid .item-container:nth-child(1) { animation-delay: 0.1s; }

@@ -330,12 +330,21 @@ export const useSkillStream = async function (
     processBuffer(true);
 
     // Construct the final result object
-    const result = {
-      story: storyContent,
-      tool: toolContent ? yaml.load(toolContent) : null,
-      outputItems: outputItems.map(item => yaml.load(item)),
-      removedItemIds: removedItemIds
-    };
+    let result;
+    try {
+      result = {
+        story: storyContent,
+        tool: toolContent ? yaml.load(toolContent) : null,
+        outputItems: outputItems.map(item => yaml.load(item)),
+        removedItemIds: removedItemIds
+      };
+    } catch (e) {
+      console.error('Error parsing tool YAML:', e);
+      if (callbacks.onComplete) {
+        callbacks.onComplete({});
+      }
+      return;
+    }
 
     // Convert short IDs back to original IDs
     if (result.tool) {
