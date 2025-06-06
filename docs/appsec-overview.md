@@ -19,7 +19,6 @@ graph TB
         Systems[Game Systems]
         UI --> Store
         Store <--> Systems
-        
     end
 
     subgraph Out
@@ -56,12 +55,12 @@ The game client is built using Vite, and hosted as static HTML, JS, CSS, and ima
 
 ### Outbound Connections
 - Browser running client connects via WSS to a WebSocket based game server via CloudFront in order to sync various forms of state:
-  - Authentication (signin/signup)
+  - Authentication (signin/signup) via WebSocket handlers
   - Item operations (pull, move, discard, appraise, buy)
   - Inventory queries and synchronization
   - Periodic ping/pong for connection health
--  Browser running client connects via HTTPS to a CloudFront distribution that hosts dynamically generated item images
--  Browser running client connects via HTTPS to it's own CloudFront distribution to load in additional static, prebuilt assets in the background as the user accesses new screens
+- Browser running client connects via HTTPS to a CloudFront distribution that hosts dynamically generated item images
+- Browser running client connects via HTTPS to it's own CloudFront distribution to load in additional static, prebuilt assets in the background as the user accesses new screens
 
 ## Game Server
 
@@ -83,6 +82,7 @@ graph TB
         DB[DynamoDB]
         Bedrock[AWS Bedrock]
         Images[Item Images Service]
+        Cognito[Amazon Cognito]
     end
 
     Client <--> WS
@@ -91,6 +91,7 @@ graph TB
     State -->|IAM|DB
     Handlers -->|IAM|Bedrock
     Handlers -->|HTTPS|Images
+    Handlers -->|IAM|Cognito
 ```
 
 ### Technology Stack
@@ -113,11 +114,16 @@ graph TB
    - `Location` Table: Item ID to inventory ID mapping
    - `Persona` Table: Metadata about player characters
 
-2. The game server requests image URL's from **Item Images Service**
+2. The game server authenticates users via **Amazon Cognito**
+   - The game server uses an ECS task IAM role to grant it permissions to verify tokens and manage users
+   - Implements JWT token validation for WebSocket connections
+   - Manages user sessions and authentication state
+
+3. The game server requests image URL's from **Item Images Service**
    - HTTPS requests to Application Load Balancer fronting the server
    - Simple REST server that returns a JSON response
 
-3. The game server uses **AWS Bedrock**
+4. The game server uses **AWS Bedrock**
    - The game server uses an ECS task IAM role to grant it permissions to make Bedrock API calls.
    - LLM is used to generate new items, model dynamic interactions between items, and appraise items for sale.
    - Server implements and retry and fallback through the following models, in order: Anthropic Sonnet 4, Anthropic Sonnet 3.7, and Amazon Nova Pro

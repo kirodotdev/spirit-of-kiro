@@ -24,6 +24,7 @@ graph LR
        realistic manner.
      * Appraisal. Sell your crafted items to see what the AI thinks
        they are worth.
+  * Amazon Cognito integration for user authentication and authorization
   
 ## Item Images Server:
   * AWS Bedrock integration powering the following features:
@@ -73,13 +74,14 @@ graph TB
         State[State Management]
         DB[DynamoDB]
         claude[Sonnet 4, Sonnet 3.7, Nova Pro]
+        Cognito[Amazon Cognito]
 
         WebDist <--> WS
         WS --> Handlers
         Handlers --> State
         State --> DB 
         Handlers --> claude
-        
+        Handlers --> Cognito
     end
 
     subgraph Image Server
