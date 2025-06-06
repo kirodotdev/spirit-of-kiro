@@ -57,12 +57,14 @@ function getOutcomeClass(outcome: string): string {
     'consume target',
     'transform target'
   ];
-  
+
   // Return specific class for known outcomes, or a generic class for custom ones
-  return knownOutcomes.includes(outcome.toLowerCase()) 
-    ? `outcome-${outcome.toLowerCase().replace(' ', '-')}` 
+  return knownOutcomes.includes(outcome.toLowerCase())
+    ? `outcome-${outcome.toLowerCase().replace(' ', '-')}`
     : 'outcome-custom';
 }
+
+// No custom material class needed as we're using the same styling as damage tag
 </script>
 
 <template>
@@ -77,11 +79,16 @@ function getOutcomeClass(outcome: string): string {
           <span v-if="!showOnlyPrice" class="tag item-rarity" :class="rarityClass">
             {{ rarityText }}
           </span>
-          <span v-if="item.value !== undefined" class="tag stat-tag">
-            <span class="stat-icon">💰</span> {{ item.value }}
+          <span v-if="item.value !== undefined" class="tag stat-tag gold-display">
+            <div class="gold-icon"></div>
+            <span class="gold-amount">{{ item.value }}</span>
           </span>
           <span v-if="!showOnlyPrice && item.weight" class="tag stat-tag">
             {{ item.weight }}
+          </span>
+          <span v-if="!showOnlyPrice && item.materials && item.materials.length > 0"
+            v-for="(material, idx) in item.materials" :key="idx" class="tag stat-tag">
+            {{ material }}
           </span>
           <span v-if="!showOnlyPrice && item.damage" class="tag stat-tag">
             {{ item.damage }}
@@ -90,23 +97,22 @@ function getOutcomeClass(outcome: string): string {
       </div>
       <div v-if="!showOnlyPrice" class="preview-details">
         <p class="item-description">{{ item.description || 'No description available.' }}</p>
-        
+
         <div class="item-skills" v-if="item.skills && item.skills.length > 0">
           <h4>Quirks:</h4>
           <div v-for="(skill, index) in item.skills" :key="index" class="skill-item">
             <div class="skill-header">
               <div class="skill-name">{{ skill.name }}</div>
               <div class="skill-outcomes" v-if="skill.outcomes && skill.outcomes.length > 0">
-                <span v-for="(outcome, i) in skill.outcomes" :key="i" class="outcome-tag" :class="getOutcomeClass(outcome)">
+                <span v-for="(outcome, i) in skill.outcomes" :key="i" class="outcome-tag"
+                  :class="getOutcomeClass(outcome)">
                   {{ formatOutcome(outcome) }}
                 </span>
               </div>
               <div class="skill-targets">
                 <span class="target-tag">
-                  {{ typeof skill.targets === 'number' && skill.targets >= 0 && skill.targets <= 2 
-                     ? (skill.targets === 0 ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets')
-                     : 'Self' }}
-                </span>
+                  {{ typeof skill.targets === 'number' && skill.targets >= 0 && skill.targets <= 2 ? (skill.targets === 0
+                    ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets') : 'Self' }} </span>
               </div>
             </div>
             <div class="skill-description">{{ skill.description }}</div>
@@ -127,7 +133,8 @@ function getOutcomeClass(outcome: string): string {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
   border: 2px solid #333;
   z-index: 30;
-  pointer-events: none; /* Allow clicking through the preview */
+  pointer-events: none;
+  /* Allow clicking through the preview */
 }
 
 /* When showing only price, make the preview more compact */
@@ -254,8 +261,25 @@ function getOutcomeClass(outcome: string): string {
   background-color: rgba(255, 255, 255, 0.4);
 }
 
-.stat-icon {
-  font-size: 0.8rem;
+/* Gold display styling from HUD.vue */
+.gold-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-weight: bold;
+}
+
+.gold-icon {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
+}
+
+.gold-amount {
+  font-size: 1.1em;
 }
 
 .item-rarity.item-common {
@@ -393,4 +417,6 @@ function getOutcomeClass(outcome: string): string {
   color: white;
   white-space: nowrap;
 }
+
+/* Material tags use the same styling as stat-tag */
 </style>
