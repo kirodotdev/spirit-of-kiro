@@ -10,6 +10,7 @@ fi
 
 STACK_PREFIX=$1
 DYNAMODB_STACK_NAME="${STACK_PREFIX}-dynamodb"
+COGNITO_STACK_NAME="${STACK_PREFIX}-cognito"
 FARGATE_STACK_NAME="${STACK_PREFIX}"
 ECR_REPOSITORY_NAME="${STACK_PREFIX}"
 
@@ -133,6 +134,18 @@ echo "Successfully pushed Docker images to ECR with tag: $IMAGE_TAG"
 # Return to the iac directory
 cd iac
 
+# Deploy the Cognito stack
+echo "Deploying Cognito stack: $COGNITO_STACK_NAME"
+aws cloudformation deploy \
+  --template-file cognito.yml \
+  --stack-name $COGNITO_STACK_NAME \
+  --capabilities CAPABILITY_IAM
+
+# Get Cognito outputs
+echo "Getting Cognito outputs..."
+COGNITO_USER_POOL_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='UserPoolId'].OutputValue" --output text)
+COGNITO_CLIENT_ID=$(aws cloudformation describe-stacks --stack-name $COGNITO_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='UserPoolClientId'].OutputValue" --output text)
+
 # Deploy the Fargate stack
 echo "Deploying Fargate stack: $FARGATE_STACK_NAME"
 
@@ -155,7 +168,7 @@ fi
 echo "Public subnets: $PUBLIC_SUBNET_IDS"
 echo "Private subnets: $PRIVATE_SUBNET_IDS"
 
-# Deploy the Fargate stack
+# Deploy the Fargate stack with Cognito parameters
 aws cloudformation deploy \
   --template-file fargate.yml \
   --stack-name $FARGATE_STACK_NAME \
@@ -180,7 +193,9 @@ aws cloudformation deploy \
     PersonaTableName=$PERSONA_TABLE_NAME \
     PersonaTableArn=$PERSONA_TABLE_ARN \
     DomainName="game-server.nathanpeck.gg" \
-    CertificateArn="arn:aws:acm:us-west-2:784059518401:certificate/14770f21-c779-4947-aeb9-df15e77c549e" 
+    CertificateArn="arn:aws:acm:us-west-2:784059518401:certificate/14770f21-c779-4947-aeb9-df15e77c549e" \
+    CognitoUserPoolId=$COGNITO_USER_POOL_ID \
+    CognitoClientId=$COGNITO_CLIENT_ID
 
 # Check if deployment was successful
 if [ $? -ne 0 ]; then
@@ -193,4 +208,6 @@ echo "Getting outputs from Fargate stack"
 LOAD_BALANCER_DNS=$(aws cloudformation describe-stacks --stack-name $FARGATE_STACK_NAME --query "Stacks[0].Outputs[?OutputKey=='LoadBalancerDNS'].OutputValue" --output text)
 
 echo "Deployment completed successfully!"
-echo "Load Balancer DNS: $LOAD_BALANCER_DNS" 
+echo "Load Balancer DNS: $LOAD_BALANCER_DNS"
+echo "Cognito User Pool ID: $COGNITO_USER_POOL_ID"
+echo "Cognito Client ID: $COGNITO_CLIENT_ID" 

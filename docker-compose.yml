@@ -56,9 +56,10 @@ services:
         condition: service_started
       ecs-local-endpoints:
         condition: service_started
-
+    env_file:
+      - dev.env
     environment:
-      AWS_REGION: us-east-1
+      AWS_REGION: us-west-2
       DYNAMODB_ENDPOINT: http://dynamodb-local:8000
       # This ENV VAR enables credentials
       # Set it to "/creds" or "/role/<role name>"

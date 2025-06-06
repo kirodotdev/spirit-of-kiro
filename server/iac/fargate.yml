@@ -114,6 +114,14 @@ Parameters:
     Default: arn:aws:acm:us-west-2:784059518401:certificate/14770f21-c779-4947-aeb9-df15e77c549e
     Description: ARN of the ACM certificate
 
+  CognitoUserPoolId:
+    Type: String
+    Description: ID of the Cognito User Pool
+
+  CognitoClientId:
+    Type: String
+    Description: ID of the Cognito App Client
+
 Resources:
   # ECS Cluster
   ECSCluster:
@@ -251,6 +259,10 @@ Resources:
               Value: !Ref UsernamesTableName
             - Name: DYNAMODB_TABLE_PERSONA
               Value: !Ref PersonaTableName
+            - Name: COGNITO_USER_POOL_ID
+              Value: !Ref CognitoUserPoolId
+            - Name: COGNITO_CLIENT_ID
+              Value: !Ref CognitoClientId
           LogConfiguration:
             LogDriver: awslogs
             Options:

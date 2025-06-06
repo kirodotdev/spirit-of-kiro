@@ -59,3 +59,9 @@ export const REDIS_CONFIG = {
 export const ITEM_IMAGES_SERVICE_CONFIG = {
   url: getEnv('ITEM_IMAGES_SERVICE_URL') || 'https://item-images.nathanpeck.gg',
 };
+
+export const COGNITO_CONFIG = {
+  userPoolId: getEnv('COGNITO_USER_POOL_ID') || '',
+  clientId: getEnv('COGNITO_CLIENT_ID') || '',
+  region: getEnv('AWS_REGION') || 'us-west-2'
+};

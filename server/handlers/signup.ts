@@ -1,6 +1,10 @@
-import { hashPassword } from '../utils/password';
 import { SignupMessage, ConnectionState } from '../types';
-import { createUser } from '../state/user-store';
+import { COGNITO_CONFIG } from '../config';
+import { SignUpCommand, CognitoIdentityProviderClient } from '@aws-sdk/client-cognito-identity-provider';
+
+const cognitoClient = new CognitoIdentityProviderClient({
+  region: COGNITO_CONFIG.region
+});
 
 interface SignupResponse {
   type: string;
@@ -25,20 +29,32 @@ export default async function handleSignup(state: ConnectionState, data: SignupM
   }
 
   try {
-    const hashedPassword = await hashPassword(password);
-    // Generate a GUID for the item
-    const id = crypto.randomUUID();
+    const command = new SignUpCommand({
+      ClientId: COGNITO_CONFIG.clientId,
+      Username: username,
+      Password: password,
+      UserAttributes: [
+        {
+          Name: 'preferred_username',
+          Value: username
+        }
+      ]
+    });
 
-    const result = await createUser(id, username, hashedPassword);
+    const result = await cognitoClient.send(command);
 
-    state.userId = result.userId;
+    state.userId = result.UserSub;
     state.username = username;
 
     return {
       type: "signup_success",
-      body: { username, userId: result.userId }
+      body: { 
+        username, 
+        userId: result.UserSub,
+        userConfirmed: result.UserConfirmed
+      }
     };
-  } catch (error) {
+  } catch (error: any) {
     return {
       type: "signup_failure",
       body: error.message
