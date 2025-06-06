@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useGameStore } from '../stores/game';
+import { getRarityClass } from '../utils/items';
 
 const store = useGameStore();
 
@@ -14,13 +15,13 @@ const imageUrl = computed(() => currentItem.value?.imageUrl || '/src/assets/gene
 // Determine CSS class based on item value
 const rarityClass = computed(() => {
   if (!currentItem.value || currentItem.value.value === undefined) return 'item-common';
-  
-  const value = currentItem.value.value;
-  if (value > 1000) return 'item-legendary';
-  if (value > 500) return 'item-epic';
-  if (value > 250) return 'item-rare';
-  if (value > 100) return 'item-uncommon';
-  return 'item-common';
+  return getRarityClass(currentItem.value.value);
+});
+
+// Format rarity text for display
+const rarityText = computed(() => {
+  if (!rarityClass.value) return 'Common';
+  return rarityClass.value.replace('item-', '').charAt(0).toUpperCase() + rarityClass.value.replace('item-', '').slice(1);
 });
 
 function closeDialog() {
@@ -34,6 +35,29 @@ function handleKeyDown(event: KeyboardEvent) {
   if (event.key === 'Escape' && visible.value) {
     closeDialog();
   }
+}
+
+// Format outcome text for display
+function formatOutcome(outcome: string): string {
+  return outcome.split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+// Get CSS class for outcome tag
+function getOutcomeClass(outcome: string): string {
+  const knownOutcomes = [
+    'split target',
+    'destroy self',
+    'transform self',
+    'consume target',
+    'transform target'
+  ];
+
+  // Return specific class for known outcomes, or a generic class for custom ones
+  return knownOutcomes.includes(outcome.toLowerCase())
+    ? `outcome-${outcome.toLowerCase().replace(' ', '-')}`
+    : 'outcome-custom';
 }
 
 // Listen for inspect-item events
@@ -74,7 +98,7 @@ onUnmounted(() => {
   <div v-if="visible" class="item-dialog-overlay">
     <div class="item-dialog" :class="rarityClass">
       <div class="dialog-header">
-        <h2>{{ currentItem?.name || 'Unknown Item' }}</h2>
+        <h3>{{ currentItem?.name || 'Unknown Item' }}</h3>
         <button class="close-button" @click="closeDialog">×</button>
       </div>
       <div class="dialog-content">
@@ -82,37 +106,42 @@ onUnmounted(() => {
           <img :src="imageUrl" alt="Item" class="dialog-image" />
           <div class="tags-container">
             <span class="tag item-rarity" :class="rarityClass">
-              {{ rarityClass.replace('item-', '').charAt(0).toUpperCase() + rarityClass.replace('item-', '').slice(1) }}
+              {{ rarityText }}
             </span>
-            <span v-for="(material, index) in currentItem?.materials" :key="index" class="tag material-tag">{{ material }}</span>
+            <span v-if="currentItem?.value !== undefined" class="tag stat-tag gold-display">
+              <div class="gold-icon"></div>
+              <span class="gold-amount">{{ currentItem.value }}</span>
+            </span>
+            <span v-if="currentItem?.weight" class="tag stat-tag">
+              {{ currentItem.weight }}
+            </span>
+            <span v-if="currentItem?.materials && currentItem.materials.length > 0"
+              v-for="(material, idx) in currentItem.materials" :key="idx" class="tag stat-tag">
+              {{ material }}
+            </span>
+            <span v-if="currentItem?.damage" class="tag stat-tag">
+              {{ currentItem.damage }}
+            </span>
           </div>
         </div>
         <div class="dialog-details">
           <p class="item-description">{{ currentItem?.description || 'No description available.' }}</p>
           
-          <div class="item-stats">
-            <div class="stat-row" v-if="currentItem?.value !== undefined">
-              <span class="stat-label">Value:</span>
-              <span class="stat-value">{{ currentItem.value }}</span>
-            </div>
-            <div class="stat-row" v-if="currentItem?.weight">
-              <span class="stat-label">Weight:</span>
-              <span class="stat-value">{{ currentItem.weight }}</span>
-            </div>
-            <div class="stat-row" v-if="currentItem?.damage">
-              <span class="stat-label">Damage:</span>
-              <span class="stat-value">{{ currentItem.damage }}</span>
-            </div>
-          </div>
-          
           <div class="item-skills" v-if="currentItem?.skills && currentItem.skills.length > 0">
-            <h3>Quirks:</h3>
+            <h4>Quirks:</h4>
             <div v-for="(skill, index) in currentItem.skills" :key="index" class="skill-item">
               <div class="skill-header">
                 <div class="skill-name">{{ skill.name }}</div>
-                <div class="skill-targets" v-if="skill.targets !== undefined">
+                <div class="skill-outcomes" v-if="skill.outcomes && skill.outcomes.length > 0">
+                  <span v-for="(outcome, i) in skill.outcomes" :key="i" class="outcome-tag"
+                    :class="getOutcomeClass(outcome)">
+                    {{ formatOutcome(outcome) }}
+                  </span>
+                </div>
+                <div class="skill-targets">
                   <span class="target-tag">
-                    {{ skill.targets === 0 ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets' }}
+                    {{ typeof skill.targets === 'number' && skill.targets >= 0 && skill.targets <= 2 ? (skill.targets === 0
+                      ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets') : 'Self' }}
                   </span>
                 </div>
               </div>
@@ -126,7 +155,7 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Dialog Styles */
+/* Dialog Overlay */
 .item-dialog-overlay {
   position: fixed;
   top: 0;
@@ -140,6 +169,7 @@ onUnmounted(() => {
   z-index: 9999;
 }
 
+/* Dialog Container */
 .item-dialog {
   background-color: #1a1a1a;
   border-radius: 8px;
@@ -178,17 +208,18 @@ onUnmounted(() => {
   100% { box-shadow: 0 0 20px rgba(255, 152, 0, 0.3); }
 }
 
+/* Dialog Header */
 .dialog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 20px;
+  padding: 10px 15px;
   border-bottom: 1px solid #333;
 }
 
-.dialog-header h2 {
+.dialog-header h3 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   color: white;
 }
 
@@ -206,61 +237,90 @@ onUnmounted(() => {
   color: white;
 }
 
+/* Dialog Content */
 .dialog-content {
-  padding: 20px;
+  padding: 15px;
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 20px;
+  gap: 15px;
 }
 
+/* Image Container */
 .dialog-image-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  width: 30%;
-  min-width: 120px;
-  max-width: 200px;
-  padding-right: 10px;
+  width: 25%;
+  min-width: 80px;
+  max-width: 120px;
 }
 
 .dialog-image {
   width: 100%;
-  max-height: 200px;
+  max-height: 120px;
   object-fit: contain;
 }
 
+/* Details Container */
 .dialog-details {
   color: #ddd;
-  width: 70%;
+  width: 75%;
   flex-grow: 1;
 }
 
 .item-description {
-  margin-bottom: 15px;
-  line-height: 1.5;
+  margin-bottom: 10px;
+  line-height: 1.4;
+  font-size: 0.9rem;
 }
 
+/* Tags */
 .tag {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 2px 6px;
   border-radius: 4px;
   font-weight: bold;
   background-color: rgba(255, 255, 255, 0.15);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 
 .item-rarity {
   text-align: left;
 }
 
-.material-tag {
-  /* Extends the .tag class */
-  background-color: rgba(255, 255, 255, 0.25);
-  color: #ddd;
-  font-weight: normal;
+.stat-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.75rem;
+  padding: 1px 5px;
+  color: white;
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
+/* Gold display styling from HUD.vue */
+.gold-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-weight: bold;
+}
+
+.gold-icon {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
+}
+
+.gold-amount {
+  font-size: 1.1em;
+}
+
+/* Rarity Classes */
 .item-rarity.item-common {
   color: #ffffff;
   background-color: rgba(255, 255, 255, 0.2);
@@ -287,89 +347,110 @@ onUnmounted(() => {
   text-shadow: 0 0 3px rgba(255, 152, 0, 0.5);
 }
 
-.dialog-footer {
-  padding: 15px 20px;
-  border-top: 1px solid #333;
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* Additional styles for item details */
-.item-stats {
-  margin: 15px 0;
-  padding: 10px;
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
-}
-
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 5px;
-}
-
-.stat-label {
-  font-weight: bold;
-  color: #aaa;
-}
-
-.stat-value {
-  color: white;
-}
-
-.item-materials, .item-skills {
-  margin: 10px 0;
-}
-
-.item-skills h3 {
-  font-size: 1rem;
-  margin-bottom: 5px;
-  color: #aaa;
-}
-
+/* Tags Container */
 .tags-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 4px;
   align-items: flex-start;
   justify-content: flex-start;
-  margin-top: 10px;
+  margin-top: 8px;
   width: 100%;
 }
 
+/* Skill Styles */
+.item-skills {
+  margin: 8px 0;
+}
+
+.item-skills h4 {
+  font-size: 0.9rem;
+  margin: 0 0 5px 0;
+  color: #aaa;
+}
+
 .skill-item {
-  margin-bottom: 10px;
-  padding: 8px;
+  margin-bottom: 8px;
+  padding: 6px;
   background-color: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
+  font-size: 0.85rem;
 }
 
 .skill-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 3px;
+  margin-bottom: 2px;
+  flex-wrap: wrap;
 }
 
 .skill-name {
   font-weight: bold;
   color: #ddd;
+  font-size: 0.85rem;
 }
 
 .skill-description {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #bbb;
-  margin-top: 5px;
+  margin-top: 3px;
 }
 
-/* Add styles for the target tag */
+.skill-outcomes {
+  display: flex;
+  gap: 3px;
+  flex-wrap: wrap;
+}
+
+.outcome-tag {
+  font-size: 0.65rem;
+  padding: 1px 4px;
+  border-radius: 8px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.outcome-split-target {
+  background-color: #2196f3;
+  color: white;
+}
+
+.outcome-destroy-self {
+  background-color: #f44336;
+  color: white;
+}
+
+.outcome-transform-self {
+  background-color: #9c27b0;
+  color: white;
+}
+
+.outcome-consume-target {
+  background-color: #ff9800;
+  color: white;
+}
+
+.outcome-transform-target {
+  background-color: #4caf50;
+  color: white;
+}
+
+.outcome-custom {
+  background-color: #607d8b;
+  color: white;
+}
+
+/* Target Tag */
 .target-tag {
-  font-size: 0.7rem;
-  padding: 2px 6px;
+  font-size: 0.65rem;
+  padding: 1px 4px;
   border-radius: 8px;
   font-weight: bold;
   background-color: #607d8b;
   color: white;
   white-space: nowrap;
 }
+
+/* Material tags use the same styling as stat-tag */
 </style>
