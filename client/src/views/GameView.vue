@@ -20,6 +20,8 @@
     <SellDialog />
     <DiscardDialog />
     <SkillResultDialog />
+    <!-- Preloader component to keep static assets in memory -->
+    <Preloader />
   </div>
 </template>
 
@@ -38,6 +40,7 @@ import RandomChat from '../components/RandomChat.vue'
 import { setupGameObjects } from '../utils/init-world'
 import { storeToRefs } from 'pinia'
 import LoadingScreen from '../components/LoadingScreen.vue'
+import Preloader from '../components/Preloader.vue'
 
 const gridSize = ref(20)
 const gameStore = useGameStore()
