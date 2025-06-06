@@ -367,6 +367,13 @@ watch(() => heldItemId.value, (newValue) => {
     gameStore.emitEvent('clear-hint');
   }
 }, { immediate: true });
+
+// Watch for changes to interaction locked state
+watch(() => gameStore.interactionLocked, (newValue) => {
+  if (newValue) {
+    clearPressedKeys();
+  }
+});
 </script>
 
 <template>

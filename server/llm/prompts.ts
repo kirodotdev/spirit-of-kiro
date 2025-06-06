@@ -283,7 +283,7 @@ export const useSkillStream = async function (
               icon: short description of item appearance
               materials: array of material types (e.g., ["Ceramic", "Metal"])
               damage: A short description of damaged or missing parts
-              skills[] - length 1 to 3 depending on item state. Add skills to items if they have none
+              skills[] - length 1 to 3 depending on item state. Add skills to items if they have none, but exceed 5 skills.
                 name: Verb-like action performed by this item on another item, capitalized (e.g., "Absorb", "Deploy", "Smash")
                 description: Corny, adventurous, describes how the verb is performed on it's target
                 targets: Number of targets. Either 0 (targets self), 1 (targets one other item), or 2 (joins two other items)

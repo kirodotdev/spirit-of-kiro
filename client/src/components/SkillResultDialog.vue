@@ -9,7 +9,6 @@ const store = useGameStore();
 // State to track dialog visibility, loading state, story state, and result data
 const visible = ref(false);
 const isLoading = ref(true);
-const hasStory = ref(false);
 const storyText = ref<string>('');
 const isComplete = ref(false);
 const displayedStoryText = ref<string>('');
@@ -134,7 +133,6 @@ onMounted(() => {
   skillInvokedListenerId = store.addEventListener('skill-invoked', (data) => {
     visible.value = true;
     isLoading.value = true;
-    hasStory.value = false;
     isComplete.value = false;
     storyText.value = '';
     displayedStoryText.value = '';
@@ -151,30 +149,25 @@ onMounted(() => {
   skillStoryListenerId = store.addEventListener('skill-use-story', (data) => {
     storyText.value = data.story;
     resultData.value.story = data.story;
-    hasStory.value = true;
     isLoading.value = false;
     startTypingAnimation(data.story);
   });
   
   skillToolUpdateListenerId = store.addEventListener('skill-use-tool-update', (data) => {
     resultData.value.tool = data.tool;
-    hasStory.value = false;
     isLoading.value = false;
   });
   
   skillNewItemListenerId = store.addEventListener('skill-use-new-item', (data) => {
-    hasStory.value = false;
     isLoading.value = false;
   });
   
   skillUpdatedItemListenerId = store.addEventListener('skill-use-updated-item', (data) => {
-    hasStory.value = false;
     isLoading.value = false;
   });
   
   skillRemovedItemListenerId = store.addEventListener('skill-use-removed-item', (data) => {
     resultData.value.removedItemIds.push(data.itemId);
-    hasStory.value = false;
     isLoading.value = false;
   });
   
@@ -242,13 +235,6 @@ onUnmounted(() => {
       </div>
     </div>
     
-    <!-- Story state - mini dialog above animation -->
-    <div v-else-if="hasStory" class="story-phase">
-      <div class="story-dialog" :class="{ 'processing': !isComplete }">
-        <p class="story-text">{{ displayedStoryText }}</p>
-      </div>
-    </div>
-    
     <!-- Result state - full dialog -->
     <div v-else class="skill-result-dialog" :class="{ 'processing': !isComplete }">
       <button v-if="isComplete" class="close-button" @click="closeDialog">×</button>
@@ -301,6 +287,16 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
+
+          <!-- Placeholder item for incomplete results -->
+          <div v-if="!isComplete" class="result-item">
+            <div class="item-label">Processing</div>
+            <div class="item-container">
+              <div class="item-wrapper placeholder">
+                <div class="loading-dot"></div>
+              </div>
+            </div>
+          </div>
         </div>
         
         <!-- Item Preview Component -->
@@ -341,27 +337,11 @@ onUnmounted(() => {
 
 /* Story phase styles */
 .story-phase {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 40px;
+  display: none;
 }
 
 .story-dialog {
-  background-color: rgba(26, 26, 26, 0.9);
-  border-radius: 8px;
-  padding: 20px;
-  width: 800px;
-  min-width: 800px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-  border: 1px solid #333;
-  position: relative;
-}
-
-.story-dialog.processing {
-  border: 1px solid #ffd700;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
-  animation: glow 2s ease-in-out infinite;
+  display: none;
 }
 
 /* Result dialog styles */
@@ -941,5 +921,32 @@ onUnmounted(() => {
   color: #fff;
   white-space: pre-line;
   margin: 0;
+}
+
+.item-wrapper.placeholder {
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 2px dashed #666;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.loading-dot {
+  width: 12px;
+  height: 12px;
+  background-color: #666;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
 }
 </style>

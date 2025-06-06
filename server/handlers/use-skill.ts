@@ -241,7 +241,7 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
         // Check if any images are still being generated
         const checkPendingImages = async () => {
           if (pendingImageCount > 0) {
-            setTimeout(checkPendingImages, 1000);
+            setTimeout(checkPendingImages, 200);
             return;
           }
           
