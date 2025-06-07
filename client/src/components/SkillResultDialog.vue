@@ -91,7 +91,6 @@ function closeDialog() {
   }
   store.emitEvent('clean-workbench-results');
   visible.value = false;
-  store.interactionLocked = false;
 }
 
 // Function to handle keydown events
@@ -140,7 +139,6 @@ onMounted(() => {
       removedItemIds: [],
       story: ''
     };
-    store.interactionLocked = true;
     skillInvocationData.value = data;
   });
   
@@ -185,16 +183,12 @@ onUnmounted(() => {
   store.removeEventListener('skill-use-removed-item', skillRemovedItemListenerId);
   store.removeEventListener('use-skill-done', useSkillDoneListenerId);
   window.removeEventListener('keydown', handleKeyDown);
-  
-  store.interactionLocked = false;
 });
 
 watch(visible, (newValue) => {
   if (newValue) {
-    store.interactionLocked = true;
     store.pushFocus('skill-use');
   } else {
-    store.interactionLocked = false;
     store.popFocus();
   }
 }, { immediate: true });

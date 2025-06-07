@@ -26,7 +26,6 @@ const rarityText = computed(() => {
 
 function closeDialog() {
   visible.value = false;
-  store.interactionLocked = false;
 }
 
 // Function to handle keydown events
@@ -98,9 +97,6 @@ onUnmounted(() => {
   store.removeEventListener('lost-focus:item-dialog', lostFocusListenerId);
   window.removeEventListener('keydown', handleKeyDown);
   store.removeEventListener('inspect-item', inspectItemListenerId);
-  if (visible.value) {
-    store.interactionLocked = false;
-  }
 });
 
 // Watch for changes to visible prop to manage focus

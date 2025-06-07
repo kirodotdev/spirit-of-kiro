@@ -1,17 +1,21 @@
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, type Ref } from 'vue'
 import type { SocketSystem } from './socket-system'
 
 export class FocusSystem {
   private focusStack = ref<string[]>([])
   private socketSystem: SocketSystem
   private eventListenerIds: string[] = []
+  private interactionLocked: Ref<boolean>
 
-  constructor(socketSystem: SocketSystem) {
+  constructor(socketSystem: SocketSystem, interactionLocked: Ref<boolean>) {
     this.socketSystem = socketSystem
+    this.interactionLocked = interactionLocked
     
     // Watch for changes to the focus stack
     watch(this.focusStack, (newStack) => {
       console.log('Focus stack changed:', [...newStack])
+      // Update interactionLocked based on whether there are any focused components
+      this.interactionLocked.value = newStack.length > 0
     }, { deep: true })
   }
 

@@ -441,15 +441,7 @@ onMounted(() => {
 onUnmounted(() => {
   gameStore.removeEventListener('gained-focus:workbench-fullscreen', gainedFocusListenerId);
   gameStore.removeEventListener('lost-focus:workbench-fullscreen', lostFocusListenerId);
-  // Clean up escape key listener in case component is unmounted while focused
   window.removeEventListener('keydown', handleKeydown);
-  window.removeEventListener('mousemove', handleMouseMove);
-  window.removeEventListener('click', handleClickOutside);
-  window.removeEventListener('contextmenu', handleContextMenu);
-  // Ensure interaction is unlocked when component unmounts
-  if (props.show) {
-    gameStore.interactionLocked = false;
-  }
 });
 
 // Watch for show prop changes to manage focus

@@ -101,10 +101,6 @@ onUnmounted(() => {
   gameStore.removeEventListener('lost-focus:computer-fullscreen', lostFocusListenerId);
   window.removeEventListener('keydown', handleKeydown);
   gameStore.removeEventListener('buy-results', buyResultsListenerId);
-  // Ensure interaction is unlocked when component unmounts
-  if (props.show) {
-    gameStore.interactionLocked = false;
-  }
 });
 
 // Watch for show prop changes to manage focus

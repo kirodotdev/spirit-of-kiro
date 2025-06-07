@@ -46,7 +46,7 @@ export const useGameStore = defineStore('game', () => {
   const itemSystem = new ItemSystem(items, socketSystem);
   const inventorySystem = new InventorySystem(inventories, socketSystem, userId);
   const personaSystem = new PersonaSystem(personaData, socketSystem);
-  const focusSystem = new FocusSystem(socketSystem);
+  const focusSystem = new FocusSystem(socketSystem, interactionLocked);
   
   // Initialize preloader system
   const preloaderSystem = new PreloaderSystem(socketSystem, preloadProgress, isInitialLoadComplete)

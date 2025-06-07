@@ -13,7 +13,6 @@ const imageUrl = computed(() => currentItem.value?.imageUrl || '/src/assets/gene
 
 function closeDialog() {
   visible.value = false;
-  store.interactionLocked = false;
   currentItem.value = null;
 }
 
@@ -57,7 +56,6 @@ onMounted(() => {
       if (itemData) {
         currentItem.value = itemData;
         visible.value = true;
-        store.interactionLocked = true;
       }
     }
   });
@@ -68,10 +66,6 @@ onUnmounted(() => {
   store.removeEventListener('lost-focus:discard-dialog', lostFocusListenerId);
   window.removeEventListener('keydown', handleKeyDown);
   store.removeEventListener('intent-to-discard-item', discardItemListenerId);
-  // Make sure to unlock interactions if component is unmounted while dialog is open
-  if (visible.value) {
-    store.interactionLocked = false;
-  }
 });
 
 // Watch for changes to visible prop to manage focus

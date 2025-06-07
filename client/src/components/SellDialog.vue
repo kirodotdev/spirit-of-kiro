@@ -74,7 +74,6 @@ function closeDialog() {
   // Clear any hovered item preview when closing
   hoveredItemId.value = null;
   visible.value = false;
-  store.interactionLocked = false;
   // Emit gold update event with the sale amount
   if (result.value?.gold) {
     store.emitEvent('gold-update', { gold: result.value.gold });
@@ -141,9 +140,6 @@ onUnmounted(() => {
   store.removeEventListener('sell-item', sellItemListenerId);
   if (itemSoldListenerId) {
     store.removeEventListener('item-sold', itemSoldListenerId);
-  }
-  if (visible.value) {
-    store.interactionLocked = false;
   }
 });
 
