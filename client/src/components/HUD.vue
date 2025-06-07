@@ -64,14 +64,6 @@ watch(gold, (newValue, oldValue) => {
   font-weight: bold;
 }
 
-.gold-icon {
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(135deg, #ffd700, #ffa500);
-  border-radius: 50%;
-  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
-}
-
 .gold-amount {
   font-size: 1.1em;
 }

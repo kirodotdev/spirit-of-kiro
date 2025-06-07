@@ -213,32 +213,6 @@ const closeFullscreen = () => {
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
 }
 
-/* Dot colors based on item rarity */
-.capacity-dot.empty {
-  background-color: rgba(255, 255, 255, 0.3);
-}
-
-.capacity-dot.item-common {
-  background-color: #ffffff;
-}
-
-.capacity-dot.item-uncommon {
-  background-color: #4caf50;
-}
-
-.capacity-dot.item-rare {
-  background-color: #2196f3;
-}
-
-.capacity-dot.item-epic {
-  background-color: #9c27b0;
-}
-
-.capacity-dot.item-legendary {
-  background-color: #ff9800;
-  box-shadow: 0 0 4px rgba(255, 152, 0, 0.8);
-}
-
 @keyframes pulse {
   0% { opacity: 0.5; }
   50% { opacity: 1; }

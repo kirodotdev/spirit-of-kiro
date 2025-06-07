@@ -341,18 +341,6 @@ const handleReset = () => {
   filter: grayscale(100%);
 }
 
-.item-name {
-  font-size: 0.7em;
-  color: white;
-  text-align: center;
-  margin-top: 4px;
-  text-shadow: 1px 1px 2px black;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  width: 90%;
-}
-
 .reset-button {
   position: absolute;
   bottom: 16.5%;

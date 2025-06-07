@@ -11,7 +11,6 @@ const props = defineProps<{
   bottom?: string;
   left?: string;
   transform?: string;
-  showOnlyPrice?: boolean;
 }>();
 
 // Computed properties for the preview
@@ -46,33 +45,33 @@ const positionStyle = computed(() => {
 
 <template>
   <div v-if="item" class="item-preview" :class="rarityClass" :style="positionStyle">
-    <div v-if="!showOnlyPrice" class="preview-header">
+    <div class="preview-header">
       <h3>{{ item.name || 'Unknown Item' }}</h3>
     </div>
     <div class="preview-content">
       <div class="preview-image-container">
         <img :src="imageUrl" alt="Item" class="preview-image" />
         <div class="tags-container">
-          <span v-if="!showOnlyPrice" class="tag item-rarity" :class="rarityClass">
+          <span class="tag item-rarity" :class="rarityClass">
             {{ rarityText }}
           </span>
           <span v-if="item.value !== undefined" class="tag stat-tag gold-display">
             <div class="gold-icon"></div>
             <span class="gold-amount">{{ item.value }}</span>
           </span>
-          <span v-if="!showOnlyPrice && item.weight" class="tag stat-tag">
+          <span v-if="item.weight" class="tag stat-tag">
             {{ item.weight }}
           </span>
-          <span v-if="!showOnlyPrice && item.materials && item.materials.length > 0"
+          <span v-if="item.materials && item.materials.length > 0"
             v-for="(material, idx) in item.materials" :key="idx" class="tag stat-tag">
             {{ material }}
           </span>
-          <span v-if="!showOnlyPrice && item.damage" class="tag stat-tag">
+          <span v-if="item.damage" class="tag stat-tag">
             {{ item.damage }}
           </span>
         </div>
       </div>
-      <div v-if="!showOnlyPrice" class="preview-details">
+      <div class="preview-details">
         <p class="item-description">{{ item.description || 'No description available.' }}</p>
 
         <div class="item-skills" v-if="item.skills && item.skills.length > 0">
@@ -106,13 +105,6 @@ const positionStyle = computed(() => {
   z-index: 30;
   pointer-events: none;
   /* Allow clicking through the preview */
-}
-
-/* When showing only price, make the preview more compact */
-.item-preview:has(.preview-content:only-child) {
-  width: auto;
-  max-width: none;
-  padding: 10px;
 }
 
 .item-preview.item-uncommon {
@@ -157,12 +149,6 @@ const positionStyle = computed(() => {
   gap: 15px;
 }
 
-/* When showing only price, adjust the content layout */
-.item-preview:has(.preview-content:only-child) .preview-content {
-  padding: 0;
-  gap: 8px;
-}
-
 .preview-image-container {
   display: flex;
   flex-direction: column;
@@ -172,22 +158,10 @@ const positionStyle = computed(() => {
   max-width: 120px;
 }
 
-/* When showing only price, adjust the image container */
-.item-preview:has(.preview-content:only-child) .preview-image-container {
-  width: auto;
-  min-width: 40px;
-  max-width: 60px;
-}
-
 .preview-image {
   width: 100%;
   max-height: 120px;
   object-fit: contain;
-}
-
-/* When showing only price, adjust the image size */
-.item-preview:has(.preview-content:only-child) .preview-image {
-  max-height: 40px;
 }
 
 .preview-details {
@@ -225,13 +199,6 @@ const positionStyle = computed(() => {
   background-color: rgba(255, 255, 255, 0.3);
 }
 
-/* When showing only price, make the price tag more prominent */
-.item-preview:has(.preview-content:only-child) .stat-tag {
-  font-size: 1rem;
-  padding: 2px 8px;
-  background-color: rgba(255, 255, 255, 0.4);
-}
-
 /* Gold display styling from HUD.vue */
 .gold-display {
   display: flex;
@@ -241,42 +208,8 @@ const positionStyle = computed(() => {
   font-weight: bold;
 }
 
-.gold-icon {
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(135deg, #ffd700, #ffa500);
-  border-radius: 50%;
-  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
-}
-
 .gold-amount {
   font-size: 1.1em;
-}
-
-.item-rarity.item-common {
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.item-rarity.item-uncommon {
-  color: #4caf50;
-  background-color: rgba(76, 175, 80, 0.25);
-}
-
-.item-rarity.item-rare {
-  color: #2196f3;
-  background-color: rgba(33, 150, 243, 0.25);
-}
-
-.item-rarity.item-epic {
-  color: #9c27b0;
-  background-color: rgba(156, 39, 176, 0.25);
-}
-
-.item-rarity.item-legendary {
-  color: #ff9800;
-  background-color: rgba(255, 152, 0, 0.25);
-  text-shadow: 0 0 3px rgba(255, 152, 0, 0.5);
 }
 
 .tags-container {
@@ -287,12 +220,6 @@ const positionStyle = computed(() => {
   justify-content: flex-start;
   margin-top: 8px;
   width: 100%;
-}
-
-/* When showing only price, adjust the tags container */
-.item-preview:has(.preview-content:only-child) .tags-container {
-  margin-top: 0;
-  width: auto;
 }
 
 /* Skill styles */
@@ -345,5 +272,31 @@ const positionStyle = computed(() => {
   white-space: nowrap;
 }
 
-/* Material tags use the same styling as stat-tag */
+/* Used to style the item rarity tag */
+.item-rarity.item-common {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.item-rarity.item-uncommon {
+  color: #4caf50;
+  background-color: rgba(76, 175, 80, 0.25);
+}
+
+.item-rarity.item-rare {
+  color: #2196f3;
+  background-color: rgba(33, 150, 243, 0.25);
+}
+
+.item-rarity.item-epic {
+  color: #9c27b0;
+  background-color: rgba(156, 39, 176, 0.25);
+}
+
+.item-rarity.item-legendary {
+  color: #ff9800;
+  background-color: rgba(255, 152, 0, 0.25);
+  text-shadow: 0 0 3px rgba(255, 152, 0, 0.5);
+}
+
 </style>

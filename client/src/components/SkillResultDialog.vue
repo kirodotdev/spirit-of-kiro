@@ -412,13 +412,6 @@ watch(visible, (newValue) => {
   perspective: 1000px;
 }
 
-:root {
-  --smash-tool-duration: 3s;
-  --smash-target-duration: 3s;
-  --smash-skill-duration: 3s;
-  --pulse-glow-duration: 2s;
-}
-
 .fusion-item {
   position: absolute;
   width: 80px;

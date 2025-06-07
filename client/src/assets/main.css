@@ -105,3 +105,39 @@ body {
   50% { box-shadow: 0 0 20px rgba(255, 152, 0, 0.6); }
   100% { box-shadow: 0 0 10px rgba(255, 152, 0, 0.3); }
 }
+
+/* Dot colors based on item rarity */
+.capacity-dot.empty {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.capacity-dot.item-common {
+  background-color: #ffffff;
+}
+
+.capacity-dot.item-uncommon {
+  background-color: #4caf50;
+}
+
+.capacity-dot.item-rare {
+  background-color: #2196f3;
+}
+
+.capacity-dot.item-epic {
+  background-color: #9c27b0;
+}
+
+.capacity-dot.item-legendary {
+  background-color: #ff9800;
+  box-shadow: 0 0 4px rgba(255, 152, 0, 0.8);
+}
+
+/* Gold display styling */
+
+.gold-icon {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
+}

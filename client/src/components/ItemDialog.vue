@@ -294,43 +294,8 @@ watch(() => visible.value, (newValue) => {
   font-weight: bold;
 }
 
-.gold-icon {
-  width: 16px;
-  height: 16px;
-  background: linear-gradient(135deg, #ffd700, #ffa500);
-  border-radius: 50%;
-  box-shadow: 0 0 4px rgba(255, 215, 0, 0.5);
-}
-
 .gold-amount {
   font-size: 1.1em;
-}
-
-/* Rarity Classes */
-.item-rarity.item-common {
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.item-rarity.item-uncommon {
-  color: #4caf50;
-  background-color: rgba(76, 175, 80, 0.25);
-}
-
-.item-rarity.item-rare {
-  color: #2196f3;
-  background-color: rgba(33, 150, 243, 0.25);
-}
-
-.item-rarity.item-epic {
-  color: #9c27b0;
-  background-color: rgba(156, 39, 176, 0.25);
-}
-
-.item-rarity.item-legendary {
-  color: #ff9800;
-  background-color: rgba(255, 152, 0, 0.25);
-  text-shadow: 0 0 3px rgba(255, 152, 0, 0.5);
 }
 
 /* Tags Container */
