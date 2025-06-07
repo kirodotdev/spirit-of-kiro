@@ -41,29 +41,6 @@ const positionStyle = computed(() => {
   };
 });
 
-// Format outcome text for display
-function formatOutcome(outcome: string): string {
-  return outcome.split(' ')
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-}
-
-// Get CSS class for outcome tag
-function getOutcomeClass(outcome: string): string {
-  const knownOutcomes = [
-    'split target',
-    'destroy self',
-    'transform self',
-    'consume target',
-    'transform target'
-  ];
-
-  // Return specific class for known outcomes, or a generic class for custom ones
-  return knownOutcomes.includes(outcome.toLowerCase())
-    ? `outcome-${outcome.toLowerCase().replace(' ', '-')}`
-    : 'outcome-custom';
-}
-
 // No custom material class needed as we're using the same styling as damage tag
 </script>
 
@@ -103,12 +80,6 @@ function getOutcomeClass(outcome: string): string {
           <div v-for="(skill, index) in item.skills" :key="index" class="skill-item">
             <div class="skill-header">
               <div class="skill-name">{{ skill.name }}</div>
-              <div class="skill-outcomes" v-if="skill.outcomes && skill.outcomes.length > 0">
-                <span v-for="(outcome, i) in skill.outcomes" :key="i" class="outcome-tag"
-                  :class="getOutcomeClass(outcome)">
-                  {{ formatOutcome(outcome) }}
-                </span>
-              </div>
               <div class="skill-targets">
                 <span class="target-tag">
                   {{ typeof skill.targets === 'number' && skill.targets >= 0 && skill.targets <= 2 ? (skill.targets === 0
@@ -361,50 +332,6 @@ function getOutcomeClass(outcome: string): string {
   font-size: 0.8rem;
   color: #bbb;
   margin-top: 3px;
-}
-
-.skill-outcomes {
-  display: flex;
-  gap: 3px;
-  flex-wrap: wrap;
-}
-
-.outcome-tag {
-  font-size: 0.65rem;
-  padding: 1px 4px;
-  border-radius: 8px;
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.outcome-split-target {
-  background-color: #2196f3;
-  color: white;
-}
-
-.outcome-destroy-self {
-  background-color: #f44336;
-  color: white;
-}
-
-.outcome-transform-self {
-  background-color: #9c27b0;
-  color: white;
-}
-
-.outcome-consume-target {
-  background-color: #ff9800;
-  color: white;
-}
-
-.outcome-transform-target {
-  background-color: #4caf50;
-  color: white;
-}
-
-.outcome-custom {
-  background-color: #607d8b;
-  color: white;
 }
 
 /* Add styles for the target tag */
