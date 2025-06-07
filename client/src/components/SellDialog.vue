@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useGameStore } from '../stores/game';
 import ItemPreview from './ItemPreview.vue';
 import { getRarityClass } from '../utils/items';
@@ -83,16 +83,31 @@ function closeDialog() {
 
 // Handle keydown events
 function handleKeyDown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && visible.value && !isLoading.value && store.hasFocus('sell-dialog')) {
-    closeDialog();
+  if (event.key !== 'Escape' || !visible.value || !store.hasFocus('sell-dialog')) {
+    return;
   }
+  closeDialog();
 }
 
 // Listen for events
 let sellItemListenerId: string;
 let itemSoldListenerId: string | null = null;
 
+let gainedFocusListenerId: string;
+let lostFocusListenerId: string;
+
+function handleGainedFocus() {
+  window.addEventListener('keydown', handleKeyDown);
+}
+
+function handleLostFocus() {
+  window.removeEventListener('keydown', handleKeyDown);
+}
+
 onMounted(() => {
+  gainedFocusListenerId = store.addEventListener('gained-focus:sell-dialog', handleGainedFocus);
+  lostFocusListenerId = store.addEventListener('lost-focus:sell-dialog', handleLostFocus);
+  window.addEventListener('keydown', handleKeyDown);
   sellItemListenerId = store.addEventListener('sell-item', (data) => {
     if (data && data.id) {
       // Get the item data directly from the store using the ID
@@ -101,8 +116,6 @@ onMounted(() => {
         sellData.value = itemData;
         visible.value = true;
         isLoading.value = true;
-        store.interactionLocked = true;
-        store.pushFocus('sell-dialog');
         
         // Remove the game object from the world
         store.removeObject(data.id);
@@ -119,18 +132,26 @@ onMounted(() => {
     // Clear any hovered item preview when the result comes back
     hoveredItemId.value = null;
   });
-  
-  window.addEventListener('keydown', handleKeyDown);
 });
 
 onUnmounted(() => {
+  store.removeEventListener('gained-focus:sell-dialog', gainedFocusListenerId);
+  store.removeEventListener('lost-focus:sell-dialog', lostFocusListenerId);
+  window.removeEventListener('keydown', handleKeyDown);
   store.removeEventListener('sell-item', sellItemListenerId);
   if (itemSoldListenerId) {
     store.removeEventListener('item-sold', itemSoldListenerId);
   }
-  window.removeEventListener('keydown', handleKeyDown);
   if (visible.value) {
     store.interactionLocked = false;
+  }
+});
+
+// Watch for changes to visible prop to manage focus
+watch(() => visible.value, (newValue) => {
+  if (newValue) {
+    store.pushFocus('sell-dialog');
+  } else {
     store.popFocus();
   }
 });

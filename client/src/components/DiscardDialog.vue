@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGameStore } from '../stores/game';
 
 const store = useGameStore();
@@ -28,15 +28,28 @@ function discardItem() {
 // Function to handle keydown events
 function handleKeyDown(event: KeyboardEvent) {
   // Check if the pressed key is Escape and the dialog is visible
-  if (event.key === 'Escape' && visible.value) {
+  if (event.key === 'Escape' && visible.value && store.hasFocus('discard-dialog')) {
     closeDialog();
   }
 }
 
 // Listen for intent-to-discard-item events
 let discardItemListenerId: string;
+let gainedFocusListenerId: string;
+let lostFocusListenerId: string;
+
+function handleGainedFocus() {
+  window.addEventListener('keydown', handleKeyDown);
+}
+
+function handleLostFocus() {
+  window.removeEventListener('keydown', handleKeyDown);
+}
 
 onMounted(() => {
+  gainedFocusListenerId = store.addEventListener('gained-focus:discard-dialog', handleGainedFocus);
+  lostFocusListenerId = store.addEventListener('lost-focus:discard-dialog', handleLostFocus);
+  window.addEventListener('keydown', handleKeyDown);
   discardItemListenerId = store.addEventListener('intent-to-discard-item', (data) => {
     if (data && data.id) {
       // Get the item data directly from the store using the ID
@@ -48,20 +61,27 @@ onMounted(() => {
       }
     }
   });
-  
-  // Add event listener for keydown to handle Escape key
-  window.addEventListener('keydown', handleKeyDown);
 });
 
 onUnmounted(() => {
-  store.removeEventListener('intent-to-discard-item', discardItemListenerId);
-  // Remove the keydown event listener
+  store.removeEventListener('gained-focus:discard-dialog', gainedFocusListenerId);
+  store.removeEventListener('lost-focus:discard-dialog', lostFocusListenerId);
   window.removeEventListener('keydown', handleKeyDown);
+  store.removeEventListener('intent-to-discard-item', discardItemListenerId);
   // Make sure to unlock interactions if component is unmounted while dialog is open
   if (visible.value) {
     store.interactionLocked = false;
   }
-})
+});
+
+// Watch for changes to visible prop to manage focus
+watch(() => visible.value, (newValue) => {
+  if (newValue) {
+    store.pushFocus('discard-dialog');
+  } else {
+    store.popFocus();
+  }
+});
 </script>
 
 <template>

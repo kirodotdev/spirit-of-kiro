@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useGameStore } from '../stores/game';
 import ItemPreview from './ItemPreview.vue';
 import { getRarityClass } from '../utils/items';
@@ -92,13 +92,11 @@ function closeDialog() {
   store.emitEvent('clean-workbench-results');
   visible.value = false;
   store.interactionLocked = false;
-  store.popFocus();
-  store.pushFocus('workbench');
 }
 
 // Function to handle keydown events
 function handleKeyDown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && visible.value && !isLoading.value && isComplete.value && store.hasFocus('skill-result-dialog')) {
+  if (event.key === 'Escape' && visible.value && !isLoading.value && isComplete.value && store.hasFocus('skill-use')) {
     event.stopPropagation();
     closeDialog();
   }
@@ -143,7 +141,6 @@ onMounted(() => {
       story: ''
     };
     store.interactionLocked = true;
-    store.pushFocus('skill-result-dialog');
     skillInvocationData.value = data;
   });
   
@@ -190,9 +187,17 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
   
   store.interactionLocked = false;
-  store.popFocus();
-  store.pushFocus('workbench');
 });
+
+watch(visible, (newValue) => {
+  if (newValue) {
+    store.interactionLocked = true;
+    store.pushFocus('skill-use');
+  } else {
+    store.interactionLocked = false;
+    store.popFocus();
+  }
+}, { immediate: true });
 </script>
 
 <template>

@@ -2,6 +2,7 @@ import { ref, computed } from 'vue'
 import { PhysicsSystem } from '../systems/physics-system'
 import { SocketSystem } from '../systems/socket-system'
 import { defineStore } from 'pinia'
+import { FocusSystem } from '../systems/focus-system'
 
 import { GameObjectSystem, type GameObject } from '../systems/game-object-system'
 import { ItemSystem, type Item } from '../systems/item-system'
@@ -22,7 +23,6 @@ export const useGameStore = defineStore('game', () => {
   const heldItemId = ref<string | null>(null)
   const inventories = ref<Map<string, string[]>>(new Map())
   const personaData = ref<Map<string, string>>(new Map())
-  const focusedComponent = ref<string | null>(null)
 
   // Flags
   const debug = ref(false)
@@ -46,22 +46,10 @@ export const useGameStore = defineStore('game', () => {
   const itemSystem = new ItemSystem(items, socketSystem);
   const inventorySystem = new InventorySystem(inventories, socketSystem, userId);
   const personaSystem = new PersonaSystem(personaData, socketSystem);
+  const focusSystem = new FocusSystem(socketSystem);
   
   // Initialize preloader system
   const preloaderSystem = new PreloaderSystem(socketSystem, preloadProgress, isInitialLoadComplete)
-
-  // Focus management functions
-  function pushFocus(componentId: string) {
-    focusedComponent.value = componentId;
-  }
-
-  function popFocus() {
-    focusedComponent.value = null;
-  }
-
-  function hasFocus(componentId: string): boolean {
-    return focusedComponent.value === componentId;
-  }
 
   return {
     // State
@@ -79,12 +67,12 @@ export const useGameStore = defineStore('game', () => {
     heldItemId,
     inventories,
     personaData,
-    focusedComponent,
+    focusedComponent: focusSystem.focusedComponentRef,
 
     // Focus management
-    pushFocus,
-    popFocus,
-    hasFocus,
+    pushFocus: focusSystem.pushFocus.bind(focusSystem),
+    popFocus: focusSystem.popFocus.bind(focusSystem),
+    hasFocus: focusSystem.hasFocus.bind(focusSystem),
 
     // Socket actions
     initWebSocket: socketSystem.initWebSocket.bind(socketSystem),

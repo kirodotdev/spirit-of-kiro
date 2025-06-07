@@ -358,7 +358,7 @@ const handleDrop = (event: DragEvent, targetArea: 'tools' | 'working') => {
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key !== 'Escape' || !props.show || !gameStore.hasFocus('workbench')) {
+  if (e.key !== 'Escape' || !props.show || !gameStore.hasFocus('workbench-fullscreen')) {
     return;
   }
   
@@ -418,7 +418,20 @@ const handleContextMenu = (e: MouseEvent) => {
   }
 };
 
+let gainedFocusListenerId: string;
+let lostFocusListenerId: string;
+
+function handleGainedFocus() {
+  window.addEventListener('keydown', handleKeydown);
+}
+
+function handleLostFocus() {
+  window.removeEventListener('keydown', handleKeydown);
+}
+
 onMounted(() => {
+  gainedFocusListenerId = gameStore.addEventListener('gained-focus:workbench-fullscreen', handleGainedFocus);
+  lostFocusListenerId = gameStore.addEventListener('lost-focus:workbench-fullscreen', handleLostFocus);
   window.addEventListener('keydown', handleKeydown);
   window.addEventListener('mousemove', handleMouseMove);
   window.addEventListener('click', handleClickOutside);
@@ -426,6 +439,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  gameStore.removeEventListener('gained-focus:workbench-fullscreen', gainedFocusListenerId);
+  gameStore.removeEventListener('lost-focus:workbench-fullscreen', lostFocusListenerId);
+  // Clean up escape key listener in case component is unmounted while focused
   window.removeEventListener('keydown', handleKeydown);
   window.removeEventListener('mousemove', handleMouseMove);
   window.removeEventListener('click', handleClickOutside);
@@ -436,16 +452,14 @@ onUnmounted(() => {
   }
 });
 
-// Watch for changes to show prop to lock/unlock interaction and manage focus
+// Watch for show prop changes to manage focus
 watch(() => props.show, (newValue) => {
   if (newValue) {
-    gameStore.interactionLocked = true;
-    gameStore.pushFocus('workbench');
+    gameStore.pushFocus('workbench-fullscreen');
   } else {
-    gameStore.interactionLocked = false;
     gameStore.popFocus();
   }
-}, { immediate: true });
+});
 </script>
 
 <template>

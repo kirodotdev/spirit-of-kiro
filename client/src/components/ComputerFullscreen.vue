@@ -72,17 +72,33 @@ const handleItemMouseLeave = () => {
 };
 
 const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Escape' && props.show) {
-    emit('close');
+  if (e.key !== 'Escape' || !props.show || !gameStore.hasFocus('computer-fullscreen')) {
+    return;
   }
+  emit('close');
 };
 
+let gainedFocusListenerId: string;
+let lostFocusListenerId: string;
+
+function handleGainedFocus() {
+  window.addEventListener('keydown', handleKeydown);
+}
+
+function handleLostFocus() {
+  window.removeEventListener('keydown', handleKeydown);
+}
+
 onMounted(() => {
+  gainedFocusListenerId = gameStore.addEventListener('gained-focus:computer-fullscreen', handleGainedFocus);
+  lostFocusListenerId = gameStore.addEventListener('lost-focus:computer-fullscreen', handleLostFocus);
   window.addEventListener('keydown', handleKeydown);
   buyResultsListenerId = gameStore.addEventListener('buy-results', handleBuyResults);
 });
 
 onUnmounted(() => {
+  gameStore.removeEventListener('gained-focus:computer-fullscreen', gainedFocusListenerId);
+  gameStore.removeEventListener('lost-focus:computer-fullscreen', lostFocusListenerId);
   window.removeEventListener('keydown', handleKeydown);
   gameStore.removeEventListener('buy-results', buyResultsListenerId);
   // Ensure interaction is unlocked when component unmounts
@@ -91,14 +107,14 @@ onUnmounted(() => {
   }
 });
 
-// Watch for changes to show prop to lock/unlock interaction
+// Watch for show prop changes to manage focus
 watch(() => props.show, (newValue) => {
   if (newValue) {
-    gameStore.interactionLocked = true;
+    gameStore.pushFocus('computer-fullscreen');
   } else {
-    gameStore.interactionLocked = false;
+    gameStore.popFocus();
   }
-}, { immediate: true });
+});
 
 const handleReset = () => {
   // Emit peek-discarded event to fetch 21 items

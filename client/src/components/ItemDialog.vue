@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGameStore } from '../stores/game';
 import { getRarityClass } from '../utils/items';
 
@@ -31,10 +31,10 @@ function closeDialog() {
 
 // Function to handle keydown events
 function handleKeyDown(event: KeyboardEvent) {
-  // Check if the pressed key is Escape and the dialog is visible
-  if (event.key === 'Escape' && visible.value) {
-    closeDialog();
+  if (event.key !== 'Escape' || !visible.value || !store.hasFocus('item-dialog')) {
+    return;
   }
+  closeDialog();
 }
 
 // Format outcome text for display
@@ -63,7 +63,21 @@ function getOutcomeClass(outcome: string): string {
 // Listen for inspect-item events
 let inspectItemListenerId: string;
 
+let gainedFocusListenerId: string;
+let lostFocusListenerId: string;
+
+function handleGainedFocus() {
+  window.addEventListener('keydown', handleKeyDown);
+}
+
+function handleLostFocus() {
+  window.removeEventListener('keydown', handleKeyDown);
+}
+
 onMounted(() => {
+  gainedFocusListenerId = store.addEventListener('gained-focus:item-dialog', handleGainedFocus);
+  lostFocusListenerId = store.addEventListener('lost-focus:item-dialog', handleLostFocus);
+  window.addEventListener('keydown', handleKeyDown);
   inspectItemListenerId = store.addEventListener('inspect-item', (data) => {
     console.log('inspect-item data', data)
     if (data && data.id) {
@@ -74,24 +88,29 @@ onMounted(() => {
         // Store the game object ID for later removal
         currentItem.value.gameObjectId = data.id;
         visible.value = true;
-        store.interactionLocked = true;
       }
     }
   });
-  
-  // Add event listener for keydown to handle Escape key
-  window.addEventListener('keydown', handleKeyDown);
 });
 
 onUnmounted(() => {
-  store.removeEventListener('inspect-item', inspectItemListenerId);
-  // Remove the keydown event listener
+  store.removeEventListener('gained-focus:item-dialog', gainedFocusListenerId);
+  store.removeEventListener('lost-focus:item-dialog', lostFocusListenerId);
   window.removeEventListener('keydown', handleKeyDown);
-  // Make sure to unlock interactions if component is unmounted while dialog is open
+  store.removeEventListener('inspect-item', inspectItemListenerId);
   if (visible.value) {
     store.interactionLocked = false;
   }
-})
+});
+
+// Watch for changes to visible prop to manage focus
+watch(() => visible.value, (newValue) => {
+  if (newValue) {
+    store.pushFocus('item-dialog');
+  } else {
+    store.popFocus();
+  }
+});
 </script>
 
 <template>
