@@ -1,6 +1,6 @@
 # Infrastructure Operations Guide
 
-This guide explains how to deploy the Kiro Demo Game infrastructure to AWS. The infrastructure consists of several components:
+This guide explains how to deploy the PlaceholderTitle infrastructure to AWS. The infrastructure consists of several components:
 
 - Server:
   * DynamoDB tables for data storage

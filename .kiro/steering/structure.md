@@ -1,6 +1,6 @@
 # Project Structure
 
-AI Scrapyard follows a client-server architecture with clear separation of concerns.
+PlaceholderTitle follows a client-server architecture with clear separation of concerns.
 
 ## Root Directory
 - `launch.ts` - Main entry point that starts both client and server

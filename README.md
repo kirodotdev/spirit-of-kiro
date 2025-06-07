@@ -1,10 +1,36 @@
-## Kiro Demo Game
+## PlaceholderTitle
 
-This is an infinite crafting game developed as a demo project for Kiro. >95% of the code has been written by prompting Kiro. This demo project is
+![1.png](docs/images/1.png)
+
+This is an infinite crafting workshop game developed as a demo project for Kiro. >95% of the code has been written by prompting Kiro. This demo project is
 designed to show best practices for Kiro, and AI engineering
 in general.
 
-## Resources
+## Find Unique Items
+
+Every generated item is unique. Experience an infinite range of potential: from mundane pieces of garbage, to celestial remnants of epic value.
+
+![2.png](docs/images/2.png)
+
+Each item has its own unique description, damage, and quirks.
+
+## Craft and Improve
+
+![3.png](docs/images/3.png)
+
+The items you obtain aren't static. Add an item to the workbench to use it's quirks on other items. Cut, smash, and break items down into components. Glue, weld, or install items together into complex configurations. Paint, cook, or enchant items to modify their appearances and effects.
+
+If there is a verb for it, you can probably do it in this game!
+
+## Sell
+
+Done with an item, or just need to make some space in your inventory?
+
+![4.png](docs/images/4.png)
+
+The appraiser will analyze your item, and sell it for you, giving you a cut of what it was worth!
+
+## Developer Resources
 
 ### Start Here
 

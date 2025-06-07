@@ -1,4 +1,4 @@
-# Kiro Demo Game - Guiding Principles
+# PlaceholderTitle - Guiding Principles
 
 ## Core Principles
 

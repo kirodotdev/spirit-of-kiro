@@ -1,4 +1,4 @@
-# AI Scrapyard Game Documentation
+# PlaceholderTitle Game Documentation
 
 This game uses a client server architecture. There are three main components:
 

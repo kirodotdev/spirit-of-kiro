@@ -1,6 +1,6 @@
-# AI Scrapyard
+# PlaceholderTitle
 
-AI Scrapyard is a browser-based game where players collecting and interacting with AI-generated items. The game features:
+PlaceholderTitle is a browser-based game where players collecting and interacting with AI-generated items. The game features:
 
 - Real-time physics-based gameplay with collision detection
 - WebSocket-based connection to a server that connects to AWS Bedrock and handles data persistence
