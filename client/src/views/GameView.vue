@@ -60,6 +60,10 @@ onMounted(() => {
   calculateTileSize()
   window.addEventListener('resize', calculateTileSize)
   initializeWorld()
+  // Blur any focused elements
+  if (document.activeElement instanceof HTMLElement) {
+    document.activeElement.blur()
+  }
 })
 
 onUnmounted(() => {

@@ -118,7 +118,6 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
     // Track processed items and removed items
     const processedItems = [];
     const removedItemIds = [];
-    let updatedTool = null;
     let story = '';
     let pendingImageCount = 0;
 
@@ -131,47 +130,33 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
         ws.send(formatMessage('skill-use-story', { story: storyChunk }));
       },
       
-      // Handle tool updates as they arrive
-      onTool: async (toolUpdate) => {
-        if (toolUpdate && toolUpdate.id === toolId) {
-          updatedTool = toolUpdate;
-          
-          // Check if the tool's icon has changed
-          if (updatedTool.icon && toolItem.icon !== updatedTool.icon) {
-            // Regenerate the image for the tool with the new icon
+      // Handle output items as they arrive
+      onOutputItem: async (item) => {
+        // Helper function to handle image regeneration
+        const regenerateImage = async (item: any, existingItem: any) => {
+          if (item.icon && existingItem?.icon !== item.icon) {
             try {
               pendingImageCount++;
               const imageServiceUrl = `${ITEM_IMAGES_SERVICE_CONFIG.url}/image`;
-              const description = updatedTool.icon;
+              const description = item.icon;
               const response = await fetch(`${imageServiceUrl}?description=${encodeURIComponent(description)}`);
 
               if (response.ok) {
                 const imageData = await response.json();
-                updatedTool.imageUrl = imageData.imageUrl;
+                item.imageUrl = imageData.imageUrl;
               }
             } catch (error) {
-              console.error('Error fetching updated image from item-images service:', error);
-              // Continue without updating the image if fetching fails
+              console.error('Error fetching image from item-images service:', error);
             } finally {
               pendingImageCount--;
             }
           }
 
-          if (!updatedTool.imageUrl) {
-            // Fallback to keeping the same tool image
-            updatedTool.imageUrl = toolItem.imageUrl;
+          if (!item.imageUrl && existingItem?.imageUrl) {
+            item.imageUrl = existingItem.imageUrl;
           }
+        };
 
-          // Update the tool item in the database
-          await updateItem(toolId, updatedTool);
-          
-          // Send tool update to client
-          ws.send(formatMessage('skill-use-tool-update', { tool: updatedTool }));
-        }
-      },
-      
-      // Handle output items as they arrive
-      onOutputItem: async (item) => {
         if (item.id === 'new-item') {
           // Create a new item
           const id = crypto.randomUUID();
@@ -191,7 +176,6 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
               }
             } catch (error) {
               console.error('Error fetching image from item-images service:', error);
-              // Continue without image if fetching fails
             } finally {
               pendingImageCount--;
             }
@@ -202,8 +186,21 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
           
           // Send new item to client
           ws.send(formatMessage('skill-use-new-item', { item: savedItem }));
+        } else if (item.id === toolId) {
+          // Handle tool update
+          const existingItem = await getItemById(item.id);
+          await regenerateImage(item, existingItem);
+          
+          const updatedTool = await updateItem(item.id, item);
+          processedItems.push(updatedTool);
+          
+          // Send tool update to client
+          ws.send(formatMessage('skill-use-tool-update', { tool: updatedTool }));
         } else {
-          // Update existing item
+          // Handle target item update
+          const existingItem = await getItemById(item.id);
+          await regenerateImage(item, existingItem);
+          
           const updatedItem = await updateItem(item.id, item);
           
           // Move it to the workbench-results inventory
@@ -250,7 +247,7 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
         };
         
         // Start checking for pending images
-        checkPendingImages();
+        setTimeout(checkPendingImages, 200);
       }
     });
 

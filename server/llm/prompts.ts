@@ -257,19 +257,15 @@ export const useSkillStream = async function (
             You must structure your response using specific XML tags for each part:
             
             <STORY>A three to four sentence, first person perspective story about the skill being used on any targets, and the outcome</STORY>
-            
-            <TOOL>
-            # YAML representation of the tool item, including any changes to the tool
+
+            <ITEM>
+            # YAML representation of a resulting item.
+            # Use one ITEM tag per item. This includes
+            # tools, target items, and any new items that result.
             # Include all required item properties
-            </TOOL>
-            
-            <OUTPUT_ITEM>
-            # YAML representation of an output item
-            # Include all required item properties
-            # Use one OUTPUT_ITEM tag per item
-            </OUTPUT_ITEM>
-            
-            <REMOVED_ITEM>itemId</REMOVED_ITEM>
+            </ITEM>
+
+            <REMOVED_ITEM>itemId</REMOVED_ITEM> # An item that is removed must not have an ITEM tag.
             
             Items must have the following format:            
               id: You may change the values of any item property (except ID) if that seems realistic,
@@ -384,29 +380,9 @@ export const useSkillStream = async function (
       buffer = buffer.replace(storyMatch[0], '');
     }
 
-    // Process <TOOL> tags
-    let toolMatch;
-    const toolRegex = /<TOOL>([\s\S]*?)<\/TOOL>/g;
-    while ((toolMatch = toolRegex.exec(buffer)) !== null) {
-      const toolYaml = toolMatch[1].trim();
-      toolContent = toolYaml; // Store the tool YAML
-      if (callbacks.onTool) {
-        try {
-          const tool = yaml.load(toolYaml);
-          // Convert short IDs back to original IDs before callback
-          const toolWithOriginalIds = replaceWithOriginalIds(tool, shortIdToId);
-          callbacks.onTool(toolWithOriginalIds);
-        } catch (e) {
-          console.error('Error parsing tool YAML:', e);
-        }
-      }
-      // Remove the processed tag from the buffer
-      buffer = buffer.replace(toolMatch[0], '');
-    }
-
-    // Process <OUTPUT_ITEM> tags
+    // Process <ITEM> tags
     let itemMatch;
-    const itemRegex = /<OUTPUT_ITEM>([\s\S]*?)<\/OUTPUT_ITEM>/g;
+    const itemRegex = /<ITEM>([\s\S]*?)<\/ITEM>/g;
     while ((itemMatch = itemRegex.exec(buffer)) !== null) {
       const itemYaml = itemMatch[1].trim();
       outputItems.push(itemYaml); // Store the output item YAML

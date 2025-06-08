@@ -276,7 +276,7 @@ watch(visible, (newValue) => {
           
           <!-- New items -->
           <div v-for="item in workbenchResultItems" :key="item.id" class="result-item">
-            <div class="item-label new">New</div>
+            <div class="item-label new">Gained</div>
             <div 
               class="item-container animate-in"
               @mouseenter="handleItemMouseEnter(item.id)"

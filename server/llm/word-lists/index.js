@@ -16,7 +16,6 @@ var allItems = [];
 
 allItems = allItems.concat(accessories);
 allItems = allItems.concat(adhesives);
-//allItems = allItems.concat(carParts);
 allItems = allItems.concat(clothing);
 allItems = allItems.concat(containers);
 allItems = allItems.concat(cookingItems);

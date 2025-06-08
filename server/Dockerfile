@@ -11,6 +11,9 @@ RUN bun install
 # Copy the rest of the server files
 COPY . .
 
+# Create necessary directories
+RUN mkdir -p /app/server/iac
+
 # Expose port 3000
 EXPOSE 3000
 
