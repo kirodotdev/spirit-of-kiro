@@ -21,7 +21,6 @@ export const useGameStore = defineStore('game', () => {
   const items = ref<Item[]>([])
   const tileSize = ref(50)
   const heldItemId = ref<string | null>(null)
-  const inventories = ref<Map<string, string[]>>(new Map())
   const personaData = ref<Map<string, string>>(new Map())
 
   // Flags
@@ -44,7 +43,10 @@ export const useGameStore = defineStore('game', () => {
   const socketSystem = new SocketSystem(ws, wsConnected, isAuthenticated);
   const gameObjectSystem = new GameObjectSystem(objects);
   const itemSystem = new ItemSystem(items, socketSystem);
-  const inventorySystem = new InventorySystem(inventories, socketSystem, userId);
+  const inventorySystem = new InventorySystem(
+    socketSystem,
+    userId
+  );
   const personaSystem = new PersonaSystem(personaData, socketSystem);
   const focusSystem = new FocusSystem(socketSystem, interactionLocked);
   
@@ -65,7 +67,6 @@ export const useGameStore = defineStore('game', () => {
     interactionLocked,
     hasActivePhysics,
     heldItemId,
-    inventories,
     personaData,
     focusedComponent: focusSystem.focusedComponentRef,
 
@@ -105,8 +106,6 @@ export const useGameStore = defineStore('game', () => {
     // Inventory system actions
     useInventory: inventorySystem.useInventory.bind(inventorySystem),
     moveItemToInventory: inventorySystem.moveItemToInventory.bind(inventorySystem),
-    getInventoryItems: inventorySystem.getInventoryItems.bind(inventorySystem),
-    refreshInventory: inventorySystem.refreshInventory.bind(inventorySystem),
 
     // Persona system actions
     usePersona: personaSystem.usePersona.bind(personaSystem),
