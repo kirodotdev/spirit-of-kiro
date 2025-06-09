@@ -37,8 +37,9 @@ Run the following script to verify that the dependencies are fulfilled:
 This game uses Amazon Cognito for authentication. You must deploy the Cognito resources first, prior to launching the stack.
 
 ```sh
-./scripts/deploy-cognito.sh
+./scripts/deploy-cognito.sh game-auth
 ```
+_You can substitute your own custom CloudFormation stack name instead of `game-auth`_
 
 ## 4. Launch the game stack
 
