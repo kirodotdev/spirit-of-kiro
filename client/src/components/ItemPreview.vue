@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { getRarityClass } from '../utils/items';
+import type { Item } from '../systems/item-system';
 
 const props = defineProps<{
-  item: any | null;
+  item: Item | null;
   // Position configuration props
   position?: string;
   top?: string;

@@ -25,11 +25,6 @@ const inventory = gameStore.useInventory(inventoryName);
 // Add maxCapacity constant
 const maxCapacity = 21;
 
-// Create computed property for usedCapacity
-const usedCapacity = computed(() => {
-  return inventory.value.length;
-});
-
 // Computed property to determine the color of each dot based on item rarity
 const capacityDots = computed(() => {
   const dots = [];

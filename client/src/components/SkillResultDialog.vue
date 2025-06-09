@@ -6,11 +6,6 @@ import { getRarityClass } from '../utils/items';
 
 const store = useGameStore();
 
-const props = defineProps<{
-  items: string[];
-  removedItemIds: string[];
-}>();
-
 // State to track dialog visibility, loading state, story state, and result data
 const visible = ref(false);
 const isLoading = ref(true);

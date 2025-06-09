@@ -88,7 +88,7 @@ watch(() => visible.value, (newValue) => {
 </script>
 
 <template>
-  <div v-if="visible" class="item-dialog-overlay">
+  <div v-if="visible && currentItem" class="item-dialog-overlay">
     <div class="item-dialog" :class="rarityClass">
       <div class="dialog-header">
         <h3>{{ currentItem?.name || 'Unknown Item' }}</h3>
@@ -101,18 +101,17 @@ watch(() => visible.value, (newValue) => {
             <span class="tag item-rarity" :class="rarityClass">
               {{ rarityText }}
             </span>
-            <span v-if="currentItem?.value !== undefined" class="tag stat-tag gold-display">
+            <span class="tag stat-tag gold-display">
               <div class="gold-icon"></div>
               <span class="gold-amount">{{ currentItem.value }}</span>
             </span>
-            <span v-if="currentItem?.weight" class="tag stat-tag">
+            <span class="tag stat-tag">
               {{ currentItem.weight }}
             </span>
-            <span v-if="currentItem?.materials && currentItem.materials.length > 0"
-              v-for="(material, idx) in currentItem.materials" :key="idx" class="tag stat-tag">
+            <span v-for="(material, idx) in currentItem.materials" :key="idx" class="tag stat-tag">
               {{ material }}
             </span>
-            <span v-if="currentItem?.damage" class="tag stat-tag">
+            <span class="tag stat-tag">
               {{ currentItem.damage }}
             </span>
           </div>
@@ -120,7 +119,7 @@ watch(() => visible.value, (newValue) => {
         <div class="dialog-details">
           <p class="item-description">{{ currentItem?.description || 'No description available.' }}</p>
           
-          <div class="item-skills" v-if="currentItem?.skills && currentItem.skills.length > 0">
+          <div class="item-skills">
             <h4>Quirks:</h4>
             <div v-for="(skill, index) in currentItem.skills" :key="index" class="skill-item">
               <div class="skill-header">

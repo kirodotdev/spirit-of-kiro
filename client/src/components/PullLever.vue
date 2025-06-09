@@ -1,8 +1,8 @@
-
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import leverImage from '../assets/lever.png';
 import { useGameStore } from '../stores/game';
+import type { Item } from '../systems/item-system';
 
 const props = defineProps<{
   id: string,
@@ -29,7 +29,7 @@ const isRotating = ref(false);
 const isPulled = ref(false);
 const currentRotation = ref(props.props.initialAngle || 0);
 const gameStore = useGameStore();
-const localInventory = ref<any[]>([]);
+const localInventory = ref<Item[]>([]);
 
 function handlePlayerInteraction() {
   if (!props.playerIsNear || isPulling.value || isRotating.value) {

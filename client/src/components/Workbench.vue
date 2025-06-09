@@ -102,16 +102,6 @@ const toolsCapacityDots = computed(() => {
   return dots;
 });
 
-// Computed property for working items
-const workingItems = computed(() => {
-  return workingInventoryIds.value.map(id => gameStore.useItem(id).value);
-});
-
-// Computed property for tools items
-const toolsItems = computed(() => {
-  return toolsInventoryIds.value.map(id => gameStore.useItem(id).value);
-});
-
 function handlePlayerInteraction() {
   if (!props.playerIsNear) {
     return;
@@ -290,8 +280,8 @@ const closeFullscreen = () => {
     <WorkbenchFullscreen
       :show="showFullscreen"
       :workbench-image="workbenchZoomImage"
-      :tools-items="toolsItems"
-      :working-items="workingItems"
+      :tools-items="toolsInventory"
+      :working-items="workingInventory"
       @close="closeFullscreen"
     />
   </div>
