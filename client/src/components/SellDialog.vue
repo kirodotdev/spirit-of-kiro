@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useGameStore } from '../stores/game';
+import { useFocusManagement } from '../composables/useFocusManagement';
 import ItemPreview from './ItemPreview.vue';
 import { getRarityClass } from '../utils/items';
 import sellTableImage from '../assets/sell-table.png';
@@ -9,6 +10,7 @@ import happyImage from '../assets/happy.png';
 import unhappyImage from '../assets/unhappy.png';
 import neutralImage from '../assets/neutral.png';
 import type { Item } from '../systems/item-system';
+import { useEscapeKeyHandler } from '../composables/useEscapeKeyHandler';
 
 const store = useGameStore();
 
@@ -82,33 +84,20 @@ function closeDialog() {
   }
 }
 
-// Handle keydown events
-function handleKeyDown(event: KeyboardEvent) {
-  if (event.key !== 'Escape' || !visible.value || !store.hasFocus('sell-dialog')) {
-    return;
+// Use the focus management composable
+const { handleKeyDown } = useEscapeKeyHandler('sell-dialog', (event) => {
+  if (event.key === 'Escape' && visible.value && !isLoading.value) {
+    closeDialog();
+    return true;
   }
-  closeDialog();
-}
+  return false;
+});
 
 // Listen for events
 let sellItemListenerId: string;
 let itemSoldListenerId: string | null = null;
 
-let gainedFocusListenerId: string;
-let lostFocusListenerId: string;
-
-function handleGainedFocus() {
-  window.addEventListener('keydown', handleKeyDown);
-}
-
-function handleLostFocus() {
-  window.removeEventListener('keydown', handleKeyDown);
-}
-
 onMounted(() => {
-  gainedFocusListenerId = store.addEventListener('gained-focus:sell-dialog', handleGainedFocus);
-  lostFocusListenerId = store.addEventListener('lost-focus:sell-dialog', handleLostFocus);
-  window.addEventListener('keydown', handleKeyDown);
   sellItemListenerId = store.addEventListener('sell-item', (data) => {
     if (data && data.id) {
       // Get the item data directly from the store using the ID
@@ -136,9 +125,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  store.removeEventListener('gained-focus:sell-dialog', gainedFocusListenerId);
-  store.removeEventListener('lost-focus:sell-dialog', lostFocusListenerId);
-  window.removeEventListener('keydown', handleKeyDown);
   store.removeEventListener('sell-item', sellItemListenerId);
   if (itemSoldListenerId) {
     store.removeEventListener('item-sold', itemSoldListenerId);

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useGameStore } from '../stores/game';
+import { useFocusManagement } from '../composables/useFocusManagement';
 import ItemPreview from './ItemPreview.vue';
 import { getRarityClass } from '../utils/items';
+import { useEscapeKeyHandler } from '../composables/useEscapeKeyHandler';
 
 const store = useGameStore();
 
@@ -91,13 +93,14 @@ function closeDialog() {
   visible.value = false;
 }
 
-// Function to handle keydown events
-function handleKeyDown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && visible.value && !isLoading.value && isComplete.value && store.hasFocus('skill-use')) {
-    event.stopPropagation();
+// Use the focus management composable
+const { handleKeyDown } = useEscapeKeyHandler('skill-use', (event) => {
+  if (event.key === 'Escape' && visible.value && !isLoading.value && isComplete.value) {
     closeDialog();
+    return true;
   }
-}
+  return false;
+});
 
 // Listen for skill events
 let skillInvokedListenerId: string;
@@ -168,8 +171,6 @@ onMounted(() => {
   useSkillDoneListenerId = store.addEventListener('skill-use-done', () => {
     isComplete.value = true;
   });
-  
-  window.addEventListener('keydown', handleKeyDown);
 });
 
 onUnmounted(() => {
@@ -180,7 +181,6 @@ onUnmounted(() => {
   store.removeEventListener('skill-use-updated-item', skillUpdatedItemListenerId);
   store.removeEventListener('skill-use-removed-item', skillRemovedItemListenerId);
   store.removeEventListener('use-skill-done', useSkillDoneListenerId);
-  window.removeEventListener('keydown', handleKeyDown);
 });
 
 watch(visible, (newValue) => {

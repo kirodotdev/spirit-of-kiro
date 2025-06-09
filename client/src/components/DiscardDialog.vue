@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGameStore } from '../stores/game';
+import { useEscapeKeyHandler } from '../composables/useEscapeKeyHandler';
 
 const store = useGameStore();
 
@@ -24,31 +25,19 @@ function discardItem() {
   closeDialog();
 }
 
-// Function to handle keydown events
-function handleKeyDown(event: KeyboardEvent) {
-  // Check if the pressed key is Escape and the dialog is visible
-  if (event.key === 'Escape' && visible.value && store.hasFocus('discard-dialog')) {
+// Use the focus management composable
+const { handleKeyDown } = useEscapeKeyHandler('discard-dialog', (event) => {
+  if (event.key === 'Escape' && visible.value) {
     closeDialog();
+    return true;
   }
-}
+  return false;
+});
 
 // Listen for intent-to-discard-item events
 let discardItemListenerId: string;
-let gainedFocusListenerId: string;
-let lostFocusListenerId: string;
-
-function handleGainedFocus() {
-  window.addEventListener('keydown', handleKeyDown);
-}
-
-function handleLostFocus() {
-  window.removeEventListener('keydown', handleKeyDown);
-}
 
 onMounted(() => {
-  gainedFocusListenerId = store.addEventListener('gained-focus:discard-dialog', handleGainedFocus);
-  lostFocusListenerId = store.addEventListener('lost-focus:discard-dialog', handleLostFocus);
-  window.addEventListener('keydown', handleKeyDown);
   discardItemListenerId = store.addEventListener('intent-to-discard-item', (data) => {
     if (data && data.id) {
       // Get the item data using useItem
@@ -62,9 +51,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  store.removeEventListener('gained-focus:discard-dialog', gainedFocusListenerId);
-  store.removeEventListener('lost-focus:discard-dialog', lostFocusListenerId);
-  window.removeEventListener('keydown', handleKeyDown);
   store.removeEventListener('intent-to-discard-item', discardItemListenerId);
 });
 

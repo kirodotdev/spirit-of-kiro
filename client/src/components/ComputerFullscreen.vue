@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, watch, ref, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import { getRarityClass } from '../utils/items';
 import BuyPreview from './BuyPreview.vue';
+import { useEscapeKeyHandler } from '../composables/useEscapeKeyHandler';
 
 const gameStore = useGameStore();
 const props = defineProps<{
@@ -69,45 +70,31 @@ const handleItemMouseLeave = () => {
   hoveredItemId.value = null;
 };
 
-const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key !== 'Escape' || !props.show || !gameStore.hasFocus('computer-fullscreen')) {
-    return;
+// Use the escape key handler
+const { handleKeyDown } = useEscapeKeyHandler('computer-fullscreen', (event) => {
+  if (event.key === 'Escape' && props.show) {
+    emit('close');
+    return true;
   }
-  emit('close');
-};
-
-let gainedFocusListenerId: string;
-let lostFocusListenerId: string;
-
-function handleGainedFocus() {
-  window.addEventListener('keydown', handleKeydown);
-}
-
-function handleLostFocus() {
-  window.removeEventListener('keydown', handleKeydown);
-}
+  return false;
+});
 
 onMounted(() => {
-  gainedFocusListenerId = gameStore.addEventListener('gained-focus:computer-fullscreen', handleGainedFocus);
-  lostFocusListenerId = gameStore.addEventListener('lost-focus:computer-fullscreen', handleLostFocus);
-  window.addEventListener('keydown', handleKeydown);
   buyResultsListenerId = gameStore.addEventListener('buy-results', handleBuyResults);
+  
+  // Watch for show prop changes to manage focus
+  watch(() => props.show, (newValue) => {
+    if (newValue) {
+      gameStore.pushFocus('computer-fullscreen');
+    } else {
+      gameStore.popFocus();
+    }
+  });
 });
 
 onUnmounted(() => {
-  gameStore.removeEventListener('gained-focus:computer-fullscreen', gainedFocusListenerId);
-  gameStore.removeEventListener('lost-focus:computer-fullscreen', lostFocusListenerId);
-  window.removeEventListener('keydown', handleKeydown);
   gameStore.removeEventListener('buy-results', buyResultsListenerId);
-});
-
-// Watch for show prop changes to manage focus
-watch(() => props.show, (newValue) => {
-  if (newValue) {
-    gameStore.pushFocus('computer-fullscreen');
-  } else {
-    gameStore.popFocus();
-  }
+  // No need to clean up escape key listeners as useEscapeKeyHandler handles that
 });
 
 const handleReset = () => {

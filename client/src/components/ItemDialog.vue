@@ -2,6 +2,8 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGameStore } from '../stores/game';
 import { getRarityClass } from '../utils/items';
+import { useFocusManagement } from '../composables/useFocusManagement';
+import { useEscapeKeyHandler } from '../composables/useEscapeKeyHandler';
 import type { Item } from '../systems/item-system';
 
 const store = useGameStore();
@@ -35,32 +37,19 @@ function closeDialog() {
   visible.value = false;
 }
 
-// Function to handle keydown events
-function handleKeyDown(event: KeyboardEvent) {
-  if (event.key !== 'Escape' || !visible.value || !store.hasFocus('item-dialog')) {
-    return;
+// Use the focus management composable
+const { handleKeyDown } = useEscapeKeyHandler('item-dialog', (event) => {
+  if (event.key === 'Escape' && visible.value) {
+    closeDialog();
+    return true;
   }
-  closeDialog();
-}
+  return false;
+});
 
 // Listen for inspect-item events
 let inspectItemListenerId: string;
 
-let gainedFocusListenerId: string;
-let lostFocusListenerId: string;
-
-function handleGainedFocus() {
-  window.addEventListener('keydown', handleKeyDown);
-}
-
-function handleLostFocus() {
-  window.removeEventListener('keydown', handleKeyDown);
-}
-
 onMounted(() => {
-  gainedFocusListenerId = store.addEventListener('gained-focus:item-dialog', handleGainedFocus);
-  lostFocusListenerId = store.addEventListener('lost-focus:item-dialog', handleLostFocus);
-  window.addEventListener('keydown', handleKeyDown);
   inspectItemListenerId = store.addEventListener('inspect-item', (data) => {
     console.log('inspect-item data', data)
     if (data && data.id) {
@@ -71,9 +60,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  store.removeEventListener('gained-focus:item-dialog', gainedFocusListenerId);
-  store.removeEventListener('lost-focus:item-dialog', lostFocusListenerId);
-  window.removeEventListener('keydown', handleKeyDown);
   store.removeEventListener('inspect-item', inspectItemListenerId);
 });
 

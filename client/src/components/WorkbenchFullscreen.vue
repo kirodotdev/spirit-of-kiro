@@ -3,6 +3,8 @@ import { onMounted, onUnmounted, watch, ref, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import { getRarityClass } from '../utils/items';
 import ItemPreview from './ItemPreview.vue';
+import { useFocusManagement } from '../composables/useFocusManagement';
+import { useEscapeKeyHandler } from '../composables/useEscapeKeyHandler';
 
 const gameStore = useGameStore();
 const props = defineProps<{
@@ -357,27 +359,28 @@ const handleDrop = (event: DragEvent, targetArea: 'tools' | 'working') => {
   draggedItem.value = null;
 };
 
-const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key !== 'Escape' || !props.show || !gameStore.hasFocus('workbench-fullscreen')) {
-    return;
+// Use the focus management composable
+const { handleKeyDown } = useEscapeKeyHandler('workbench-fullscreen', (event) => {
+  if (event.key === 'Escape' && props.show) {
+    // Handle Escape key press in priority order
+    if (selectedSkill.value) {
+      // First cancel any selected skill
+      selectedSkill.value = null;
+      return true;
+    }
+    
+    if (showSkillsDropdown.value) {
+      // Close the skills dropdown if it's open
+      showSkillsDropdown.value = false;
+      return true;
+    }
+    
+    // Then close the workbench if no skill is selected and dropdown is closed
+    emit('close');
+    return true;
   }
-  
-  // Handle Escape key press in priority order
-  if (selectedSkill.value) {
-    // First cancel any selected skill
-    selectedSkill.value = null;
-    return;
-  }
-  
-  if (showSkillsDropdown.value) {
-    // Close the skills dropdown if it's open
-    showSkillsDropdown.value = false;
-    return;
-  }
-  
-  // Then close the workbench if no skill is selected and dropdown is closed
-  emit('close');
-};
+  return false;
+});
 
 // Track mouse position for skill casting
 const handleMouseMove = (e: MouseEvent) => {
@@ -418,30 +421,16 @@ const handleContextMenu = (e: MouseEvent) => {
   }
 };
 
-let gainedFocusListenerId: string;
-let lostFocusListenerId: string;
-
-function handleGainedFocus() {
-  window.addEventListener('keydown', handleKeydown);
-}
-
-function handleLostFocus() {
-  window.removeEventListener('keydown', handleKeydown);
-}
-
 onMounted(() => {
-  gainedFocusListenerId = gameStore.addEventListener('gained-focus:workbench-fullscreen', handleGainedFocus);
-  lostFocusListenerId = gameStore.addEventListener('lost-focus:workbench-fullscreen', handleLostFocus);
-  window.addEventListener('keydown', handleKeydown);
   window.addEventListener('mousemove', handleMouseMove);
   window.addEventListener('click', handleClickOutside);
   window.addEventListener('contextmenu', handleContextMenu);
 });
 
 onUnmounted(() => {
-  gameStore.removeEventListener('gained-focus:workbench-fullscreen', gainedFocusListenerId);
-  gameStore.removeEventListener('lost-focus:workbench-fullscreen', lostFocusListenerId);
-  window.removeEventListener('keydown', handleKeydown);
+  window.removeEventListener('mousemove', handleMouseMove);
+  window.removeEventListener('click', handleClickOutside);
+  window.removeEventListener('contextmenu', handleContextMenu);
 });
 
 // Watch for show prop changes to manage focus
