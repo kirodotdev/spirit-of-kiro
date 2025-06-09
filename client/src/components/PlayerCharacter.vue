@@ -140,7 +140,6 @@ const handleDropItem = (data: any) => {
     type: GameItem,
     row: props.row,
     col: props.col,
-    interactive: true,
     width: 1,
     depth: 1,
     props: {

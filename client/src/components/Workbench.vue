@@ -153,7 +153,6 @@ function handleWorkbenchOverflowItem(data: { itemId: string }) {
     type: GameItem,
     row: props.row + props.depth, // Position below the workbench
     col: props.col + props.width / 2, // Center horizontally
-    interactive: true,
     width: 1,
     depth: 1,
     props: {

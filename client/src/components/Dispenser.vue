@@ -1,4 +1,3 @@
-
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import dispenserImage from '../assets/chute.png';
@@ -89,7 +88,6 @@ function spawnItemGameObject(data: any) {
       type: GameItem,
       row: itemRow,
       col: itemCol,
-      interactive: true,
       width: 1,
       depth: 1,
       height: 1,
