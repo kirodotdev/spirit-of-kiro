@@ -2,7 +2,7 @@
   <div class="auth-screen">
     <router-link to="/" class="back-link">← Back to Home</router-link>
     <div class="auth-container">
-      <h1>{{ isLogin ? 'Login' : 'Sign Up' }}</h1>
+      <h1>Sign Up</h1>
       
       <form @submit.prevent="handleSubmit" class="auth-form">
         <div class="form-group">
@@ -23,7 +23,7 @@
             id="password" 
             v-model="password" 
             required
-            autocomplete="current-password"
+            autocomplete="new-password"
           />
         </div>
 
@@ -32,12 +32,12 @@
         </div>
 
         <button type="submit" class="submit-button">
-          {{ isLogin ? 'Login' : 'Sign Up' }}
+          Sign Up
         </button>
 
-        <button type="button" class="toggle-button" @click="toggleMode">
-          {{ isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login' }}
-        </button>
+        <router-link to="/signin" class="toggle-button">
+          Already have an account? Login
+        </router-link>
       </form>
     </div>
   </div>
@@ -50,7 +50,6 @@ import { useRouter } from 'vue-router'
 
 const gameStore = useGameStore()
 const router = useRouter()
-const isLogin = ref(true)
 const username = ref('')
 const password = ref('')
 const error = ref('')
@@ -64,10 +63,7 @@ const setupListeners = () => {
   // Remove any existing listeners first
   removeListeners();
   
-  const successType = isLogin.value ? 'signin_success' : 'signup_success'
-  const failureType = isLogin.value ? 'signin_failure' : 'signup_failure'
-  
-  successListenerId = gameStore.addEventListener(successType, (data) => {
+  successListenerId = gameStore.addEventListener('signup_success', (data) => {
     if (data && data.userId) {
       gameStore.userId = data.userId
     }
@@ -75,7 +71,7 @@ const setupListeners = () => {
     removeListeners();
   })
   
-  failureListenerId = gameStore.addEventListener(failureType, (data) => {
+  failureListenerId = gameStore.addEventListener('signup_failure', (data) => {
     error.value = data || 'Authentication failed'
     removeListeners();
   })
@@ -84,13 +80,11 @@ const setupListeners = () => {
 // Cleanup event listeners
 const removeListeners = () => {
   if (successListenerId) {
-    const successType = isLogin.value ? 'signin_success' : 'signup_success'
-    gameStore.removeEventListener(successType, successListenerId)
+    gameStore.removeEventListener('signup_success', successListenerId)
     successListenerId = null;
   }
   if (failureListenerId) {
-    const failureType = isLogin.value ? 'signin_failure' : 'signup_failure'
-    gameStore.removeEventListener(failureType, failureListenerId)
+    gameStore.removeEventListener('signup_failure', failureListenerId)
     failureListenerId = null;
   }
 }
@@ -108,7 +102,7 @@ const handleSubmit = async () => {
     setupListeners();
 
     const message = {
-      type: isLogin.value ? 'signin' : 'signup',
+      type: 'signup',
       body: {
         username: username.value,
         password: password.value
@@ -122,16 +116,8 @@ const handleSubmit = async () => {
   }
 }
 
-const toggleMode = () => {
-  isLogin.value = !isLogin.value
-  error.value = ''
-  // Reset listeners when toggling between login/signup
-  removeListeners();
-}
-
 // Setup connection status listeners
 let connectionListenerId: string | null = null;
-let reconnectAttemptId: string | null = null;
 let reconnectFailedId: string | null = null;
 
 onMounted(() => {
@@ -242,6 +228,8 @@ input:focus {
   cursor: pointer;
   padding: 0.5rem;
   font-size: 0.9rem;
+  text-decoration: none;
+  text-align: center;
 }
 
 .toggle-button:hover {
@@ -269,4 +257,4 @@ input:focus {
 .back-link:hover {
   color: #45a049;
 }
-</style>
+</style> 

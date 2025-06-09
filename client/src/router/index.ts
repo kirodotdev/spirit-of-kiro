@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
-import AuthView from '../views/AuthView.vue'
+import SignInView from '../views/SignInView.vue'
+import SignUpView from '../views/SignUpView.vue'
 import GameView from '../views/GameView.vue'
 import { useGameStore } from '../stores/game'
 import { watch } from 'vue'
@@ -14,9 +15,22 @@ const router = createRouter({
       component: HomeView
     },
     {
-      path: '/auth',
-      name: 'auth',
-      component: AuthView,
+      path: '/signin',
+      name: 'signin',
+      component: SignInView,
+      beforeEnter: (to, from, next) => {
+        const gameStore = useGameStore()
+        if (gameStore.isAuthenticated) {
+          next('/play')
+        } else {
+          next()
+        }
+      }
+    },
+    {
+      path: '/signup',
+      name: 'signup',
+      component: SignUpView,
       beforeEnter: (to, from, next) => {
         const gameStore = useGameStore()
         if (gameStore.isAuthenticated) {
@@ -33,7 +47,7 @@ const router = createRouter({
       beforeEnter: (to, from, next) => {
         const gameStore = useGameStore()
         if (!gameStore.isAuthenticated) {
-          next('/auth')
+          next('/signin')
         } else {
           next()
         }
@@ -51,14 +65,14 @@ router.beforeEach((to, from, next) => {
   const gameStore = useGameStore()
 
   // Always allow access to home and auth routes
-  if (to.name === 'home' || to.name === 'auth') {
+  if (to.name === 'home' || to.name === 'signin' || to.name === 'signup') {
     next()
     return
   }
 
   // Check authentication for other routes
   if (!gameStore.isAuthenticated) {
-    next('/auth')
+    next('/signin')
   } else {
     next()
   }
