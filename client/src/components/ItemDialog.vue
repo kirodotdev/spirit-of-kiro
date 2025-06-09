@@ -2,9 +2,7 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGameStore } from '../stores/game';
 import { getRarityClass } from '../utils/items';
-import { useFocusManagement } from '../composables/useFocusManagement';
 import { useEscapeKeyHandler } from '../composables/useEscapeKeyHandler';
-import type { Item } from '../systems/item-system';
 
 const store = useGameStore();
 

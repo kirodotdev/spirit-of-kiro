@@ -3,7 +3,6 @@ import { onMounted, onUnmounted, watch, ref, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import { getRarityClass } from '../utils/items';
 import ItemPreview from './ItemPreview.vue';
-import { useFocusManagement } from '../composables/useFocusManagement';
 import { useEscapeKeyHandler } from '../composables/useEscapeKeyHandler';
 
 const gameStore = useGameStore();

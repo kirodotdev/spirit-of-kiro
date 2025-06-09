@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 import { useGameStore } from '../stores/game';
-import { useFocusManagement } from '../composables/useFocusManagement';
 import ItemPreview from './ItemPreview.vue';
 import { getRarityClass } from '../utils/items';
 import sellTableImage from '../assets/sell-table.png';
