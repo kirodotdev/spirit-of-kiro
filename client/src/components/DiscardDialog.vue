@@ -51,8 +51,8 @@ onMounted(() => {
   window.addEventListener('keydown', handleKeyDown);
   discardItemListenerId = store.addEventListener('intent-to-discard-item', (data) => {
     if (data && data.id) {
-      // Get the item data directly from the store using the ID
-      const itemData = store.itemsById.get(data.id);
+      // Get the item data using useItem
+      const itemData = store.useItem(data.id).value;
       if (itemData) {
         currentItem.value = itemData;
         visible.value = true;

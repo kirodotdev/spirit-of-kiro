@@ -24,18 +24,18 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// Get the item details directly from the itemsById Map
-const item = store.itemsById.get(props.props.itemId);
+// Get the item details using useItem
+const item = computed(() => store.useItem(props.props.itemId).value);
 
 // No dialog state needed anymore
 
 // Use the item's imageUrl if available, otherwise use generic.png
-const icon = computed(() => item?.imageUrl || '/src/assets/generic.png');
+const icon = computed(() => item.value?.imageUrl || '/src/assets/generic.png');
 
 // Use the shared utility function for rarity class
 const rarityClass = computed(() => {
-  if (!item || item.value === undefined) return getRarityClass();
-  return getRarityClass(item.value);
+  if (!item.value || item.value.value === undefined) return getRarityClass();
+  return getRarityClass(item.value.value);
 });
 
 // Calculate shadow opacity based on item height
@@ -46,7 +46,7 @@ const shadowOpacity = computed(() => {
 });
 
 function handlePlayerInteraction() {
-  if (!props.playerIsNear || !item) {
+  if (!props.playerIsNear || !item.value) {
     return;
   }
 

@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import type { Ref } from 'vue'
 import { PhysicsSystem } from '../systems/physics-system'
 import { SocketSystem } from '../systems/socket-system'
 import { defineStore } from 'pinia'
@@ -18,7 +19,6 @@ export const useGameStore = defineStore('game', () => {
   const isAuthenticated = ref(false)
   const userId = ref<string | null>(null)
   const objects = ref<GameObject[]>([])
-  const items = ref<Item[]>([])
   const tileSize = ref(50)
   const heldItemId = ref<string | null>(null)
   const personaData = ref<Map<string, string>>(new Map())
@@ -42,7 +42,7 @@ export const useGameStore = defineStore('game', () => {
   new PhysicsSystem(objects, hasActivePhysics);
   const socketSystem = new SocketSystem(ws, wsConnected, isAuthenticated);
   const gameObjectSystem = new GameObjectSystem(objects);
-  const itemSystem = new ItemSystem(items, socketSystem);
+  const itemSystem = new ItemSystem(socketSystem);
   const inventorySystem = new InventorySystem(
     socketSystem,
     userId
@@ -60,8 +60,6 @@ export const useGameStore = defineStore('game', () => {
     isAuthenticated,
     userId,
     objects,
-    items,
-    itemsById: itemSystem.itemsById,
     debug,
     tileSize,
     interactionLocked,
@@ -93,9 +91,10 @@ export const useGameStore = defineStore('game', () => {
     cleanup: socketSystem.cleanup.bind(socketSystem),
 
     // Game item actions (getting items is done using the reactive itemsById prop)
-    addItem: itemSystem.addItem.bind(itemSystem),
+    upsertItem: itemSystem.upsertItem.bind(itemSystem),
     removeItem: itemSystem.removeItem.bind(itemSystem),
     clearItems: itemSystem.clearItems.bind(itemSystem),
+    useItem: itemSystem.useItem.bind(itemSystem),
 
     // Game object (drawn objects) actions
     addObject: gameObjectSystem.addObject.bind(gameObjectSystem),

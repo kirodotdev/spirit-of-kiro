@@ -34,11 +34,11 @@ const toolsMaxCapacity = 32;
 
 // Create computed properties for the actual inventory items
 const workingInventory = computed(() => {
-  return workingInventoryIds.value.map(id => gameStore.itemsById.get(id)).filter(Boolean);
+  return workingInventoryIds.value.map(id => gameStore.useItem(id).value);
 });
 
 const toolsInventory = computed(() => {
-  return toolsInventoryIds.value.map(id => gameStore.itemsById.get(id)).filter(Boolean);
+  return toolsInventoryIds.value.map(id => gameStore.useItem(id).value);
 });
 
 // Create computed properties for capacity
@@ -102,6 +102,16 @@ const toolsCapacityDots = computed(() => {
   return dots;
 });
 
+// Computed property for working items
+const workingItems = computed(() => {
+  return workingInventoryIds.value.map(id => gameStore.useItem(id).value);
+});
+
+// Computed property for tools items
+const toolsItems = computed(() => {
+  return toolsInventoryIds.value.map(id => gameStore.useItem(id).value);
+});
+
 function handlePlayerInteraction() {
   if (!props.playerIsNear) {
     return;
@@ -143,7 +153,7 @@ const OVERFLOW_IMPULSE = 5; // Lower impulse than throwing
 function handleWorkbenchOverflowItem(data: { itemId: string }) {
   if (!data.itemId) return;
   
-  const item = gameStore.itemsById.get(data.itemId);
+  const item = gameStore.useItem(data.itemId).value;
   if (!item) return;
 
   // Add the item back to the game world at a position below the workbench
@@ -172,6 +182,40 @@ function handleWorkbenchOverflowItem(data: { itemId: string }) {
     }
   });
 }
+
+// Handle workbench overflow item event
+const handleWorkbenchOverflow = (data: any) => {
+  if (!data || !data.itemId) return;
+  
+  const item = gameStore.useItem(data.itemId).value;
+  if (!item) return;
+  
+  // Add the item back to the game world at the workbench's position
+  // with minimal velocity and physics settings
+  gameStore.addObject({
+    id: data.itemId,
+    type: GameItem,
+    row: props.row,
+    col: props.col,
+    interactive: true,
+    width: 1,
+    depth: 1,
+    props: {
+      itemId: data.itemId,
+      pickedUp: true
+    },
+    physics: {
+      active: true,
+      angle: 0,
+      velocity: OVERFLOW_IMPULSE,
+      friction: 3,
+      height: 1,
+      verticalVelocity: 0,
+      bounceStrength: 0.2,
+      mass: 1.0
+    }
+  });
+};
 
 let interactionListenerId: string;
 let overflowItemListenerId: string;
@@ -246,8 +290,8 @@ const closeFullscreen = () => {
     <WorkbenchFullscreen
       :show="showFullscreen"
       :workbench-image="workbenchZoomImage"
-      :tools-items="toolsInventory"
-      :working-items="workingInventory"
+      :tools-items="toolsItems"
+      :working-items="workingItems"
       @close="closeFullscreen"
     />
   </div>

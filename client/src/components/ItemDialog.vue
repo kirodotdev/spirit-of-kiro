@@ -2,12 +2,19 @@
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useGameStore } from '../stores/game';
 import { getRarityClass } from '../utils/items';
+import type { Item } from '../systems/item-system';
 
 const store = useGameStore();
 
-// State to track dialog visibility and current item
+// State to track dialog visibility and current item ID
 const visible = ref(false);
-const currentItem = ref<any>(null);
+const currentItemId = ref<string>();
+
+// Computed property for the current item
+const currentItem = computed(() => {
+  if (!currentItemId.value) return undefined;
+  return store.useItem(currentItemId.value).value;
+});
 
 // Computed properties for the dialog
 const imageUrl = computed(() => currentItem.value?.imageUrl || '/src/assets/generic.png');
@@ -57,14 +64,8 @@ onMounted(() => {
   inspectItemListenerId = store.addEventListener('inspect-item', (data) => {
     console.log('inspect-item data', data)
     if (data && data.id) {
-      // Get the item data directly from the store using the ID
-      const itemData = store.itemsById.get(data.id);
-      if (itemData) {
-        currentItem.value = itemData;
-        // Store the game object ID for later removal
-        currentItem.value.gameObjectId = data.id;
-        visible.value = true;
-      }
+      currentItemId.value = data.id;
+      visible.value = true;
     }
   });
 });

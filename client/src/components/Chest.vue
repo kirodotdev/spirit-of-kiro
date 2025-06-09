@@ -33,7 +33,7 @@ const usedCapacity = computed(() => {
 // Computed property to determine the color of each dot based on item rarity
 const capacityDots = computed(() => {
   const dots = [];
-  const items = inventory.value.map(id => gameStore.itemsById.get(id)).filter(Boolean);
+  const items = inventory.value.map(id => gameStore.useItem(id).value).filter(Boolean);
   
   // Fill dots with items that exist in inventory
   for (let i = 0; i < Math.min(items.length, maxCapacity); i++) {

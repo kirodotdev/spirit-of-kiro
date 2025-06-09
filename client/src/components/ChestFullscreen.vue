@@ -19,17 +19,15 @@ const emit = defineEmits<{
 // State to track which item is being hovered
 const hoveredItemId = ref<string | null>(null);
 
-// Map the item IDs to actual item objects using gameStore.itemsById
+// Map the item IDs to actual item objects using useItem
 const mappedItems = computed(() => {
-  return props.items
-    .map(id => gameStore.itemsById.get(id))
-    .filter(item => item !== undefined);
+  return props.items.map(id => gameStore.useItem(id).value);
 });
 
 // Get the currently hovered item object
 const hoveredItem = computed(() => {
   if (!hoveredItemId.value) return null;
-  return gameStore.itemsById.get(hoveredItemId.value) || null;
+  return gameStore.useItem(hoveredItemId.value).value;
 });
 
 const handleItemClick = (itemId: string) => {

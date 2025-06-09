@@ -8,13 +8,14 @@ import appraisingImage from '../assets/appraising.png';
 import happyImage from '../assets/happy.png';
 import unhappyImage from '../assets/unhappy.png';
 import neutralImage from '../assets/neutral.png';
+import type { Item } from '../systems/item-system';
 
 const store = useGameStore();
 
 // State
 const visible = ref(false);
 const isLoading = ref(true);
-const sellData = ref<any>(null);
+const sellData = ref<Item | null>(null);
 const result = ref<any>(null);
 
 // State to track which item is being hovered
@@ -25,11 +26,12 @@ const hoveredItemPosition = ref({ x: 0, y: 0 });
 // Get the currently hovered item object
 const hoveredItem = computed(() => {
   if (!hoveredItemId.value) return null;
-  return store.itemsById.get(hoveredItemId.value) || null;
+  return store.useItem(hoveredItemId.value).value;
 });
 
 // Handle mouse enter event for items
-function handleItemMouseEnter(itemId: string, event: MouseEvent) {
+function handleItemMouseEnter(itemId: string | undefined, event: MouseEvent) {
+  if (!itemId) return;
   hoveredItemId.value = itemId;
   hoveredItemElement.value = event.currentTarget as HTMLElement;
   
@@ -110,9 +112,9 @@ onMounted(() => {
   sellItemListenerId = store.addEventListener('sell-item', (data) => {
     if (data && data.id) {
       // Get the item data directly from the store using the ID
-      const itemData = store.itemsById.get(data.id);
+      const itemData = store.useItem(data.id);
       if (itemData) {
-        sellData.value = itemData;
+        sellData.value = itemData.value;
         visible.value = true;
         isLoading.value = true;
         
@@ -189,10 +191,10 @@ function getAppraiserComment(happiness: number): string {
         </div>
         <div class="preview-grid" v-if="sellData">
           <div class="item-wrapper" 
-               :class="getRarityClass(sellData.value)"
-               @mouseenter="(event) => handleItemMouseEnter(sellData.id, event)"
+               :class="getRarityClass(sellData?.value)"
+               @mouseenter="(event) => handleItemMouseEnter(sellData?.id, event)"
                @mouseleave="handleItemMouseLeave">
-            <img :src="sellData.imageUrl" class="item-image" :alt="sellData.name" />
+            <img :src="sellData?.imageUrl" class="item-image" :alt="sellData?.name" />
           </div>
         </div>
       </div>
@@ -210,10 +212,10 @@ function getAppraiserComment(happiness: number): string {
         </div>
         <div class="preview-grid" v-if="sellData">
           <div class="item-wrapper" 
-                :class="getRarityClass(sellData.value)"
-                @mouseenter="(event) => handleItemMouseEnter(sellData.id, event)"
+                :class="getRarityClass(sellData?.value)"
+                @mouseenter="(event) => handleItemMouseEnter(sellData?.id, event)"
                 @mouseleave="handleItemMouseLeave">
-            <img :src="sellData.imageUrl" class="item-image" :alt="sellData.name" />
+            <img :src="sellData?.imageUrl" class="item-image" :alt="sellData?.name" />
           </div>
         </div>
         <div class="appraisal-details">

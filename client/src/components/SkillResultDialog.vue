@@ -6,6 +6,11 @@ import { getRarityClass } from '../utils/items';
 
 const store = useGameStore();
 
+const props = defineProps<{
+  items: string[];
+  removedItemIds: string[];
+}>();
+
 // State to track dialog visibility, loading state, story state, and result data
 const visible = ref(false);
 const isLoading = ref(true);
@@ -44,15 +49,13 @@ const removedItems = computed(() => {
   }
   
   return resultData.value.removedItemIds
-    .map((itemId: string) => store.itemsById.get(itemId))
-    .filter((item): item is NonNullable<typeof item> => item !== undefined);
+    .map((itemId: string) => store.useItem(itemId).value);
 });
 
 // Get the actual item objects from the workbench-results inventory IDs
 const workbenchResultItems = computed(() => {
   return workbenchResultsIds.value
-    .map(itemId => store.itemsById.get(itemId))
-    .filter((item): item is NonNullable<typeof item> => item !== undefined);
+    .map(itemId => store.useItem(itemId).value);
 });
 
 // Get the currently hovered item object
@@ -61,7 +64,7 @@ const hoveredItem = computed(() => {
     return resultData.value.tool;
   }
   if (!hoveredItemId.value) return null;
-  return store.itemsById.get(hoveredItemId.value) || null;
+  return store.useItem(hoveredItemId.value).value;
 });
 
 // Handle mouse enter event for items
@@ -772,8 +775,6 @@ watch(visible, (newValue) => {
 .animate-in {
   animation: pop-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-
-
 
 /* Add animation delay based on item index */
 .items-grid .item-container:nth-child(1) { animation-delay: 0.1s; }

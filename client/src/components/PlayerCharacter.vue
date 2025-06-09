@@ -47,11 +47,8 @@ const rarityClass = computed(() => {
 
 // Computed property for the held item
 const heldItem = computed(() => {
-  if (heldItemId.value) {
-    return gameStore.itemsById.get(heldItemId.value);
-  } else {
-    return null;
-  }
+  if (!heldItemId.value) return null;
+  return gameStore.useItem(heldItemId.value).value;
 });
 
 const handleKeyDown = (e: KeyboardEvent) => {

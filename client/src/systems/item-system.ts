@@ -1,4 +1,4 @@
-import { type Ref, computed } from 'vue'
+import { type Ref, computed, ref } from 'vue'
 import { useGameStore } from '../stores/game';
 import type { SocketSystem } from './socket-system';
 
@@ -11,24 +11,20 @@ export interface Item {
   weight?: string
   damage?: string
   materials?: string[]
-  skills?: { name: string, description: string }[]
+  skills?: { 
+    name: string
+    description: string
+    targets?: number // 0 for self, 1 for single target, 2 for two targets
+  }[]
 }
 
 export class ItemSystem {
-  private items: Ref<Item[]>
+  private items: Map<string, Ref<Item>>
   private socketSystem;
   private eventListenerIds: string[] = [];
-  
-  public itemsById = computed(() => {
-    const map = new Map<string, Item>()
-    this.items.value.forEach(item => {
-      map.set(item.id, item)
-    })
-    return map
-  })
 
-  constructor(items: Ref<Item[]>, socketSystem: SocketSystem) {
-    this.items = items
+  constructor(socketSystem: SocketSystem) {
+    this.items = new Map()
     this.socketSystem = socketSystem;
     
     // Subscribe to inventory-items:* events
@@ -38,27 +34,40 @@ export class ItemSystem {
     this.eventListenerIds.push(this.socketSystem.addEventListener('discarded-results', this.handleDiscardedResults.bind(this)))
   }
 
-  addItem(item: Item) {
-    // Check if item with same ID already exists
-    const existingItemIndex = this.items.value.findIndex(i => i.id === item.id)
-    if (existingItemIndex !== -1) {
-      // Replace existing item
-      this.items.value[existingItemIndex] = item
+  useItem(itemId: string): Ref<Item> {
+    const item = this.items.get(itemId)
+    if (!item) {
+      // Create a placeholder loading item
+      const loadingItem: Item = {
+        id: itemId,
+        name: 'Loading...',
+        description: 'This item is still loading...',
+        imageUrl: '/src/assets/generic.png'
+      }
+      const loadingItemRef = ref(loadingItem)
+      this.items.set(itemId, loadingItemRef)
+      return loadingItemRef
+    }
+    return item
+  }
+
+  upsertItem(item: Item) {
+    const existingRef = this.items.get(item.id)
+    if (existingRef) {
+      // Update the existing ref's value
+      existingRef.value = item
     } else {
-      // Add new item
-      this.items.value.push(item)
+      // Create a new ref
+      this.items.set(item.id, ref(item))
     }
   }
 
   removeItem(itemId: string) {
-    const index = this.items.value.findIndex(item => item.id === itemId)
-    if (index !== -1) {
-      this.items.value.splice(index, 1)
-    }
+    this.items.delete(itemId)
   }
 
   clearItems() {
-    this.items.value = []
+    this.items.clear()
   }
   
   /**
@@ -68,7 +77,7 @@ export class ItemSystem {
   private handleInventoryItems(data?: any, eventType?: string) {    
     // Add each item to the collection
     data.forEach((item: Item) => {
-      this.addItem(item)
+      this.upsertItem(item)
     })
   }
 
@@ -76,7 +85,7 @@ export class ItemSystem {
    * Adds item when an item is pulled
    */
   private handlePulledItem(data?: any, eventType?: string) {    
-    this.addItem(data.item)
+    this.upsertItem(data.item)
   }
 
   /**
@@ -86,11 +95,11 @@ export class ItemSystem {
   private handleSkillResults(data?: any, eventType?: string) {
     // Update the tool item if present
     if (data.tool) {
-      this.addItem(data.tool)
+      this.upsertItem(data.tool)
     }
 
     if (data.item) {
-      this.addItem(data.item)
+      this.upsertItem(data.item)
     }
     
     // Remove all items with IDs in the removedItemIds array
@@ -111,7 +120,7 @@ export class ItemSystem {
     // Add all items to the local item store
     if (data && Array.isArray(data)) {
       data.forEach((item: Item) => {
-        this.addItem(item)
+        this.upsertItem(item)
       })
     }
   }

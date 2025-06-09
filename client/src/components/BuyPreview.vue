@@ -13,9 +13,6 @@ const props = defineProps<{
   transform?: string;
 }>();
 
-// Computed properties for the preview
-const imageUrl = computed(() => props.item?.imageUrl || '/src/assets/generic.png');
-
 // Determine CSS class based on item value
 const rarityClass = computed(() => {
   if (!props.item || props.item.value === undefined) return 'item-common';
