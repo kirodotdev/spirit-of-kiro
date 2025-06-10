@@ -10,10 +10,10 @@ WEST_REGION="us-west-2"
 EAST_REGION="us-east-1"
 
 # Deploy item-images
-#echo "📸 Deploying item-images..."
-#cd item-images/iac
-#AWS_REGION=$WEST_REGION ./deploy.sh "$ITEM_IMAGES_PREFIX"
-#cd ../..
+echo "📸 Deploying item-images..."
+cd item-images/iac
+AWS_REGION=$WEST_REGION ./deploy.sh "$ITEM_IMAGES_PREFIX"
+cd ../..
 
 # Deploy server
 echo "🖥️ Deploying server..."

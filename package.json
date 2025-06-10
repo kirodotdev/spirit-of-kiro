@@ -1,7 +1,7 @@
 {
-  "name": "ai-scrapyard",
+  "name": "placeholder-title",
   "version": "1.0.0",
-  "description": "AI-powered scrapyard game with client and server components",
+  "description": "AI-powered game with client and server components",
   "scripts": {
     "dev": "bun launch.ts"
   },
