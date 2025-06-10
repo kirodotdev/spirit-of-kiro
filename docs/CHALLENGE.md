@@ -4,11 +4,11 @@ This project has a few bugs and feature gaps that were
 deliberately left behind so you could experiment with AI
 engineering.
 
-## Challenge 1: Weak landing page
+## Challenge 1: Weak home page
 
 See if you can get the coding agent to explore the codebase,
 figure out the game's features and selling points, and
-create a better landing page for the game
+create a better home page for the game
 
 ## Challenge 2: Physics bug
 
