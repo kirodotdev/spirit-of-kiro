@@ -14,25 +14,6 @@ Resources:
         DestinationBucketName: !Ref ImagesLoggingBucket
         LogFilePrefix: images-access-logs/
 
-  ImagesBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref ImagesBucket
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: s3.amazonaws.com
-            Action: 
-              - s3:PutObject
-            Resource: !Sub "${ImagesBucket.Arn}/*"
-            Condition:
-              StringEquals:
-                'AWS:SourceAccount': !Ref AWS::AccountId
-              Bool:
-                aws:SecureTransport: "true"
-
   ImagesLoggingBucket:
     Type: AWS::S3::Bucket
     Properties:
