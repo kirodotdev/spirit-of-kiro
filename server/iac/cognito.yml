@@ -35,6 +35,8 @@ Resources:
         - email
       UsernameConfiguration:
         CaseSensitive: false
+      UserPoolAddOns:
+        AdvancedSecurityMode: OFF
 
   # Cognito App Client
   UserPoolClient:
