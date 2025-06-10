@@ -31,14 +31,7 @@ Sometimes when the player is closer to the wall than to an interactive
 object like an item, then the interaction prompt does not appear over the item.
 Can you fix this using AI?
 
-## Challenge 4: Implement password reset
-
-You may notice that there is no "forgot password" link on sign in. It looks
-like we need to implement that! This application uses Amazon Cognito for auth.
-Can you implement password reset screens in the client and the backend for password
-resets in the server?
-
-## Challenge 5: Sounds
+## Challenge 4: Sounds
 
 The game currently has no sounds. Can you add a sound system to the game?
 There is a list of royalty free, no attribution required sounds available here:
@@ -46,5 +39,15 @@ https://sonniss.com/gameaudiogdc/
 Consider how to load a list of background and interaction sounds, then trigger
 these sounds to play via events that are emitted from all relevant components.
 
+## Challenge 5: Implement email verification, then password reset
 
+This application uses Amazon Cognito. Cognito requires emails to be verified
+in order to use them as a password reset option.
+
+Currently the application just uses an admin method to verify user accounts
+without verfiying the user's email. This means that password resets
+can't be implemented. 
+
+Can you implement email verification, then implement password reset across the client
+and the backend server?
 
