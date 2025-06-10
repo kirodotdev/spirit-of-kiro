@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "ai-scrapyard",
+      "name": "placeholder-title",
       "dependencies": {
         "@aws-sdk/client-dynamodb": "^3.821.0",
         "@types/uuid": "^10.0.0",

@@ -147,7 +147,7 @@ export const appraiseItem = async function (item: any): Promise<any> {
     system: [
       {
         "text": `
-          You are an experienced appraiser in a fantasy scrapyard game.
+          You are an experienced appraiser in a fantasy crafting game.
           Your job is to evaluate items and determine their market value.
           
           You are very sensitive to the condition of items, and you treat

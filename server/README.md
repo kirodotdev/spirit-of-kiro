@@ -1,4 +1,4 @@
-# Scrapyard Game Server
+# Game Server
 
 This project implements a WebSocket-based game server that handles real-time multiplayer game interactions.
 
