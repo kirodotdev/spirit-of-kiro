@@ -4,54 +4,58 @@ This project has a few bugs and feature gaps that were
 deliberately left behind so you could experiment with AI
 engineering.
 
-## Challenge 1: Weak landing page
+## Challenge 1: Weak home page
 
 See if you can get the coding agent to explore the codebase,
 figure out the game's features and selling points, and
-create a better landing page for the game
+create a better home page for the game.
 
-## Challenge 2: Basic refactor
+__Tip:__ Try out different styles such as: "Apple product marketing page",
+"Retro", or "Startup" and/or ask for specific things that you want like a
+"carousel", "quotes", or "animations".
 
-In file like `WorkbenchFullscreen.vue` there are opportunities
-to use the "return early" pattern to refactor deeply nested if statements. Can AI do this automatically? Can it find other similar
-places that need to be refactored?
-
-## Challenge 3: Physics bug
+## Challenge 2: Physics bug
 
 If you have items in an active physics state (such as the
 player character actively moving, and colliding with an object)
 then if you tab out of the game, wait a few seconds, and tab
-back in, you will see a tremendous bounce that goes haywire!
+back in, you will see the items do a tremendous bounce!
 
-Easy reproduction is to pull the lever, switch browser tabs for
-at least 20-30 seconds so that the item is dispensed while the
+![](gifs/bounce-bug-optimized.gif)
+
+Easy reproduction is to pull the lever, switch browser tabs while the
+item is generated so that the item is dispensed while the
 tab is backgrounded, then switch back to the game tab. 
 
 Can AI figure out the cause of this bug and then fix it?
 
-_Extra credit: There are multiple potential solutions to this problem. Be sure to ask the AI to dig deeper and suggest alternate solutions. Think about the various potential solutions, and use your strengths as a human to select the right one._
+_Extra credit: There are multiple potential solutions to this problem. Be sure to ask the AI to dig deeper and suggest alternate solutions. Think about the various potential solutions, and use your strengths as a human to select the right one(s)._
 
-## Challenge 4: Interactions bug
+## Challenge 3: Interactions bug
 
-Sometimes when the player is closer to the wall than to an interactive
-object like an item, then the interaction prompt does not appear over the item.
+Sometimes when the player is closer to the wall than to an interactive object like an item or the chest, then the interact prompt does not appear over the interactive object.
+
+![](gifs/interactions-bug-optimized.gif)
+
 Can you fix this using AI?
 
-## Challenge 5: Image loading system
-
-The first time you load the game, and the first time you open a storage chest
-you may see the images loading in on the fly. This is because the browser
-does not load images until they are actually available in the DOM. Can you
-implement an image loading system that preloads all the required images for
-the game, including dynamic images for items?
-
-_Extra credit: Add a loading screen to block the game appearing until image loading is completed._
-
-## Challenge 6: Sounds
+## Challenge 4: Sounds
 
 The game currently has no sounds. Can you add a sound system to the game?
+There is a list of royalty free, no attribution required sounds available here:
+https://sonniss.com/gameaudiogdc/
 Consider how to load a list of background and interaction sounds, then trigger
-them via events in all the relevant components.
+these sounds to play via events that are emitted from all relevant components.
 
+## Challenge 5: Implement email verification, then password reset
 
+This application uses Amazon Cognito for auth. Cognito requires emails to be verified
+in order to use them as a password reset option.
+
+Currently the application just uses an admin method to verify user accounts
+without verfiying the user's email. This means that password resets
+can't be implemented. 
+
+Can you implement email verification, then implement password reset across the client
+and the backend server?
 
