@@ -18,6 +18,24 @@ Parameters:
     Default: arn:aws:acm:us-east-1:784059518401:certificate/94e1f477-2af7-4f9a-a547-5f4ddd59474b
 
 Resources:
+  ImagesBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ImagesBucketName
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: 's3:GetObject'
+            Resource: !Sub "${ImagesBucketArn}/*"
+            Condition:
+              StringEquals:
+                'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
+              Bool:
+                aws:SecureTransport: "true"
+
   CloudFrontOriginAccessControl:
     Type: AWS::CloudFront::OriginAccessControl
     Properties:
@@ -62,24 +80,6 @@ Resources:
               Bool:
                 aws:SecureTransport: "true"
 
-  ImagesBucketPolicy:
-    Type: AWS::S3::BucketPolicy 
-    Properties:
-      Bucket: !Ref ImagesBucketName
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: cloudfront.amazonaws.com
-            Action: 's3:GetObject'
-            Resource: !Sub '${ImagesBucketArn}/*'
-            Condition:
-              StringEquals:
-                'AWS:SourceArn': !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
-              Bool:
-                aws:SecureTransport: "true"
-
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -96,13 +96,14 @@ Resources:
           DefaultTTL: 86400
           MaxTTL: 31536000
           Compress: true
-          ViewerCertificate:
-            CloudFrontDefaultCertificate: true
-            MinimumProtocolVersion: TLSv1.2_2021
         Enabled: true
         HttpVersion: http3
         Aliases:
           - !Ref DomainName
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
         Logging:
           Bucket: !Sub "${CloudFrontLoggingBucket.DomainName}"
           Prefix: cf-logs/
