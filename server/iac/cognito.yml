@@ -36,7 +36,7 @@ Resources:
       UsernameConfiguration:
         CaseSensitive: false
       UserPoolAddOns:
-        AdvancedSecurityMode: OFF
+        AdvancedSecurityMode: "OFF"
 
   # Cognito App Client
   UserPoolClient:
