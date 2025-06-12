@@ -25,9 +25,9 @@ services:
       # You can change which AWS CLI Profile is used
       AWS_PROFILE: "default"
     networks:
-        credentials_network:
-            # This special IP address is recognized by the AWS SDKs and AWS CLI
-            ipv4_address: "169.254.170.2"
+      credentials_network:
+        # This special IP address is recognized by the AWS SDKs and AWS CLI
+        ipv4_address: "169.254.170.2"
 
   # Storage for game data
   dynamodb-local:
@@ -40,7 +40,8 @@ services:
       - "./docker/dynamodb:/home/dynamodblocal/data"
     working_dir: /home/dynamodblocal
     networks:
-      - credentials_network
+      credentials_network:
+        ipv4_address: "169.254.170.3"
 
   # Hosts the backend WebSocket server 
   server:
@@ -67,7 +68,8 @@ services:
       # Enables V3 Metadata
       ECS_CONTAINER_METADATA_URI: "http://169.254.170.2/v3"
     networks:
-      - credentials_network
+      credentials_network:
+        ipv4_address: "169.254.170.4"
     develop:
       watch:
         - action: sync+restart
@@ -77,6 +79,7 @@ services:
             - node_modules/
         - action: rebuild
           path: package.json
+    
 
   # Hosts the web server for the game client
   client:
@@ -91,7 +94,8 @@ services:
     environment:
       VITE_WS_URL: http://localhost:8080/
     networks:
-      - credentials_network
+      credentials_network:
+        ipv4_address: "169.254.170.5"
     develop:
       watch:
         - action: sync
@@ -101,3 +105,4 @@ services:
             - node_modules/
         - action: rebuild
           path: package.json
+    
