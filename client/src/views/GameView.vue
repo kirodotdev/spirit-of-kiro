@@ -1,5 +1,6 @@
 <template>
   <div class="app">
+    <TutorialScreen />
     <LoadingScreen 
       :progress="gameStore.preloadProgress" 
     />
@@ -40,6 +41,7 @@ import RandomChat from '../components/RandomChat.vue'
 import { setupGameObjects } from '../utils/init-world'
 import { storeToRefs } from 'pinia'
 import LoadingScreen from '../components/LoadingScreen.vue'
+import TutorialScreen from '../components/TutorialScreen.vue'
 import Preloader from '../components/Preloader.vue'
 
 const gridSize = ref(20)

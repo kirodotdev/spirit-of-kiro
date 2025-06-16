@@ -19,6 +19,12 @@ import garbage from './garbage.png'
 import dispenser from './dispenser.png'
 import chute from './chute.png'
 
+// Tutorial assets
+import tutorialGhost from './tutorial/ghost.png'
+import tutorialDispenser from './tutorial/dispenser.png'
+import tutorialWorkbench from './tutorial/workbench.png'
+import tutorialShopkeeper from './tutorial/shopkeeper.png'
+
 // Ghost assets
 import ghostSouthwest from './kiro-ghost/southwest.png'
 import ghostSouth from './kiro-ghost/south.png'
@@ -48,6 +54,11 @@ export const staticAssets = {
   garbage,
   dispenser,
   chute,
+  // Tutorial assets
+  tutorialGhost,
+  tutorialDispenser,
+  tutorialWorkbench,
+  tutorialShopkeeper,
   // Ghost assets
   ghostSouthwest,
   ghostSouth,
