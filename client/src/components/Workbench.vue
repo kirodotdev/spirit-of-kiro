@@ -173,40 +173,6 @@ function handleWorkbenchOverflowItem(data: { itemId: string }) {
   });
 }
 
-// Handle workbench overflow item event
-const handleWorkbenchOverflow = (data: any) => {
-  if (!data || !data.itemId) return;
-  
-  const item = gameStore.useItem(data.itemId).value;
-  if (!item) return;
-  
-  // Add the item back to the game world at the workbench's position
-  // with minimal velocity and physics settings
-  gameStore.addObject({
-    id: data.itemId,
-    type: GameItem,
-    row: props.row,
-    col: props.col,
-    interactive: true,
-    width: 1,
-    depth: 1,
-    props: {
-      itemId: data.itemId,
-      pickedUp: true
-    },
-    physics: {
-      active: true,
-      angle: 0,
-      velocity: OVERFLOW_IMPULSE,
-      friction: 3,
-      height: 1,
-      verticalVelocity: 0,
-      bounceStrength: 0.2,
-      mass: 1.0
-    }
-  });
-};
-
 let interactionListenerId: string;
 let overflowItemListenerId: string;
 
