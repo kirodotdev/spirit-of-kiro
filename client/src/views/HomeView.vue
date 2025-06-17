@@ -3,7 +3,7 @@
     <div class="hero">
       <div class="hero-content">
         <div class="hero-text">
-          <h1>PlaceholderTitle</h1>
+          <h1>Spirit of Kiro</h1>
           <router-link to="/play" class="play-button">
             Enter
           </router-link>

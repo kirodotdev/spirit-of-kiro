@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Creates an S3 bucket for storing and serving item images in the PlaceholderTitle game. This bucket is used to store all item images that players can find and collect in the game.
+Description: Creates an S3 bucket for storing and serving item images in the Spirit of Kiro game. This bucket is used to store all item images that players can find and collect in the game.
 
 Resources:
   ImagesBucket:

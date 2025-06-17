@@ -1,4 +1,4 @@
-## PlaceholderTitle
+## Spirit of Kiro
 
 ![1.png](docs/images/1.png)
 

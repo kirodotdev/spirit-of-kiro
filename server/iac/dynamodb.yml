@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Creates the core DynamoDB tables for the PlaceholderTitle game server, including tables for game items, player inventories, item locations, user accounts, and player personas. These tables store all game state and player data with pay-per-request billing for optimal cost efficiency.
+Description: Creates the core DynamoDB tables for the Spirit of Kiro game server, including tables for game items, player inventories, item locations, user accounts, and player personas. These tables store all game state and player data with pay-per-request billing for optimal cost efficiency.
 
 Resources:
   # DynamoDB Tables

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deploys the item-images microservice to AWS Fargate, which handles image generation, storage, and retrieval for the PlaceholderTitle game. This service integrates with Amazon Bedrock for AI image generation, S3 for storage, CloudFront for delivery, and MemoryDB for vector search capabilities.
+Description: Deploys the item-images microservice to AWS Fargate, which handles image generation, storage, and retrieval for the Spirit of Kiro game. This service integrates with Amazon Bedrock for AI image generation, S3 for storage, CloudFront for delivery, and MemoryDB for vector search capabilities.
 
 Parameters:
   Environment:
