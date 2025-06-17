@@ -1,4 +1,4 @@
-# PlaceholderTitle - Guiding Principles
+# Spirit of Kiro - Guiding Principles
 
 ## Core Principles
 

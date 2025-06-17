@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deploys the main game server to AWS Fargate, which manages game state, player interactions, and AI-driven gameplay. This service integrates with DynamoDB for game data persistence and Amazon Bedrock for AI-powered game mechanics, providing the core backend functionality for the PlaceholderTitle game.
+Description: Deploys the main game server to AWS Fargate, which manages game state, player interactions, and AI-driven gameplay. This service integrates with DynamoDB for game data persistence and Amazon Bedrock for AI-powered game mechanics, providing the core backend functionality for the Spirit of Kiro game.
 
 Parameters:
   Environment:

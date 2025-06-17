@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Creates the web infrastructure for the PlaceholderTitle game client, including a CloudFront distribution with basic authentication, S3 hosting, and WebSocket support. This setup provides secure, global access to the game client with real-time communication capabilities.
+Description: Creates the web infrastructure for the Spirit of Kiro game client, including a CloudFront distribution with basic authentication, S3 hosting, and WebSocket support. This setup provides secure, global access to the game client with real-time communication capabilities.
 
 Parameters:
   DomainName:

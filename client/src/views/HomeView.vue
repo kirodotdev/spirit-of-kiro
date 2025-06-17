@@ -4,7 +4,7 @@
       <div class="hero-content">
         <img src="../assets/kiro-ghost/south.png" alt="Ghost" class="ghost-image" />
         <div class="hero-text">
-          <h1>PlaceholderTitle</h1>
+          <h1>Spirit of Kiro</h1>
           <p class="tagline">Imagine endless possibilities</p>
           <router-link to="/play" class="play-button">
             Start Exploring
