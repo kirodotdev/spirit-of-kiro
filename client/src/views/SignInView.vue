@@ -1,44 +1,46 @@
 <template>
   <div class="auth-screen">
-    <router-link to="/" class="back-link">← Back to Home</router-link>
-    <div class="auth-container">
-      <h1>Login</h1>
-      
-      <form @submit.prevent="handleSubmit" class="auth-form">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input 
-            type="text" 
-            id="username" 
-            v-model="username" 
-            required
-            autocomplete="username"
-          />
-        </div>
+    <div class="auth-wrapper">
+      <router-link to="/" class="back-link">← Back to Home</router-link>
+      <div class="auth-container">
+        <h1>Login</h1>
         
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input 
-            type="password" 
-            id="password" 
-            v-model="password" 
-            required
-            autocomplete="current-password"
-          />
-        </div>
+        <form @submit.prevent="handleSubmit" class="auth-form">
+          <div class="form-group">
+            <label for="username">Email Adddress</label>
+            <input 
+              type="text" 
+              id="username" 
+              v-model="username" 
+              required
+              autocomplete="username"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              v-model="password" 
+              required
+              autocomplete="current-password"
+            />
+          </div>
 
-        <div v-if="error" class="error-message">
-          {{ error }}
-        </div>
+          <div v-if="error" class="error-message">
+            {{ error }}
+          </div>
 
-        <button type="submit" class="submit-button">
-          Login
-        </button>
+          <button type="submit" class="submit-button">
+            Login
+          </button>
 
-        <router-link to="/signup" class="toggle-button">
-          Need an account? Sign Up
-        </router-link>
-      </form>
+          <router-link to="/signup" class="toggle-button">
+            Need an account? Sign Up
+          </router-link>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -160,6 +162,23 @@ onUnmounted(() => {
   z-index: 1000;
 }
 
+.auth-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 400px;
+}
+
+.back-link {
+  color: #4CAF50;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s;
+  margin-bottom: 1rem;
+  align-self: flex-start;
+}
+
 .auth-container {
   background: #1a1a1a;
   padding: 2rem;
@@ -241,20 +260,5 @@ input:focus {
   text-align: center;
   font-size: 0.9rem;
   margin-top: 0.5rem;
-}
-
-.back-link {
-  display: block;
-  color: #4CAF50;
-  text-decoration: none;
-  font-size: 0.9rem;
-  transition: color 0.3s;
-  position: absolute;
-  left: calc(50% - 200px);
-  bottom: calc(50% + 240px);
-}
-
-.back-link:hover {
-  color: #45a049;
 }
 </style> 

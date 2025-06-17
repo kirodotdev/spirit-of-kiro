@@ -1,50 +1,75 @@
 <template>
   <div class="auth-screen">
-    <router-link to="/" class="back-link">← Back to Home</router-link>
-    <div class="auth-container">
-      <h1>Sign Up</h1>
-      
-      <form @submit.prevent="handleSubmit" class="auth-form">
-        <div class="form-group">
-          <label for="username">Username</label>
-          <input 
-            type="text" 
-            id="username" 
-            v-model="username" 
-            required
-            autocomplete="username"
-          />
-        </div>
+    <div class="auth-wrapper">
+      <router-link to="/" class="back-link">← Back to Home</router-link>
+      <div class="auth-container">
+        <h1>Sign Up</h1>
         
-        <div class="form-group">
-          <label for="password">Password</label>
-          <input 
-            type="password" 
-            id="password" 
-            v-model="password" 
-            required
-            autocomplete="new-password"
-          />
-        </div>
+        <form @submit.prevent="handleSubmit" class="auth-form">
+          <div class="form-group">
+            <label for="username">Email Address</label>
+            <input 
+              type="text" 
+              id="username" 
+              v-model="username" 
+              required
+              autocomplete="username"
+            />
+          </div>
+          
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input 
+              type="password" 
+              id="password" 
+              v-model="password" 
+              required
+              autocomplete="new-password"
+              @input="validatePassword"
+            />
+            <div class="password-requirements">
+              <div class="requirement" :class="{ met: passwordValidation.length }">
+                ✓ At least 8 characters
+              </div>
+              <div class="requirement" :class="{ met: passwordValidation.lowercase }">
+                ✓ Contains lowercase letter
+              </div>
+              <div class="requirement" :class="{ met: passwordValidation.uppercase }">
+                ✓ Contains uppercase letter
+              </div>
+              <div class="requirement" :class="{ met: passwordValidation.number }">
+                ✓ Contains number
+              </div>
+              <div class="requirement" :class="{ met: passwordValidation.symbol }">
+                ✓ Contains symbol
+              </div>
+            </div>
+          </div>
 
-        <div v-if="error" class="error-message">
-          {{ error }}
-        </div>
+          <div v-if="error" class="error-message">
+            {{ error }}
+          </div>
 
-        <button type="submit" class="submit-button">
-          Sign Up
-        </button>
+          <button 
+            type="submit" 
+            class="submit-button"
+            :disabled="!isFormValid"
+            :class="{ 'disabled': !isFormValid }"
+          >
+            Sign Up
+          </button>
 
-        <router-link to="/signin" class="toggle-button">
-          Already have an account? Login
-        </router-link>
-      </form>
+          <router-link to="/signin" class="toggle-button">
+            Already have an account? Login
+          </router-link>
+        </form>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted, onMounted } from 'vue'
+import { ref, onUnmounted, onMounted, computed } from 'vue'
 import { useGameStore } from '../stores/game'
 import { useRouter } from 'vue-router'
 
@@ -89,9 +114,34 @@ const removeListeners = () => {
   }
 }
 
+const passwordValidation = ref({
+  length: false,
+  lowercase: false,
+  uppercase: false,
+  number: false,
+  symbol: false
+})
+
+const validatePassword = () => {
+  const pass = password.value
+  passwordValidation.value = {
+    length: pass.length >= 8,
+    lowercase: /[a-z]/.test(pass),
+    uppercase: /[A-Z]/.test(pass),
+    number: /[0-9]/.test(pass),
+    symbol: /[!@#$%^&*(),.?":{}|<>]/.test(pass)
+  }
+}
+
 const handleSubmit = async () => {
   error.value = ''
   try {
+    // Check if password meets all requirements
+    if (!Object.values(passwordValidation.value).every(Boolean)) {
+      error.value = 'Password does not meet all requirements'
+      return
+    }
+
     if (!gameStore.ws) {
       // Try to reconnect if WebSocket is not available
       gameStore.reconnect()
@@ -144,6 +194,11 @@ onUnmounted(() => {
     gameStore.removeEventListener('reconnect-failed', reconnectFailedId);
   }
 })
+
+const isFormValid = computed(() => {
+  return username.value.length > 0 && 
+         Object.values(passwordValidation.value).every(Boolean)
+})
 </script>
 
 <style scoped>
@@ -160,7 +215,16 @@ onUnmounted(() => {
   z-index: 1000;
 }
 
+.auth-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 400px;
+}
+
 .auth-container {
+  position: relative;
   background: #1a1a1a;
   padding: 2rem;
   border-radius: 8px;
@@ -221,6 +285,16 @@ input:focus {
   background: #45a049;
 }
 
+.submit-button.disabled {
+  background: #666;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.submit-button.disabled:hover {
+  background: #666;
+}
+
 .toggle-button {
   background: none;
   border: none;
@@ -244,17 +318,30 @@ input:focus {
 }
 
 .back-link {
-  display: block;
   color: #4CAF50;
   text-decoration: none;
   font-size: 0.9rem;
   transition: color 0.3s;
-  position: absolute;
-  left: calc(50% - 200px);
-  bottom: calc(50% + 240px);
+  margin-bottom: 1rem;
+  align-self: flex-start;
 }
 
 .back-link:hover {
   color: #45a049;
+}
+
+.password-requirements {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.requirement {
+  margin: 0.2rem 0;
+  color: #666;
+}
+
+.requirement.met {
+  color: #4CAF50;
 }
 </style> 
