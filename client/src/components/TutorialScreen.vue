@@ -111,40 +111,41 @@ const closeTutorial = () => {
 .tutorial-content {
   text-align: left;
   color: white;
-  padding: 1.5rem;
+  padding: min(1.5vw, 15px);
   border-radius: 8px;
   background-color: rgba(0, 0, 0, 0.7);
-  max-width: 1200px;
+  max-width: 1024px;
   max-height: 90vh;
   overflow-y: auto;
+  width: min(90vw, 1024px);
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 2rem;
-  font-size: 2rem;
+  margin-bottom: min(2vw, 20px);
+  font-size: min(3vw, 30px);
   color: #4CAF50;
 }
 
 .tutorial-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: min(1vw, 10px);
+  margin-bottom: min(1.5vw, 15px);
 }
 
 .tutorial-card {
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  padding: 0.75rem;
+  padding: min(0.75vw, 8px);
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: min(0.75vw, 8px);
 }
 
 .tutorial-image {
   width: 100%;
-  height: 180px;
+  height: min(20vw, 200px);
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
@@ -173,26 +174,27 @@ h1 {
 
 h2 {
   color: #4CAF50;
-  margin: 0 0 0.5rem 0;
-  font-size: 1.2rem;
+  margin: 0 0 min(0.5vw, 5px) 0;
+  font-size: min(2vw, 20px);
 }
 
 ul {
   list-style-type: none;
-  padding-left: 0.75rem;
+  padding-left: min(0.75vw, 8px);
   margin: 0;
 }
 
 li {
-  margin: 0.35rem 0;
+  margin: min(0.35vw, 4px) 0;
   line-height: 1.3;
+  font-size: min(1.5vw, 15px);
 }
 
 .close-button {
   display: block;
-  margin: 1.5rem auto 0;
-  padding: 0.6rem 1.75rem;
-  font-size: 1rem;
+  margin: min(1.5vw, 15px) auto 0;
+  padding: min(0.6vw, 6px) min(1.75vw, 18px);
+  font-size: min(1.5vw, 15px);
   background-color: #4CAF50;
   color: white;
   border: none;
@@ -207,8 +209,8 @@ li {
 
 .keycap {
   display: inline-block;
-  padding: 2px 6px;
-  margin: 0 2px;
+  padding: min(0.2vw, 2px) min(0.6vw, 6px);
+  margin: 0 min(0.2vw, 2px);
   background: #2c2c2c;
   border: 1px solid #4a4a4a;
   border-radius: 4px;
@@ -217,7 +219,7 @@ li {
   font-weight: bold;
   color: #e0e0e0;
   text-transform: uppercase;
-  font-size: 0.9em;
+  font-size: min(1.2vw, 12px);
   line-height: 1;
   min-width: 1.2em;
   text-align: center;
