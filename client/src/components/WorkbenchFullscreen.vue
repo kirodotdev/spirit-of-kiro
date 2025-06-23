@@ -17,40 +17,19 @@ const emit = defineEmits<{
   (e: 'close'): void;
 }>();
 
-// State to track which item is being hovered
 const hoveredItem = ref<any>(null);
-
-// State to track the position of the hovered item
 const hoveredItemPosition = ref({ x: 0, y: 0 });
-
-// State to track the currently dragged item
 const draggedItem = ref<any>(null);
-
-// State to track the current drop target area
 const dropTarget = ref<'tools' | 'working' | null>(null);
-
-// State to track the currently selected tool item
 const selectedToolItem = ref<any>(null);
-
-// State to track the currently selected skill for casting
 const selectedSkill = ref<any>(null);
-
-// State to track selected targets for multi-target skills
 const selectedTargets = ref<any[]>([]);
-
-// State to track mouse position for skill casting
 const mousePosition = ref({ x: 0, y: 0 });
-
-// State to track if skills dropdown is visible
 const showSkillsDropdown = ref(false);
-
-// State to track the position of the skills dropdown
 const skillsDropdownPosition = ref({ x: 0, y: 0 });
 
-// Computed property to check if the tools items array is empty
 const isToolGridEmpty = computed(() => !props.toolsItems?.length);
 
-// Computed property to get skills from the selected tool item
 const selectedToolSkills = computed(() => {
   if (!selectedToolItem.value || !selectedToolItem.value.skills) {
     return [];
@@ -58,7 +37,6 @@ const selectedToolSkills = computed(() => {
   return selectedToolItem.value.skills;
 });
 
-// Position the skills dropdown based on the event target
 const positionSkillsDropdown = (event: MouseEvent) => {
   const target = event.currentTarget as HTMLElement;
   if (target) {
@@ -71,219 +49,177 @@ const positionSkillsDropdown = (event: MouseEvent) => {
 };
 
 const handleItemClick = (item: any, sourceArea: 'tools' | 'working', event?: MouseEvent) => {
-  // Clear the hovered item preview immediately when an item is clicked
   hoveredItem.value = null;
-  
-  // Handle tool area clicks
+
   if (sourceArea === 'tools') {
     handleToolItemClick(item, event);
     return;
   }
-  
-  // Handle working area clicks
-  
-  // If a skill is selected, handle target selection
+
   if (selectedSkill.value) {
     handleSkillTargetSelection(item);
     return;
   }
-  
-  // Otherwise, move to inventory
+
   moveItemToMainInventory(item);
 };
 
-// Helper function to handle tool item clicks
 const handleToolItemClick = (item: any, event?: MouseEvent) => {
-  // If clicking on already selected tool item, toggle dropdown visibility
   if (selectedToolItem.value === item) {
     showSkillsDropdown.value = !showSkillsDropdown.value;
-    
+
     if (showSkillsDropdown.value && event) {
       positionSkillsDropdown(event);
     }
     return;
   }
-  
-  // Select the new tool and show its skills
+
   selectedToolItem.value = item;
-  selectedSkill.value = null; // Clear any selected skill when changing tools
+  selectedSkill.value = null; // Clear skill when switching tools to prevent confusion
   showSkillsDropdown.value = true;
-  
+
   if (event) {
     positionSkillsDropdown(event);
   }
 };
 
-// Helper function to handle skill target selection
 const handleSkillTargetSelection = (item: any) => {
-  // Check if this item is already selected
   const isAlreadySelected = selectedTargets.value.some(target => target.id === item.id);
-  
+
   if (isAlreadySelected) {
-    // Deselect the item
     selectedTargets.value = selectedTargets.value.filter(target => target.id !== item.id);
     return;
   }
-  
-  // Add the item to selected targets
+
   selectedTargets.value.push(item);
-  
-  // If we don't have enough targets yet, return
+
   if (selectedTargets.value.length < selectedSkill.value.targets) {
     return;
   }
-  
-  // Get the index of the skill in the tool's skills array
+
   const toolSkillIndex = selectedToolItem.value.skills.findIndex(
     (s: any) => s === selectedSkill.value
   );
-  
+
   if (toolSkillIndex === -1) {
     console.error('Selected skill not found in tool skills');
     return;
   }
-  
-  // Emit the skill-invoked event before using the skill
+
   gameStore.emitEvent('skill-invoked', {
     skill: selectedSkill.value,
     tool: selectedToolItem.value,
     targets: selectedTargets.value
   });
-  
-  // Use the skill with all selected targets
+
   gameStore.useSkill(
     selectedToolItem.value.id,
     toolSkillIndex,
     selectedTargets.value.map(target => target.id)
   );
-  
-  // Clear the selected skill and targets
+
   selectedSkill.value = null;
   selectedTargets.value = [];
 };
 
-// Helper function to move item to main inventory
 const moveItemToMainInventory = (item: any) => {
   const targetInventory = `${gameStore.userId}:main`;
-  
-  // Set up a one-time listener for the 'item-moved' event
+
+  // One-time listener to handle post-move actions
   const listenerId = gameStore.addEventListener('item-moved', (data) => {
-    // Check if this is the item we just moved
     if (data && data.itemId === item.id && data.targetInventoryId === targetInventory) {
-      // Remove the listener since we only need it once
       gameStore.removeEventListener('item-moved', listenerId);
-      
-      // Close the workbench fullscreen view
       emit('close');
-      
-      // Put the item in the player's hands
+
       gameStore.emitEvent('item-pickup', {
         id: data.itemId
       });
     }
   });
 
-  // Move the item from workbench to main inventory
   gameStore.moveItem(item.id, targetInventory);
 };
 
-// Handle skill button click
 const handleSkillClick = (skill: any, event: MouseEvent) => {
-  // If a skill is already selected, deselect it
   if (selectedSkill.value === skill) {
     selectedSkill.value = null;
-    selectedTargets.value = []; // Clear selected targets
+    selectedTargets.value = [];
     return;
   }
-  
-  // If the skill has invalid targets (not 1 or 2), treat it as self-targeting
+
+  // Skills with invalid target counts default to self-targeting
   if (!skill.targets || typeof skill.targets !== 'number' || skill.targets < 0 || skill.targets > 2) {
     handleSelfTargetingSkill(skill);
     return;
   }
-  
-  // For skills that require targets, select the skill for casting
+
   selectedSkill.value = skill;
-  selectedTargets.value = []; // Clear any previously selected targets
-  
-  // Update the mouse position when a skill is clicked
+  selectedTargets.value = [];
+
   mousePosition.value = {
     x: event.clientX,
     y: event.clientY
   };
-  
-  // Hide the dropdown after selecting a skill
+
   showSkillsDropdown.value = false;
 };
 
-// Helper function to handle self-targeting skills
 const handleSelfTargetingSkill = (skill: any) => {
-  // Get the index of the skill in the tool's skills array
   const toolSkillIndex = selectedToolItem.value.skills.findIndex(
     (s: any) => s === skill
   );
-  
+
   if (toolSkillIndex === -1) {
     console.error('Selected skill not found in tool skills');
     return;
   }
-  
-  // Emit the skill-invoked event before using the skill
+
   gameStore.emitEvent('skill-invoked', {
     skill: skill,
     tool: selectedToolItem.value,
-    target: selectedToolItem.value // For self-targeting skills, the tool is also the target
+    target: selectedToolItem.value // Tool targets itself for self-skills
   });
-  
-  // Use the skill on the tool itself
+
   gameStore.useSkill(
     selectedToolItem.value.id,
     toolSkillIndex,
-    [] // Empty array since it's self-targeting
+    [] // Self-targeting requires no target IDs
   );
-  
-  // Hide the dropdown after casting
+
   showSkillsDropdown.value = false;
 };
 
 const handleItemMouseEnter = (event: MouseEvent, item: any) => {
   hoveredItem.value = item;
-  
-  // Capture the position of the hovered item
+
   const target = event.currentTarget as HTMLElement;
   if (!target) {
     return;
   }
-  
-  const rect = target.getBoundingClientRect();
-  const tooltipWidth = 600; // Approximate width of tooltip
-  const tooltipHeight = 400; // Approximate height of tooltip
 
-  // Initial position - centered under the item
+  const rect = target.getBoundingClientRect();
+  const tooltipWidth = 600;
+  const tooltipHeight = 400;
+
   hoveredItemPosition.value = {
     x: rect.left - (tooltipWidth / 2) - 10,
     y: rect.bottom + 10
   };
-  
-  // Adjust position if tooltip would go off-screen
+
   adjustTooltipPosition(tooltipWidth, tooltipHeight, rect);
 };
 
-// Helper function to adjust tooltip position to stay on screen
+// Prevents tooltip from rendering outside viewport bounds
 const adjustTooltipPosition = (tooltipWidth: number, tooltipHeight: number, rect: DOMRect) => {
-  // Check if tooltip would go off-screen to the right
   if (hoveredItemPosition.value.x + tooltipWidth > window.innerWidth) {
     hoveredItemPosition.value.x = window.innerWidth - tooltipWidth - 10;
   }
 
-  // Check if tooltip would go off-screen to the left
   if (hoveredItemPosition.value.x < 0) {
     hoveredItemPosition.value.x = 10;
   }
-  
-  // Check if tooltip would go off-screen at the bottom
+
   if (hoveredItemPosition.value.y + tooltipHeight > window.innerHeight) {
-    // Adjust y position to keep tooltip on screen
     hoveredItemPosition.value.y = rect.top - tooltipHeight - 10;
   }
 };
@@ -292,96 +228,72 @@ const handleItemMouseLeave = () => {
   hoveredItem.value = null;
 };
 
-// Drag and drop handlers
 const handleDragStart = (event: DragEvent, item: any, sourceArea: 'tools' | 'working') => {
   if (!item) return;
-  
-  // Store the dragged item and its source area
+
   draggedItem.value = { ...item, sourceArea };
-  
-  // Set the drag effect and data
+
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = 'move';
     event.dataTransfer.setData('text/plain', item.id);
   }
-  
-  // Hide the preview during drag
+
+  // Clean up UI state during drag
   hoveredItem.value = null;
-  
-  // Close the skills dropdown when starting to drag
   showSkillsDropdown.value = false;
-  
-  // Clear any selected skill
   selectedSkill.value = null;
 };
 
 const handleDragEvent = (event: DragEvent, targetArea: 'tools' | 'working') => {
-  // Prevent default to allow drop
   event.preventDefault();
-  
-  // Set the drop effect if this is a dragover event
+
   if (event.type === 'dragover' && event.dataTransfer) {
     event.dataTransfer.dropEffect = 'move';
   }
-  
-  // Update the drop target for visual feedback
+
   dropTarget.value = targetArea;
 };
 
 const handleDragLeave = () => {
-  // Clear the drop target when leaving a drop zone
   dropTarget.value = null;
 };
 
 const handleDrop = (event: DragEvent, targetArea: 'tools' | 'working') => {
-  // Prevent default browser behavior
   event.preventDefault();
-  
-  // Clear the drop target
   dropTarget.value = null;
-  
-  // If no item is being dragged or the source and target areas are the same, do nothing
+
   if (!draggedItem.value || draggedItem.value.sourceArea === targetArea) {
     draggedItem.value = null;
     return;
   }
-  
-  // Determine the target inventory ID based on the drop area
-  const targetInventoryId = targetArea === 'tools' 
-    ? `${gameStore.userId}:workbench-tools` 
+
+  const targetInventoryId = targetArea === 'tools'
+    ? `${gameStore.userId}:workbench-tools`
     : `${gameStore.userId}:workbench-working`;
-  
-  // Move the item to the target inventory
+
   gameStore.moveItem(draggedItem.value.id, targetInventoryId);
-  
-  // Reset the dragged item
   draggedItem.value = null;
 };
 
-// Use the focus management composable
-const { handleKeyDown } = useEscapeKeyHandler('workbench-fullscreen', (event) => {
+// Escape key handler with priority: skill > dropdown > close workbench
+useEscapeKeyHandler('workbench-fullscreen', (event) => {
   if (event.key === 'Escape' && props.show) {
-    // Handle Escape key press in priority order
     if (selectedSkill.value) {
-      // First cancel any selected skill
       selectedSkill.value = null;
       return true;
     }
-    
+
     if (showSkillsDropdown.value) {
-      // Close the skills dropdown if it's open
       showSkillsDropdown.value = false;
       return true;
     }
-    
-    // Then close the workbench if no skill is selected and dropdown is closed
+
     emit('close');
     return true;
   }
   return false;
 });
 
-// Track mouse position for skill casting
 const handleMouseMove = (e: MouseEvent) => {
   if (selectedSkill.value) {
     mousePosition.value = {
@@ -391,32 +303,29 @@ const handleMouseMove = (e: MouseEvent) => {
   }
 };
 
-// Close skills dropdown when clicking outside
 const handleClickOutside = (e: MouseEvent) => {
   if (showSkillsDropdown.value) {
-    // Check if click is outside the dropdown and not on the selected tool
     const dropdown = document.querySelector('.skills-dropdown');
     const toolItems = document.querySelectorAll('.inventory-slot.selected');
-    
+
     let clickedOnTool = false;
     toolItems.forEach(tool => {
       if (tool.contains(e.target as Node)) {
         clickedOnTool = true;
       }
     });
-    
+
     if (dropdown && !dropdown.contains(e.target as Node) && !clickedOnTool) {
       showSkillsDropdown.value = false;
     }
   }
 };
 
-// Handle right-click to cancel selected skill
 const handleContextMenu = (e: MouseEvent) => {
   if (selectedSkill.value) {
-    e.preventDefault(); // Prevent the default context menu
+    e.preventDefault(); // Prevent browser context menu when canceling skill
     selectedSkill.value = null;
-    selectedTargets.value = []; // Clear selected targets
+    selectedTargets.value = [];
   }
 };
 
@@ -432,7 +341,6 @@ onUnmounted(() => {
   window.removeEventListener('contextmenu', handleContextMenu);
 });
 
-// Watch for show prop changes to manage focus
 watch(() => props.show, (newValue) => {
   if (newValue) {
     gameStore.pushFocus('workbench-fullscreen');
@@ -446,70 +354,48 @@ watch(() => props.show, (newValue) => {
   <div v-if="show" class="fullscreen-overlay">
     <div class="workbench-container" :style="{ backgroundImage: `url(${workbenchImage})` }">
       <button class="close-button" @click="$emit('close')">Back</button>
-      
+
       <!-- Item Preview Component -->
-      <ItemPreview 
-        v-if="hoveredItem"
-        :item="hoveredItem"
-        position="fixed"
-        :style="{
-          left: hoveredItemPosition.x + 'px',
-          top: hoveredItemPosition.y + 'px',
-          maxHeight: '80vh',
-          overflowY: 'auto'
-        }"
-      />
-      
-      <div class="tool-area" 
-           @dragover="handleDragEvent($event, 'tools')"
-           @dragenter="handleDragEvent($event, 'tools')"
-           @dragleave="handleDragLeave"
-           @drop="handleDrop($event, 'tools')"
-           :class="{ 'drop-target': dropTarget === 'tools' }">
+      <ItemPreview v-if="hoveredItem" :item="hoveredItem" position="fixed" :style="{
+        left: hoveredItemPosition.x + 'px',
+        top: hoveredItemPosition.y + 'px',
+        maxHeight: '80vh',
+        overflowY: 'auto'
+      }" />
+
+      <div class="tool-area" @dragover="handleDragEvent($event, 'tools')" @dragenter="handleDragEvent($event, 'tools')"
+        @dragleave="handleDragLeave" @drop="handleDrop($event, 'tools')"
+        :class="{ 'drop-target': dropTarget === 'tools' }">
         <div class="tool-grid">
-          <div 
-            class="inventory-slot" 
-            :class="{ 'has-item': item, 'selected': selectedToolItem === item }" 
-            v-for="(item, index) in toolsItems" 
-            :key="item ? item.id : 'tool-'+index"
+          <div class="inventory-slot" :class="{ 'has-item': item, 'selected': selectedToolItem === item }"
+            v-for="(item, index) in toolsItems" :key="item ? item.id : 'tool-' + index"
             @click="item && handleItemClick(item, 'tools', $event)"
-            @mouseenter="item && handleItemMouseEnter($event, item)"
-            @mouseleave="handleItemMouseLeave"
-            :draggable="!!item"
-            @dragstart="item && handleDragStart($event, item, 'tools')"
-          >
+            @mouseenter="item && handleItemMouseEnter($event, item)" @mouseleave="handleItemMouseLeave"
+            :draggable="!!item" @dragstart="item && handleDragStart($event, item, 'tools')">
             <div v-if="item" class="item-container" :class="getRarityClass(item.value)">
               <img :src="item.imageUrl" class="item-image" :alt="item.name" />
             </div>
           </div>
           <!-- Add empty slots to fill the grid if needed -->
-          <div 
-            class="inventory-slot" 
-            v-for="n in Math.max(0, 32 - (toolsItems ? toolsItems.length : 0))" 
-            :key="'empty-'+n"
-          ></div>
-          
+          <div class="inventory-slot" v-for="n in Math.max(0, 32 - (toolsItems ? toolsItems.length : 0))"
+            :key="'empty-' + n"></div>
+
           <!-- Empty grid prompt message -->
           <div v-if="isToolGridEmpty" class="empty-grid-prompt">
             Drag an item here to use as a tool
           </div>
         </div>
       </div>
-      
+
       <!-- Skills Dropdown - Show when a tool is selected and dropdown is toggled -->
-      <div v-if="showSkillsDropdown && selectedToolItem && selectedToolSkills.length > 0" 
-           class="skills-dropdown"
-           :style="{
-             left: `${skillsDropdownPosition.x}px`,
-             top: `${skillsDropdownPosition.y}px`
-           }">
+      <div v-if="showSkillsDropdown && selectedToolItem && selectedToolSkills.length > 0" class="skills-dropdown"
+        :style="{
+          left: `${skillsDropdownPosition.x}px`,
+          top: `${skillsDropdownPosition.y}px`
+        }">
         <div class="skills-container">
-          <button 
-            v-for="(skill, index) in selectedToolSkills" 
-            :key="index"
-            class="skill-button"
-            @click="handleSkillClick(skill, $event)"
-          >
+          <button v-for="(skill, index) in selectedToolSkills" :key="index" class="skill-button"
+            @click="handleSkillClick(skill, $event)">
             <div class="skill-button-content">
               <div class="skill-icon">
                 <img :src="selectedToolItem.imageUrl" class="tool-icon-image" :alt="selectedToolItem.name" />
@@ -519,10 +405,8 @@ watch(() => props.show, (newValue) => {
                   <div class="skill-name">{{ skill.name }}</div>
                   <div class="skill-targets">
                     <span class="target-tag">
-                      {{ typeof skill.targets === 'number' && skill.targets >= 0 && skill.targets <= 2 
-                         ? (skill.targets === 0 ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets')
-                         : 'Self' }}
-                    </span>
+                      {{ typeof skill.targets === 'number' && skill.targets >= 0 && skill.targets <= 2 ?
+                        (skill.targets === 0 ? 'Self' : skill.targets === 1 ? '1 Target' : '2 Targets') : 'Self' }} </span>
                   </div>
                 </div>
                 <div class="skill-description">{{ skill.description }}</div>
@@ -531,48 +415,34 @@ watch(() => props.show, (newValue) => {
           </button>
         </div>
       </div>
-      
+
       <!-- Working Area -->
-      <div class="working-area"
-           @dragover="handleDragEvent($event, 'working')"
-           @dragenter="handleDragEvent($event, 'working')"
-           @dragleave="handleDragLeave"
-           @drop="handleDrop($event, 'working')"
-           :class="{ 'drop-target': dropTarget === 'working' }">
+      <div class="working-area" @dragover="handleDragEvent($event, 'working')"
+        @dragenter="handleDragEvent($event, 'working')" @dragleave="handleDragLeave"
+        @drop="handleDrop($event, 'working')" :class="{ 'drop-target': dropTarget === 'working' }">
         <div class="working-grid">
-          <div 
-            class="inventory-slot working-slot" 
-            :class="{ 
-              'has-item': item,
-              'selected-target': selectedTargets.some(target => target.id === item?.id)
-            }" 
-            v-for="(item, index) in workingItems" 
-            :key="item ? item.id : 'working-'+index"
-            @click="item && handleItemClick(item, 'working')"
-            @mouseenter="item && handleItemMouseEnter($event, item)"
-            @mouseleave="handleItemMouseLeave"
-            :draggable="!!item"
-            @dragstart="item && handleDragStart($event, item, 'working')"
-          >
+          <div class="inventory-slot working-slot" :class="{
+            'has-item': item,
+            'selected-target': selectedTargets.some(target => target.id === item?.id)
+          }" v-for="(item, index) in workingItems" :key="item ? item.id : 'working-' + index"
+            @click="item && handleItemClick(item, 'working')" @mouseenter="item && handleItemMouseEnter($event, item)"
+            @mouseleave="handleItemMouseLeave" :draggable="!!item"
+            @dragstart="item && handleDragStart($event, item, 'working')">
             <div v-if="item" class="item-container" :class="getRarityClass(item.value)">
               <img :src="item.imageUrl" class="item-image" :alt="item.name" />
             </div>
           </div>
           <!-- Add empty slots to fill the grid if needed -->
-          <div 
-            class="inventory-slot working-slot" 
-            v-for="n in Math.max(0, 5 - (workingItems ? workingItems.length : 0))" 
-            :key="'empty-working-'+n"
-          ></div>
+          <div class="inventory-slot working-slot"
+            v-for="n in Math.max(0, 5 - (workingItems ? workingItems.length : 0))" :key="'empty-working-' + n"></div>
         </div>
       </div>
 
     </div>
-    
+
     <!-- Skill cursor that follows the mouse when a skill is selected -->
-    <div v-if="selectedSkill" 
-         class="skill-cursor"
-         :style="{ left: `${mousePosition.x}px`, top: `${mousePosition.y}px` }">
+    <div v-if="selectedSkill" class="skill-cursor"
+      :style="{ left: `${mousePosition.x}px`, top: `${mousePosition.y}px` }">
       <div class="skill-cursor-icon">
         <img :src="selectedToolItem?.imageUrl" class="tool-icon-image" :alt="selectedToolItem?.name" />
       </div>
@@ -597,8 +467,10 @@ watch(() => props.show, (newValue) => {
 
 .workbench-container {
   position: relative;
-  width: min(90vh, 90vw); /* Use the smaller of viewport width or height */
-  height: min(90vh, 90vw); /* Match width to maintain square ratio */
+  width: min(90vh, 90vw);
+  /* Use the smaller of viewport width or height */
+  height: min(90vh, 90vw);
+  /* Match width to maintain square ratio */
   max-width: min(90vh, 1200px);
   max-height: min(90vh, 1200px);
   margin: auto;
@@ -772,7 +644,8 @@ watch(() => props.show, (newValue) => {
 /* Skills dropdown styling */
 .skills-dropdown {
   position: fixed;
-  transform: translateX(-50%); /* Center horizontally relative to position */
+  transform: translateX(-50%);
+  /* Center horizontally relative to position */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -891,11 +764,13 @@ watch(() => props.show, (newValue) => {
 /* Skill cursor styling */
 .skill-cursor {
   position: fixed;
-  pointer-events: none; /* Allow clicking through the cursor */
+  pointer-events: none;
+  /* Allow clicking through the cursor */
   z-index: 2000;
   display: flex;
   align-items: center;
-  transform: translate(-50%, -50%); /* Center on cursor */
+  transform: translate(-50%, -50%);
+  /* Center on cursor */
   background-color: rgba(0, 0, 0, 0.7);
   border-radius: 12px;
   padding: 5px 10px;
