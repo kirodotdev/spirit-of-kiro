@@ -74,8 +74,12 @@ export class PhysicsSystem {
 
   private update(timestamp: number) {
     // Calculate delta time in seconds
-    const deltaTime = (timestamp - this.lastTimestamp) / 1000;
+    let deltaTime = (timestamp - this.lastTimestamp) / 1000;
     this.lastTimestamp = timestamp;
+    
+    // Cap delta time to prevent physics instability from large jumps
+    const MAX_DELTA_TIME = 1/30; // Cap at ~33ms (30 FPS equivalent)
+    deltaTime = Math.min(deltaTime, MAX_DELTA_TIME);
     
     // Update physics for all objects
     this.updatePhysics(deltaTime);

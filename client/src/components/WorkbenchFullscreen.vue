@@ -21,6 +21,7 @@ const hoveredItem = ref<any>(null);
 const hoveredItemPosition = ref({ x: 0, y: 0 });
 const draggedItem = ref<any>(null);
 const dropTarget = ref<'tools' | 'working' | null>(null);
+const dropTargetFull = ref<'tools' | 'working' | null>(null);
 const selectedToolItem = ref<any>(null);
 const selectedSkill = ref<any>(null);
 const selectedTargets = ref<any[]>([]);
@@ -247,22 +248,52 @@ const handleDragStart = (event: DragEvent, item: any, sourceArea: 'tools' | 'wor
 const handleDragEvent = (event: DragEvent, targetArea: 'tools' | 'working') => {
   event.preventDefault();
 
+  // Check if target area is at capacity
+  const currentCount = targetArea === 'tools'
+    ? (props.toolsItems?.length || 0)
+    : (props.workingItems?.length || 0);
+  const maxCapacity = targetArea === 'tools' ? 32 : 5;
+
+  // Don't allow drop if at capacity and item is coming from different area
+  if (draggedItem.value && draggedItem.value.sourceArea !== targetArea && currentCount >= maxCapacity) {
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'none';
+    }
+    dropTarget.value = null;
+    dropTargetFull.value = targetArea;
+    return;
+  }
+
   if (event.type === 'dragover' && event.dataTransfer) {
     event.dataTransfer.dropEffect = 'move';
   }
 
   dropTarget.value = targetArea;
+  dropTargetFull.value = null;
 };
 
 const handleDragLeave = () => {
   dropTarget.value = null;
+  dropTargetFull.value = null;
 };
 
 const handleDrop = (event: DragEvent, targetArea: 'tools' | 'working') => {
   event.preventDefault();
   dropTarget.value = null;
+  dropTargetFull.value = null;
 
   if (!draggedItem.value || draggedItem.value.sourceArea === targetArea) {
+    draggedItem.value = null;
+    return;
+  }
+
+  // Check capacity limits before allowing drop
+  const currentCount = targetArea === 'tools'
+    ? (props.toolsItems?.length || 0)
+    : (props.workingItems?.length || 0);
+  const maxCapacity = targetArea === 'tools' ? 32 : 5;
+
+  if (currentCount >= maxCapacity) {
     draggedItem.value = null;
     return;
   }
@@ -365,7 +396,7 @@ watch(() => props.show, (newValue) => {
 
       <div class="tool-area" @dragover="handleDragEvent($event, 'tools')" @dragenter="handleDragEvent($event, 'tools')"
         @dragleave="handleDragLeave" @drop="handleDrop($event, 'tools')"
-        :class="{ 'drop-target': dropTarget === 'tools' }">
+        :class="{ 'drop-target': dropTarget === 'tools', 'drop-target-full': dropTargetFull === 'tools' }">
         <div class="tool-grid">
           <div class="inventory-slot" :class="{ 'has-item': item, 'selected': selectedToolItem === item }"
             v-for="(item, index) in toolsItems" :key="item ? item.id : 'tool-' + index"
@@ -383,6 +414,11 @@ watch(() => props.show, (newValue) => {
           <!-- Empty grid prompt message -->
           <div v-if="isToolGridEmpty" class="empty-grid-prompt">
             Drag an item here to use as a tool
+          </div>
+          
+          <!-- Full area indicator -->
+          <div v-if="dropTargetFull === 'tools'" class="full-area-prompt">
+            Tool area is full (32/32)
           </div>
         </div>
       </div>
@@ -419,7 +455,7 @@ watch(() => props.show, (newValue) => {
       <!-- Working Area -->
       <div class="working-area" @dragover="handleDragEvent($event, 'working')"
         @dragenter="handleDragEvent($event, 'working')" @dragleave="handleDragLeave"
-        @drop="handleDrop($event, 'working')" :class="{ 'drop-target': dropTarget === 'working' }">
+        @drop="handleDrop($event, 'working')" :class="{ 'drop-target': dropTarget === 'working', 'drop-target-full': dropTargetFull === 'working' }">
         <div class="working-grid">
           <div class="inventory-slot working-slot" :class="{
             'has-item': item,
@@ -435,6 +471,11 @@ watch(() => props.show, (newValue) => {
           <!-- Add empty slots to fill the grid if needed -->
           <div class="inventory-slot working-slot"
             v-for="n in Math.max(0, 5 - (workingItems ? workingItems.length : 0))" :key="'empty-working-' + n"></div>
+        </div>
+        
+        <!-- Full area indicator -->
+        <div v-if="dropTargetFull === 'working'" class="full-area-prompt">
+          Working area is full (5/5)
         </div>
       </div>
 
@@ -576,6 +617,12 @@ watch(() => props.show, (newValue) => {
   border-radius: 8px;
 }
 
+.drop-target-full {
+  outline: 2px solid rgba(255, 0, 0, 0.7);
+  background-color: rgba(255, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
 .inventory-slot[draggable=true] {
   cursor: grab;
 }
@@ -634,6 +681,27 @@ watch(() => props.show, (newValue) => {
   transform: translate(-50%, -50%);
   width: auto;
   height: auto;
+}
+
+.full-area-prompt {
+  position: absolute;
+  display: inline-block;
+  padding: 12px 15px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.2em;
+  text-align: center;
+  pointer-events: none;
+  background-color: rgba(255, 0, 0, 0.3);
+  border: 2px solid rgba(255, 0, 0, 0.7);
+  border-radius: 8px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  z-index: 15;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: auto;
+  height: auto;
+  font-weight: bold;
 }
 
 /* Selected tool styling */
