@@ -1,3 +1,13 @@
+<script setup lang="ts">
+const openSourceCode = () => {
+  window.open('https://github.com/kirodotdev/spirit-of-kiro/', '_blank')
+}
+
+const openGuide = () => {
+  window.open('https://kiro.dev/docs/guides/learn-by-playing/', '_blank')
+}
+</script>
+
 <template>
   <div class="home">
     <div class="hero">
@@ -6,9 +16,15 @@
         <div class="hero-text">
           <h1>Spirit of Kiro</h1>
           <p class="tagline">Imagine endless possibilities</p>
-          <router-link to="/play" class="play-button">
-            Start Exploring
-          </router-link>
+          <div class="button-group">
+            <router-link to="/play" class="play-button">
+              Start Exploring
+            </router-link>
+            <div class="utility-buttons">
+              <button class="source-button" @click="openSourceCode">Source</button>
+              <button class="guide-button" @click="openGuide">Guide</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -164,6 +180,60 @@ h2 {
   background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
 }
 
+.button-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.utility-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.source-button {
+  padding: 0.8rem 2rem;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 2px 10px rgba(33, 150, 243, 0.2);
+}
+
+.source-button:hover {
+  background-color: #1976D2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(33, 150, 243, 0.3);
+}
+
+.guide-button {
+  padding: 0.8rem 2rem;
+  background-color: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 2px 10px rgba(255, 152, 0, 0.2);
+}
+
+.guide-button:hover {
+  background-color: #F57C00;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 152, 0, 0.3);
+}
+
 .hero-content {
   display: flex;
   align-items: flex-start;
@@ -253,6 +323,17 @@ h2 {
     top: 0;
     width: 120px;
     margin: 0 auto;
+  }
+
+  .utility-buttons {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .source-button,
+  .guide-button {
+    padding: 0.7rem 1.5rem;
+    font-size: 0.9rem;
   }
 }
 </style>

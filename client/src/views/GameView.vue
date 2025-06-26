@@ -1,14 +1,16 @@
 <template>
   <div class="app">
     <TutorialScreen />
-    <LoadingScreen 
-      :progress="gameStore.preloadProgress" 
-    />
+    <LoadingScreen :progress="gameStore.preloadProgress" />
     <div class="control-buttons">
-      <button class="debug-button" @click="gameStore.debug = !gameStore.debug">Toggle Debug</button>
-      <div class="physics-indicator" :class="{ active: hasActivePhysics }">Physics</div>
+      <div class="button-row">
+        <button class="debug-button" @click="gameStore.debug = !gameStore.debug">Debug</button>
+        <button class="source-button" @click="openSourceCode">Source</button>
+        <button class="guide-button" @click="openGuide">Guide</button>
+      </div>
+      <div v-if="gameStore.debug" class="physics-indicator" :class="{ active: hasActivePhysics }">Physics</div>
     </div>
-    <div class="game-container" :style="{width: `${tileSize * gridSize}px`, height: `${tileSize * gridSize}px`}">
+    <div class="game-container" :style="{ width: `${tileSize * gridSize}px`, height: `${tileSize * gridSize}px` }">
       <GameGrid :grid-size="gridSize" :tile-size="tileSize" />
       <GameObjects :gameObjects="gameStore.objects" :tileSize="tileSize" />
       <HintDisplay />
@@ -56,6 +58,14 @@ const calculateTileSize = () => {
 
 const initializeWorld = () => {
   setupGameObjects(gameStore, gridSize.value)
+}
+
+const openSourceCode = () => {
+  window.open('https://github.com/kirodotdev/spirit-of-kiro/', '_blank')
+}
+
+const openGuide = () => {
+  window.open('https://kiro.dev/docs/guides/learn-by-playing/', '_blank')
 }
 
 onMounted(() => {
@@ -107,6 +117,36 @@ onUnmounted(() => {
   background-color: #45a049;
 }
 
+.source-button {
+  top: 10px;
+  left: 10px;
+  padding: 8px 16px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.source-button:hover {
+  background-color: #1976D2;
+}
+
+.guide-button {
+  top: 10px;
+  left: 10px;
+  padding: 8px 16px;
+  background-color: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.guide-button:hover {
+  background-color: #F57C00;
+}
+
 .control-buttons {
   position: absolute;
   top: 10px;
@@ -115,7 +155,15 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 10px;
   align-items: flex-start;
-  z-index: 9999; /* Ensure debug panel is above all other elements */
+  z-index: 9999;
+  /* Ensure debug panel is above all other elements */
+}
+
+.button-row {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
 }
 
 .physics-indicator {
