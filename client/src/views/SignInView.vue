@@ -1,5 +1,9 @@
 <template>
   <div class="auth-screen">
+    <div class="utility-buttons-top">
+      <button class="source-button" @click="openSourceCode">Source</button>
+      <button class="guide-button" @click="openGuide">Guide</button>
+    </div>
     <div class="auth-wrapper">
       <router-link to="/" class="back-link">← Back to Home</router-link>
       <div class="auth-container">
@@ -89,6 +93,14 @@ const removeListeners = () => {
     gameStore.removeEventListener('signin_failure', failureListenerId)
     failureListenerId = null;
   }
+}
+
+const openSourceCode = () => {
+  window.open('https://github.com/kirodotdev/spirit-of-kiro/', '_blank')
+}
+
+const openGuide = () => {
+  window.open('https://kiro.dev/docs/guides/learn-by-playing/', '_blank')
 }
 
 const handleSubmit = async () => {
@@ -260,5 +272,44 @@ input:focus {
   text-align: center;
   font-size: 0.9rem;
   margin-top: 0.5rem;
+}
+
+.utility-buttons-top {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 1001;
+}
+
+.source-button {
+  padding: 8px 16px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+
+.source-button:hover {
+  background-color: #1976D2;
+}
+
+.guide-button {
+  padding: 8px 16px;
+  background-color: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+
+.guide-button:hover {
+  background-color: #F57C00;
 }
 </style> 
