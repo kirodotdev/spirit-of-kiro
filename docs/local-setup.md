@@ -9,7 +9,7 @@ version of the service is provided.
 To get started:
 
 ```sh
-git clone git@github.com:kirodotdev/kiro-demo-game.git
+git clone git@github.com:kirodotdev/spirit-of-kiro.git
 ```
 
 ## 2. Setup your environment and install dependencies
