@@ -44,8 +44,8 @@ Before deploying the infrastructure, ensure you have:
 ### Clone and Prepare the Repository
 
 ```bash
-git clone git@github.com:kirodotdev/kiro-demo-game.git
-cd kiro-demo-game
+git clone git@github.com:kirodotdev/spirit-of-kiro.git
+cd spirit-of-kiro
 ```
 
 ### Production Deployment
