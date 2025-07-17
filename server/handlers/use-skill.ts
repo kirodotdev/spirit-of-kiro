@@ -1,25 +1,11 @@
-import { ConnectionState } from '../types';
+import { ConnectionState, UseSkillMessage } from '../types';
 import { getItemById, locationForItemId, createItem, moveItemLocation, updateItem } from '../state/item-store';
 import { useSkillStream } from '../llm/prompts';
 import { ITEM_IMAGES_SERVICE_CONFIG } from '../config';
 import { ServerWebSocket } from 'bun';
 import { formatMessage } from '../utils/message';
 
-interface UseSkillMessage {
-  type: 'use-skill';
-  body: {
-    toolId: string;
-    toolSkillIndex: number;
-    targetIds: string[];
-  };
-}
-
-interface UseSkillResponse {
-  type: string;
-  body?: any;
-}
-
-export default async function handleUseSkill(state: ConnectionState, data: UseSkillMessage, ws: ServerWebSocket): Promise<UseSkillResponse> {
+export default async function handleUseSkill(state: ConnectionState, data: UseSkillMessage, ws: ServerWebSocket<any>): Promise<{ type: string; body?: any }> {
   if (!state.userId) {
     return {
       type: 'error',
@@ -184,7 +170,7 @@ export default async function handleUseSkill(state: ConnectionState, data: UseSk
           const savedItem = await createItem(id, state.userId, item, `workbench-results`);
           processedItems.push(savedItem);
           
-          // Send new item to client
+          // Send new item to the client
           ws.send(formatMessage('skill-use-new-item', { item: savedItem }));
         } else if (item.id === toolId) {
           // Handle tool update
