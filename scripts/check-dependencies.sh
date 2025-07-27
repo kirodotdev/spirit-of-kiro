@@ -88,7 +88,7 @@ required_models=(
 
 # List of optional models (for image generation)
 optional_models=(
-    "amazon.titan-text-embedding-v2"
+    "amazon.titan-embed-text-v2:0"
     "amazon.nova-canvas"
 )
 
