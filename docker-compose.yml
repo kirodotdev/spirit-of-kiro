@@ -31,13 +31,11 @@ services:
 
   # Storage for game data
   dynamodb-local:
-    command: "-jar DynamoDBLocal.jar -sharedDb -dbPath ./data"
+    command: ["-jar", "DynamoDBLocal.jar", "-inMemory", "-sharedDb"]
     image: "amazon/dynamodb-local:latest"
     container_name: dynamodb-local
     ports:
       - "8000:8000"
-    volumes:
-      - "./docker/dynamodb:/home/dynamodblocal/data"
     working_dir: /home/dynamodblocal
     networks:
       credentials_network:

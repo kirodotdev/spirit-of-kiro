@@ -72,8 +72,10 @@ podman exec server bun run /app/bootstrap-local-dynamodb.js
 ```
 _(You can substitute `docker` for `podman` if you choose to use Docker Desktop)_
 
-Note: If you add a new table to the infrastructure as code, or modify a table structure
-then you should delete `docker/dynamodb/shared-local-instance.db` and rerun the command above.
+Note: The local DynamoDB runs in-memory mode, so data is lost when containers restart. If you add a new table to the infrastructure as code, or modify a table structure, restart the DynamoDB container and rerun the command above:
+```bash
+docker-compose restart dynamodb-local
+```
 
 # Don't like containers?
 
