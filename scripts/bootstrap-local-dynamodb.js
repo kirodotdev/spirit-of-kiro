@@ -44,7 +44,9 @@ async function bootstrapLocalDynamoDB() {
   // Read and parse the CloudFormation template
   console.log(`📋 Reading template file: ${TEMPLATE_PATH}`);
   const templateContent = readFileSync(TEMPLATE_PATH, 'utf8');
-  const template = parse(templateContent);
+  // The templateContent may contain YAML tags that can cause the parser to fail
+  // We split by 'Outputs' to remove those problematic tags from the parsing section
+  const template = parse(templateContent.split('\nOutputs:')[0]);
   
   // Extract table definitions from the template
   const tables = Object.entries(template.Resources)
