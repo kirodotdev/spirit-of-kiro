@@ -4,6 +4,7 @@ import chestOpenImage from '../assets/chest-open.png';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import ChestFullscreen from './ChestFullscreen.vue';
+import InteractPrompt from './InteractPrompt.vue';
 import { getRarityClass } from '../utils/items';
 
 const props = defineProps<{
@@ -134,7 +135,7 @@ const closeFullscreen = () => {
       height: `${depth * tileSize}px`,
       border: gameStore.debug ? '1px solid red': 'none'
     }">
-      <div v-if="playerIsNear" class="interact-prompt">E</div>
+      <InteractPrompt :show="playerIsNear" />
       
       <img 
         :src="chestImage" 

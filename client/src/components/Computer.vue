@@ -4,6 +4,7 @@ import computerZoomImage from '../assets/computer-zoom.png';
 import { useGameStore } from '../stores/game';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import ComputerFullscreen from './ComputerFullscreen.vue';
+import InteractPrompt from './InteractPrompt.vue';
 import { getRarityClass } from '../utils/items';
 
 const props = defineProps<{
@@ -118,7 +119,7 @@ const closeFullscreen = () => {
       height: `${depth * tileSize}px`,
       border: gameStore.debug ? '1px solid red': 'none'
     }">
-      <div v-if="playerIsNear" class="interact-prompt">E</div>
+      <InteractPrompt :show="playerIsNear" />
       
       <img 
         :src="computerImage" 

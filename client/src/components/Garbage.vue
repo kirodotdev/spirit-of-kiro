@@ -2,7 +2,8 @@
 import garbageImage from '../assets/garbage.png';
 import { useGameStore } from '../stores/game';
 import { ref, onMounted, onUnmounted } from 'vue';
-import { storeToRefs } from 'pinia'
+import { storeToRefs } from 'pinia';
+import InteractPrompt from './InteractPrompt.vue';
 
 const props = defineProps<{
   row: number;
@@ -54,7 +55,7 @@ onUnmounted(() => {
     height: `${depth * tileSize}px`,
     border: gameStore.debug ? '1px solid red': 'none'
   }">
-    <div v-if="playerIsNear" class="interact-prompt">E</div>
+    <InteractPrompt :show="playerIsNear" />
     <img 
       :src="garbageImage" 
       :width="width * tileSize" 

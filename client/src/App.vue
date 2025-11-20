@@ -8,8 +8,10 @@ const gameStore = useGameStore()
 const router = useRouter()
 
 onMounted(() => {
-  // Initialize WebSocket at app root level
-  gameStore.initWebSocket()
+  // Only initialize WebSocket if not on home page
+  if (router.currentRoute.value.name !== 'home') {
+    gameStore.initWebSocket()
+  }
 })
 
 onUnmounted(() => {

@@ -1,93 +1,725 @@
 <template>
-  <div class="home">
+  <div class="mystical-home">
+    <!-- Animated background particles -->
+    <div class="particle-container">
+      <div v-for="i in 50" :key="i" class="particle" :style="getParticleStyle(i)"></div>
+    </div>
+    
+    <!-- Floating runes -->
+    <div class="runes-container">
+      <div v-for="i in 8" :key="i" class="rune" :style="getRuneStyle(i)">{{ getRune(i) }}</div>
+    </div>
+
+    <!-- Sacred Geometry - Ibn Arabi inspired -->
+    <div class="sacred-geometry">
+      <svg class="geometry-circle" viewBox="0 0 200 200">
+        <circle cx="100" cy="100" r="80" class="circle-outer" />
+        <circle cx="100" cy="100" r="60" class="circle-middle" />
+        <circle cx="100" cy="100" r="40" class="circle-inner" />
+        <circle cx="100" cy="100" r="20" class="circle-core" />
+        <!-- Radiating lines representing Divine Names -->
+        <line v-for="i in 99" :key="i" 
+          :x1="100" :y1="100" 
+          :x2="100 + 80 * Math.cos(i * 2 * Math.PI / 99)" 
+          :y2="100 + 80 * Math.sin(i * 2 * Math.PI / 99)" 
+          class="divine-ray" 
+          :style="{ animationDelay: `${i * 0.01}s` }" />
+      </svg>
+    </div>
+
+    <!-- Arabic Calligraphy Elements -->
+    <div class="calligraphy-container">
+      <div v-for="i in 6" :key="i" class="arabic-letter" :style="getCalligraphyStyle(i)">
+        {{ getArabicLetter(i) }}
+      </div>
+    </div>
+
+    <!-- Main content -->
     <div class="hero">
-      <div class="hero-content">
-        <div class="hero-text">
-          <h1>Spirit of Kiro</h1>
-          <router-link to="/play" class="play-button">
-            Enter
+      <div class="mystical-frame">
+        <div class="corner-ornament top-left"></div>
+        <div class="corner-ornament top-right"></div>
+        <div class="corner-ornament bottom-left"></div>
+        <div class="corner-ornament bottom-right"></div>
+        
+        <div class="hero-content">
+          <div class="title-container">
+            <h1 class="mystical-title">
+              <span class="title-word">Spirit</span>
+              <span class="title-word">of</span>
+              <span class="title-word">Kiro</span>
+            </h1>
+            <div class="subtitle">An Infinite Crafting Workshop</div>
+          </div>
+
+          <div class="description">
+            <p>Enter a realm where magic and crafting intertwine.</p>
+            <p>Every item is unique. Every creation is yours.</p>
+          </div>
+
+          <!-- Ibn Arabi Quote -->
+          <div class="sufi-quote">
+            <div class="quote-text">
+              "My heart has become capable of every form"
+            </div>
+            <div class="quote-author">— Ibn Arabi</div>
+          </div>
+
+          <router-link to="/play" class="mystical-button">
+            <span class="button-glow"></span>
+            <span class="button-text">Enter the Workshop</span>
+            <span class="button-sparkles">✨</span>
           </router-link>
+
+          <div class="features">
+            <div class="feature">
+              <span class="feature-icon">🔮</span>
+              <span class="feature-text">AI-Powered Items</span>
+            </div>
+            <div class="feature">
+              <span class="feature-icon">⚗️</span>
+              <span class="feature-text">Free-form Crafting</span>
+            </div>
+            <div class="feature">
+              <span class="feature-icon">✨</span>
+              <span class="feature-text">Infinite Possibilities</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
+
+    <!-- Ambient glow effects -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
   </div>
 </template>
 
+<script setup lang="ts">
+const getParticleStyle = (index: number) => {
+  const size = Math.random() * 3 + 1;
+  const duration = Math.random() * 20 + 10;
+  const delay = Math.random() * 5;
+  const left = Math.random() * 100;
+  
+  return {
+    width: `${size}px`,
+    height: `${size}px`,
+    left: `${left}%`,
+    animationDuration: `${duration}s`,
+    animationDelay: `${delay}s`,
+  };
+};
+
+const getRuneStyle = (index: number) => {
+  const duration = Math.random() * 15 + 10;
+  const delay = Math.random() * 5;
+  const left = (index * 12) + Math.random() * 8;
+  const top = Math.random() * 80 + 10;
+  
+  return {
+    left: `${left}%`,
+    top: `${top}%`,
+    animationDuration: `${duration}s`,
+    animationDelay: `${delay}s`,
+  };
+};
+
+const getRune = (index: number) => {
+  const runes = ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ'];
+  return runes[index % runes.length];
+};
+
+const getCalligraphyStyle = (index: number) => {
+  const duration = Math.random() * 20 + 15;
+  const delay = Math.random() * 5;
+  const left = (index * 15) + Math.random() * 10;
+  const top = Math.random() * 90 + 5;
+  
+  return {
+    left: `${left}%`,
+    top: `${top}%`,
+    animationDuration: `${duration}s`,
+    animationDelay: `${delay}s`,
+  };
+};
+
+const getArabicLetter = (index: number) => {
+  // Arabic letters representing concepts from Ibn Arabi's philosophy
+  // ح (Haqq - Truth), ع (Ishq - Love), ن (Nur - Light), و (Wahda - Unity), ب (Baqa - Permanence), ف (Fana - Annihilation)
+  const letters = ['ح', 'ع', 'ن', 'و', 'ب', 'ف'];
+  return letters[index % letters.length];
+};
+</script>
+
 <style scoped>
-.home {
+.mystical-home {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #1a0a2e 0%, #0f0520 50%, #000000 100%);
+  color: #e6d5ff;
   text-align: center;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  position: relative;
+  overflow: hidden;
 }
 
+/* Particle effects */
+.particle-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.particle {
+  position: absolute;
+  background: radial-gradient(circle, rgba(138, 43, 226, 0.8) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float-up linear infinite;
+  opacity: 0;
+}
+
+@keyframes float-up {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) scale(1);
+    opacity: 0;
+  }
+}
+
+/* Floating runes */
+.runes-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.rune {
+  position: absolute;
+  font-size: 2rem;
+  color: rgba(138, 43, 226, 0.3);
+  animation: float-rune ease-in-out infinite;
+  text-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+}
+
+@keyframes float-rune {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+    opacity: 0.6;
+  }
+}
+
+/* Ambient glows */
+.ambient-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.3;
+  pointer-events: none;
+  animation: pulse-glow 8s ease-in-out infinite;
+}
+
+.glow-1 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(138, 43, 226, 0.4) 0%, transparent 70%);
+  top: 10%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.glow-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(75, 0, 130, 0.3) 0%, transparent 70%);
+  bottom: 10%;
+  right: 10%;
+  animation-delay: 2s;
+}
+
+.glow-3 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.3) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: 4s;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.1);
+  }
+}
+
+/* Hero section */
 .hero {
   padding: 2rem;
   width: 100%;
-  max-width: 800px;
-  min-height: 100vh;
+  max-width: 900px;
+  z-index: 10;
+  position: relative;
+}
+
+/* Mystical frame */
+.mystical-frame {
+  position: relative;
+  padding: 3rem;
+  background: rgba(15, 5, 32, 0.7);
+  border: 2px solid rgba(138, 43, 226, 0.5);
+  border-radius: 20px;
+  box-shadow: 
+    0 0 30px rgba(138, 43, 226, 0.3),
+    inset 0 0 30px rgba(138, 43, 226, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+/* Corner ornaments */
+.corner-ornament {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(218, 165, 32, 0.6);
+}
+
+.corner-ornament::before,
+.corner-ornament::after {
+  content: '';
+  position: absolute;
+  background: rgba(218, 165, 32, 0.6);
+}
+
+.top-left {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+  border-top-left-radius: 20px;
+}
+
+.top-right {
+  top: -2px;
+  right: -2px;
+  border-left: none;
+  border-bottom: none;
+  border-top-right-radius: 20px;
+}
+
+.bottom-left {
+  bottom: -2px;
+  left: -2px;
+  border-right: none;
+  border-top: none;
+  border-bottom-left-radius: 20px;
+}
+
+.bottom-right {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+  border-bottom-right-radius: 20px;
+}
+
+/* Title */
+.title-container {
+  margin-bottom: 2rem;
+}
+
+.mystical-title {
+  font-size: 4.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #daa520 0%, #ffd700 25%, #e6d5ff 50%, #daa520 75%, #ffd700 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 3s linear infinite;
+  text-shadow: 0 0 30px rgba(218, 165, 32, 0.5);
+  letter-spacing: 0.1em;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  gap: 0.2rem;
 }
 
-.hero-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.title-word {
+  display: block;
+  animation: float-word 3s ease-in-out infinite;
 }
 
-.hero-text {
-  text-align: center;
+.title-word:nth-child(2) {
+  animation-delay: 0.2s;
+  font-size: 0.6em;
+  opacity: 0.8;
 }
 
-h1 {
-  font-size: 4rem;
-  font-weight: 600;
-  margin-bottom: 2rem;
-  color: white;
+.title-word:nth-child(3) {
+  animation-delay: 0.4s;
 }
 
-.play-button {
-  display: inline-block;
-  padding: 1rem 3rem;
+@keyframes shimmer {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes float-word {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.subtitle {
   font-size: 1.2rem;
-  font-weight: 500;
+  color: #b19cd9;
+  font-style: italic;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+/* Description */
+.description {
+  margin: 2rem 0;
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #c9b3e6;
+}
+
+.description p {
+  margin: 0.5rem 0;
+}
+
+/* Mystical button */
+.mystical-button {
+  position: relative;
+  display: inline-block;
+  padding: 1.2rem 3rem;
+  margin: 2rem 0;
+  font-size: 1.3rem;
+  font-weight: 600;
   text-decoration: none;
-  color: white;
-  background: #4CAF50;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  color: #ffffff;
+  background: linear-gradient(135deg, #6a0dad 0%, #8a2be2 50%, #9370db 100%);
+  border: 2px solid rgba(218, 165, 32, 0.6);
+  border-radius: 50px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 0 20px rgba(138, 43, 226, 0.5),
+    inset 0 0 20px rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.05em;
 }
 
-.play-button:hover {
-  background: #45a049;
+.button-glow {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
+  animation: rotate-glow 4s linear infinite;
+  pointer-events: none;
 }
 
+@keyframes rotate-glow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.button-text {
+  position: relative;
+  z-index: 1;
+}
+
+.button-sparkles {
+  margin-left: 0.5rem;
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.2);
+  }
+}
+
+.mystical-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 5px 30px rgba(138, 43, 226, 0.7),
+    inset 0 0 30px rgba(255, 255, 255, 0.2);
+  border-color: rgba(218, 165, 32, 1);
+}
+
+/* Features */
+.features {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-top: 3rem;
+  flex-wrap: wrap;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(138, 43, 226, 0.1);
+  border: 1px solid rgba(138, 43, 226, 0.3);
+  border-radius: 15px;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.feature:hover {
+  background: rgba(138, 43, 226, 0.2);
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(138, 43, 226, 0.3);
+}
+
+.feature-icon {
+  font-size: 2rem;
+  filter: drop-shadow(0 0 10px rgba(138, 43, 226, 0.5));
+}
+
+.feature-text {
+  font-size: 0.9rem;
+  color: #b19cd9;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+
+/* Sacred Geometry */
+.sacred-geometry {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 600px;
+  opacity: 0.15;
+  pointer-events: none;
+  animation: rotate-sacred 120s linear infinite;
+}
+
+@keyframes rotate-sacred {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+.geometry-circle {
+  width: 100%;
+  height: 100%;
+}
+
+.circle-outer,
+.circle-middle,
+.circle-inner,
+.circle-core {
+  fill: none;
+  stroke: rgba(218, 165, 32, 0.4);
+  stroke-width: 1;
+  animation: pulse-circle 4s ease-in-out infinite;
+}
+
+.circle-middle {
+  animation-delay: 0.5s;
+}
+
+.circle-inner {
+  animation-delay: 1s;
+}
+
+.circle-core {
+  animation-delay: 1.5s;
+  stroke: rgba(218, 165, 32, 0.6);
+}
+
+@keyframes pulse-circle {
+  0%, 100% {
+    stroke-opacity: 0.3;
+  }
+  50% {
+    stroke-opacity: 0.7;
+  }
+}
+
+.divine-ray {
+  stroke: rgba(138, 43, 226, 0.2);
+  stroke-width: 0.5;
+  animation: ray-pulse 3s ease-in-out infinite;
+}
+
+@keyframes ray-pulse {
+  0%, 100% {
+    stroke-opacity: 0.1;
+  }
+  50% {
+    stroke-opacity: 0.4;
+  }
+}
+
+/* Arabic Calligraphy */
+.calligraphy-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.arabic-letter {
+  position: absolute;
+  font-size: 3rem;
+  font-family: 'Traditional Arabic', 'Arabic Typesetting', serif;
+  color: rgba(218, 165, 32, 0.25);
+  animation: float-calligraphy ease-in-out infinite;
+  text-shadow: 0 0 20px rgba(218, 165, 32, 0.4);
+  font-weight: bold;
+}
+
+@keyframes float-calligraphy {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translateY(-30px) scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+/* Sufi Quote */
+.sufi-quote {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  border-top: 1px solid rgba(218, 165, 32, 0.3);
+  border-bottom: 1px solid rgba(218, 165, 32, 0.3);
+  background: rgba(218, 165, 32, 0.05);
+  border-radius: 10px;
+}
+
+.quote-text {
+  font-size: 1.3rem;
+  font-style: italic;
+  color: #daa520;
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+  text-shadow: 0 0 10px rgba(218, 165, 32, 0.3);
+}
+
+.quote-author {
+  font-size: 1rem;
+  color: #b19cd9;
+  text-align: right;
+  font-style: normal;
+  letter-spacing: 0.1em;
+}
+
+/* Responsive design */
 @media (max-width: 768px) {
-  h1 {
+  .mystical-frame {
+    padding: 2rem 1.5rem;
+  }
+
+  .mystical-title {
     font-size: 2.5rem;
   }
 
-  .play-button {
-    padding: 0.8rem 2rem;
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .description {
+    font-size: 1rem;
+  }
+
+  .mystical-button {
+    padding: 1rem 2rem;
     font-size: 1.1rem;
   }
 
-  .utility-buttons {
-    flex-direction: column;
-    gap: 0.8rem;
+  .features {
+    gap: 1rem;
   }
 
-  .source-button,
-  .guide-button {
-    padding: 0.7rem 1.5rem;
-    font-size: 0.9rem;
+  .feature {
+    min-width: 120px;
+    padding: 0.8rem;
+  }
+
+  .rune {
+    font-size: 1.5rem;
+  }
+
+  .corner-ornament {
+    width: 30px;
+    height: 30px;
+  }
+
+  .sacred-geometry {
+    width: 300px;
+    height: 300px;
+  }
+
+  .arabic-letter {
+    font-size: 2rem;
+  }
+
+  .quote-text {
+    font-size: 1.1rem;
+  }
+
+  .sufi-quote {
+    padding: 1rem;
+    margin: 1.5rem 0;
   }
 }
 </style>

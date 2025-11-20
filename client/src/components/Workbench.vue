@@ -4,6 +4,7 @@ import workbenchZoomImage from '../assets/workbench-zoom.png';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useGameStore } from '../stores/game';
 import WorkbenchFullscreen from './WorkbenchFullscreen.vue';
+import InteractPrompt from './InteractPrompt.vue';
 import { getRarityClass } from '../utils/items';
 import GameItem from './GameItem.vue';
 
@@ -201,7 +202,7 @@ const closeFullscreen = () => {
       height: `${depth * tileSize}px`,
       border: gameStore.debug ? '1px solid red': 'none'
     }">
-      <div v-if="playerIsNear" class="interact-prompt">E</div>
+      <InteractPrompt :show="playerIsNear" />
       <img 
         :src="workbenchImage" 
         :width="width * tileSize" 
