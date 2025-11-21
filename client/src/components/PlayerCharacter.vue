@@ -142,6 +142,7 @@ const handleDropItem = (data: any) => {
     col: props.col,
     width: 1,
     depth: 1,
+    interactive: true,
     props: {
       itemId: heldItemId.value,
       pickedUp: true
@@ -443,6 +444,9 @@ watch(() => gameStore.interactionLocked, (newValue) => {
       class="ghost-container ghost-glow"
       alt="Ghost character"
     />
+    
+    <!-- Physics Improvements Badge -->
+    <div class="physics-badge">B</div>
   </div>
 </template>
 
@@ -482,5 +486,37 @@ watch(() => gameStore.interactionLocked, (newValue) => {
   0% { transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0)) translateY(0); }
   50% { transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0)) translateY(-8px); }
   100% { transform: scaleX(var(--scale-x, 1)) rotate(var(--rotation, 0)) translateY(0); }
+}
+
+/* Physics Improvements Badge */
+.physics-badge {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+@keyframes badge-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.6);
+  }
 }
 </style>

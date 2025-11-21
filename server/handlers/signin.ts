@@ -66,9 +66,25 @@ export default async function handleSignin(state: ConnectionState, data: SigninM
     };
   } catch (error: any) {
     console.error('Signin error:', error);
+    
+    // Map Cognito errors to user-friendly messages
+    let errorMessage = error.message;
+    
+    if (error.name === 'UserNotConfirmedException' || errorMessage.includes('UserNotConfirmedException')) {
+      errorMessage = 'Please verify your email before signing in. Check your inbox for the verification code.';
+    } else if (error.name === 'NotAuthorizedException' || errorMessage.includes('NotAuthorizedException')) {
+      errorMessage = 'Incorrect email or password. Please try again.';
+    } else if (error.name === 'UserNotFoundException' || errorMessage.includes('UserNotFoundException')) {
+      errorMessage = 'No account found with this email address.';
+    } else if (error.name === 'TooManyRequestsException' || errorMessage.includes('TooManyRequestsException')) {
+      errorMessage = 'Too many sign-in attempts. Please try again later.';
+    } else if (error.name === 'InvalidParameterException' || errorMessage.includes('InvalidParameterException')) {
+      errorMessage = 'Invalid email or password format.';
+    }
+    
     return {
       type: "signin_failure",
-      body: error.message
+      body: errorMessage
     };
   }
 }

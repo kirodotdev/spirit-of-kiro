@@ -10,6 +10,7 @@ export interface GameObject {
   width?: number
   height?: number
   depth?: number
+  interactive: boolean
   playerIsNear?: boolean
   physics?: PhysicsProperties
   props: any
@@ -66,9 +67,15 @@ export class GameObjectSystem {
       }
     })
 
-    // Find the closest object based on tile distance
+    // Find the closest INTERACTIVE object based on tile distance
+    // Exclude walls and non-interactive objects
     this.objects.value.forEach(obj => {
       if (obj.id === 'player') {
+        return
+      }
+
+      // Skip non-interactive objects
+      if (!obj.interactive) {
         return
       }
 
@@ -94,7 +101,7 @@ export class GameObjectSystem {
       }
     })
 
-    // Mark only the closest object as near if it's within threshold
+    // Mark only the closest interactive object as near if it's within threshold
     if (closestInteractiveId && closestDistance < proximityThreshold) {
       const closestObject = this.objects.value.find(obj => obj.id === closestInteractiveId)
       if (closestObject) {

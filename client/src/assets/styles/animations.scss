@@ -1,0 +1,494 @@
+/**
+ * Shared Animation Keyframes
+ * Reusable animations for auth screens and components
+ */
+
+// ============================================================================
+// Floating Animations
+// ============================================================================
+
+/**
+ * Float animation for particles
+ * Creates a gentle upward floating motion with fade in/out
+ */
+@keyframes float {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-40px) translateX(-10px);
+    opacity: 0;
+  }
+}
+
+/**
+ * Float up animation for particles rising from bottom
+ * Used for mystical particle effects
+ */
+@keyframes float-up {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) scale(1);
+    opacity: 0;
+  }
+}
+
+/**
+ * Gentle floating motion
+ * Subtle up and down movement for decorative elements
+ */
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+// ============================================================================
+// Pulse Animations
+// ============================================================================
+
+/**
+ * Pulse animation for buttons and interactive elements
+ * Creates a subtle breathing effect
+ */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+/**
+ * Pulse glow animation
+ * For glowing effects on buttons and borders
+ */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.1);
+  }
+}
+
+/**
+ * Pulse border animation
+ * For pulsing border effects
+ */
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: rgba(138, 43, 226, 0.3);
+    box-shadow: 0 0 10px rgba(138, 43, 226, 0.2);
+  }
+  50% {
+    border-color: rgba(138, 43, 226, 0.6);
+    box-shadow: 0 0 20px rgba(138, 43, 226, 0.4);
+  }
+}
+
+// ============================================================================
+// Shake Animations
+// ============================================================================
+
+/**
+ * Shake animation for error messages
+ * Horizontal shake to draw attention to errors
+ */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-10px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(10px);
+  }
+}
+
+/**
+ * Subtle shake for input validation errors
+ */
+@keyframes shake-subtle {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+
+// ============================================================================
+// Fade Animations
+// ============================================================================
+
+/**
+ * Fade in animation for component entrance
+ * Smooth opacity transition with slight upward movement
+ */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/**
+ * Fade in from top
+ */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/**
+ * Fade in from bottom
+ */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/**
+ * Fade out animation
+ */
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+// ============================================================================
+// Glow Animations
+// ============================================================================
+
+/**
+ * Glow animation for mystical effects
+ * Pulsing glow effect for magical elements
+ */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(218, 165, 32, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(218, 165, 32, 0.6);
+  }
+}
+
+/**
+ * Text glow animation
+ */
+@keyframes text-glow {
+  0%, 100% {
+    text-shadow: 0 0 5px rgba(218, 165, 32, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 15px rgba(218, 165, 32, 0.6);
+  }
+}
+
+/**
+ * Border glow animation
+ */
+@keyframes border-glow {
+  0%, 100% {
+    border-color: rgba(218, 165, 32, 0.4);
+    box-shadow: 0 0 10px rgba(218, 165, 32, 0.2);
+  }
+  50% {
+    border-color: rgba(218, 165, 32, 0.8);
+    box-shadow: 0 0 25px rgba(218, 165, 32, 0.5);
+  }
+}
+
+// ============================================================================
+// Rotation Animations
+// ============================================================================
+
+/**
+ * Rotate animation for loading spinners
+ */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/**
+ * Slow rotation for decorative elements
+ */
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// ============================================================================
+// Scale Animations
+// ============================================================================
+
+/**
+ * Scale up animation for emphasis
+ */
+@keyframes scaleUp {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/**
+ * Scale pulse for interactive elements
+ */
+@keyframes scale-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+// ============================================================================
+// Shimmer Animations
+// ============================================================================
+
+/**
+ * Shimmer effect for text and backgrounds
+ * Creates a moving gradient effect
+ */
+@keyframes shimmer {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/**
+ * Shimmer wave effect
+ */
+@keyframes shimmer-wave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+// ============================================================================
+// Success Animations
+// ============================================================================
+
+/**
+ * Success pulse animation
+ * For success indicators and checkmarks
+ */
+@keyframes success-pulse {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(76, 175, 80, 0.6);
+  }
+}
+
+/**
+ * Checkmark draw animation
+ */
+@keyframes checkmark-draw {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+// ============================================================================
+// Bounce Animations
+// ============================================================================
+
+/**
+ * Bounce animation for playful elements
+ */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+/**
+ * Subtle bounce for buttons
+ */
+@keyframes bounce-subtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+// ============================================================================
+// Slide Animations
+// ============================================================================
+
+/**
+ * Slide in from right
+ */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/**
+ * Slide in from left
+ */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// ============================================================================
+// Utility Classes
+// ============================================================================
+
+/**
+ * Apply animation classes directly to elements
+ */
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+.animate-rotate {
+  animation: rotate 2s linear infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 3s linear infinite;
+}
+
+.animate-bounce {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+// ============================================================================
+// Animation Timing Functions
+// ============================================================================
+
+/**
+ * Custom easing functions for smoother animations
+ */
+
+.ease-smooth {
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ease-bounce {
+  animation-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.ease-elastic {
+  animation-timing-function: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+}

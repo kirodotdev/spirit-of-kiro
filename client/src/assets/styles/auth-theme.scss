@@ -1,0 +1,402 @@
+/**
+ * Shared Auth Theme Styles
+ * Mystical color palette and typography for authentication screens
+ */
+
+// ============================================================================
+// Color Variables - Mystical Theme
+// ============================================================================
+
+// Primary colors
+$mystical-purple-dark: rgba(15, 5, 32, 0.95);
+$mystical-purple-medium: rgba(45, 15, 82, 0.95);
+$mystical-purple-light: rgba(138, 43, 226, 0.8);
+$mystical-purple-border: rgba(138, 43, 226, 0.5);
+$mystical-purple-glow: rgba(138, 43, 226, 0.3);
+
+// Gold accent colors
+$mystical-gold: rgba(218, 165, 32, 1);
+$mystical-gold-light: rgba(218, 165, 32, 0.8);
+$mystical-gold-border: rgba(218, 165, 32, 0.6);
+$mystical-gold-glow: rgba(218, 165, 32, 0.3);
+
+// Text colors
+$text-primary: #e6d5ff;
+$text-secondary: #b8a3d4;
+$text-tertiary: #c9b3e6;
+$text-muted: rgba(184, 163, 212, 0.5);
+
+// Background colors
+$bg-dark: rgba(0, 0, 0, 0.9);
+$bg-frame: rgba(15, 5, 32, 0.7);
+$bg-input: rgba(0, 0, 0, 0.3);
+$bg-input-focus: rgba(0, 0, 0, 0.5);
+
+// Status colors
+$error-color: #ff4444;
+$error-bg: rgba(255, 68, 68, 0.1);
+$error-border: rgba(255, 68, 68, 0.3);
+$success-color: #4CAF50;
+$success-bg: rgba(76, 175, 80, 0.1);
+$success-border: rgba(76, 175, 80, 0.6);
+
+// ============================================================================
+// Typography Variables
+// ============================================================================
+
+$font-family-serif: Georgia, 'Times New Roman', serif;
+$font-family-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+$font-size-title: 2rem;
+$font-size-subtitle: 1.2rem;
+$font-size-body: 1rem;
+$font-size-small: 0.9rem;
+$font-size-tiny: 0.85rem;
+
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-bold: 700;
+
+$line-height-tight: 1.2;
+$line-height-normal: 1.6;
+$line-height-relaxed: 1.8;
+
+// ============================================================================
+// Spacing Variables
+// ============================================================================
+
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+$spacing-xxl: 3rem;
+
+// ============================================================================
+// Border Radius
+// ============================================================================
+
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 20px;
+$border-radius-full: 50px;
+
+// ============================================================================
+// Transitions
+// ============================================================================
+
+$transition-fast: 0.2s ease;
+$transition-normal: 0.3s ease;
+$transition-slow: 0.5s ease;
+
+// ============================================================================
+// Common Auth Screen Styles
+// ============================================================================
+
+// Full-screen auth container
+@mixin auth-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, 
+    $mystical-purple-dark 0%, 
+    $mystical-purple-medium 50%, 
+    $mystical-purple-dark 100%
+  );
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+// Auth wrapper container
+@mixin auth-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 500px;
+  max-width: 90vw;
+}
+
+// Mystical frame with corner ornaments
+@mixin mystical-frame {
+  background: $bg-frame;
+  border: 2px solid $mystical-purple-border;
+  border-radius: $border-radius-lg;
+  padding: $spacing-xxl;
+  backdrop-filter: blur(10px);
+  box-shadow: 
+    0 0 30px $mystical-purple-glow,
+    inset 0 0 20px rgba(138, 43, 226, 0.1);
+  position: relative;
+  width: 100%;
+  
+  // Corner ornaments
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid $mystical-gold-border;
+  }
+  
+  &::before {
+    top: 10px;
+    left: 10px;
+    border-right: none;
+    border-bottom: none;
+  }
+  
+  &::after {
+    bottom: 10px;
+    right: 10px;
+    border-left: none;
+    border-top: none;
+  }
+}
+
+// Back link styling
+@mixin back-link {
+  color: $mystical-gold-light;
+  text-decoration: none;
+  font-size: $font-size-small;
+  transition: color $transition-normal;
+  margin-bottom: $spacing-md;
+  align-self: flex-start;
+  font-family: $font-family-serif;
+  
+  &:hover {
+    color: $mystical-gold;
+  }
+}
+
+// Title styling
+@mixin auth-title {
+  color: $text-primary;
+  text-align: center;
+  margin-bottom: $spacing-md;
+  font-family: $font-family-serif;
+  font-size: $font-size-title;
+  font-weight: $font-weight-bold;
+}
+
+// Instruction text
+@mixin instruction-text {
+  color: $text-secondary;
+  text-align: center;
+  margin-bottom: $spacing-xl;
+  font-family: $font-family-serif;
+  line-height: $line-height-normal;
+  
+  strong {
+    color: $text-primary;
+  }
+}
+
+// Form group
+@mixin form-group {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+// Label styling
+@mixin form-label {
+  color: $text-primary;
+  font-size: $font-size-small;
+  font-family: $font-family-serif;
+}
+
+// Input field styling
+@mixin form-input {
+  padding: 0.75rem;
+  border-radius: $border-radius-md;
+  border: 2px solid $mystical-purple-border;
+  background: $bg-input;
+  color: $text-primary;
+  font-size: $font-size-body;
+  font-family: $font-family-sans;
+  transition: all $transition-normal;
+  min-height: 44px; // Touch target size
+  
+  &:focus {
+    outline: none;
+    border-color: $mystical-gold-light;
+    box-shadow: 0 0 10px $mystical-gold-glow;
+    background: $bg-input-focus;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  &::placeholder {
+    color: $text-muted;
+  }
+}
+
+// Primary button (submit)
+@mixin primary-button {
+  padding: 0.75rem 2rem;
+  background: linear-gradient(135deg, 
+    $mystical-purple-light 0%, 
+    rgba(138, 43, 226, 0.6) 100%
+  );
+  color: $text-primary;
+  border: 2px solid $mystical-gold-border;
+  border-radius: $border-radius-md;
+  font-size: $font-size-body;
+  font-family: $font-family-serif;
+  cursor: pointer;
+  transition: all $transition-normal;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  min-height: 44px; // Touch target size
+  min-width: 44px;
+  
+  &:hover:not(:disabled) {
+    background: linear-gradient(135deg, 
+      rgba(138, 43, 226, 1) 0%, 
+      $mystical-purple-light 100%
+    );
+    box-shadow: 0 0 20px rgba(138, 43, 226, 0.5);
+    transform: translateY(-2px);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Secondary button (resend, etc.)
+@mixin secondary-button {
+  background: transparent;
+  border: 1px solid $mystical-gold-border;
+  color: $mystical-gold-light;
+  padding: 0.75rem 2rem;
+  border-radius: $border-radius-md;
+  font-size: $font-size-body;
+  font-family: $font-family-serif;
+  cursor: pointer;
+  transition: all $transition-normal;
+  min-height: 44px; // Touch target size
+  min-width: 44px;
+  
+  &:hover:not(:disabled) {
+    background: rgba(218, 165, 32, 0.1);
+    border-color: $mystical-gold-light;
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Error message styling
+@mixin error-message {
+  color: $error-color;
+  text-align: center;
+  font-size: $font-size-small;
+  padding: 0.75rem;
+  background: $error-bg;
+  border-radius: $border-radius-md;
+  border: 1px solid $error-border;
+}
+
+// Success message styling
+@mixin success-message {
+  color: $success-color;
+  text-align: center;
+  font-size: $font-size-small;
+  padding: 0.75rem;
+  background: $success-bg;
+  border-radius: $border-radius-md;
+  border: 1px solid $success-border;
+}
+
+// Loading indicator
+@mixin loading-indicator {
+  text-align: center;
+  color: $text-secondary;
+  margin-top: $spacing-md;
+  font-family: $font-family-serif;
+}
+
+// Utility buttons (Source, Guide)
+@mixin utility-buttons {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 1001;
+}
+
+@mixin utility-button($bg-color, $hover-color) {
+  padding: 8px 16px;
+  background-color: $bg-color;
+  color: white;
+  border: none;
+  border-radius: $border-radius-sm;
+  cursor: pointer;
+  font-size: $font-size-small;
+  transition: background-color $transition-normal;
+  
+  &:hover {
+    background-color: $hover-color;
+  }
+}
+
+// ============================================================================
+// Mobile Responsiveness
+// ============================================================================
+
+$breakpoint-mobile: 480px;
+$breakpoint-tablet: 768px;
+
+@mixin mobile {
+  @media (max-width: $breakpoint-mobile) {
+    @content;
+  }
+}
+
+@mixin tablet {
+  @media (max-width: $breakpoint-tablet) {
+    @content;
+  }
+}
+
+// Mobile-specific adjustments
+@mixin mobile-frame {
+  @include mobile {
+    padding: $spacing-xl $spacing-lg;
+    margin: $spacing-md;
+  }
+}
+
+@mixin mobile-title {
+  @include mobile {
+    font-size: 1.5rem;
+  }
+}
+
+@mixin mobile-text {
+  @include mobile {
+    font-size: $font-size-small;
+  }
+}
+
+@mixin mobile-button {
+  @include mobile {
+    padding: 0.75rem 1.5rem;
+    font-size: $font-size-small;
+  }
+}
