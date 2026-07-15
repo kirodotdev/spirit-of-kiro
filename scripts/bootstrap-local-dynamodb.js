@@ -44,7 +44,11 @@ async function bootstrapLocalDynamoDB() {
   // Read and parse the CloudFormation template
   console.log(`📋 Reading template file: ${TEMPLATE_PATH}`);
   const templateContent = readFileSync(TEMPLATE_PATH, 'utf8');
-  const template = parse(templateContent);
+  // Neutralize CloudFormation intrinsic tags (e.g. !Ref, !GetAtt) which the
+  // plain YAML parser cannot handle. They only appear in Outputs, which this
+  // bootstrap does not use (it reads Resources). See issue #7.
+  const CFN_TAGS = /!(Ref|GetAtt|Sub|Join|Select|Split|GetAZs|ImportValue|FindInMap|Base64|Cidr|If|Equals|Not|And|Or|Condition)\b/g;
+  const template = parse(templateContent.replace(CFN_TAGS, ''));
   
   // Extract table definitions from the template
   const tables = Object.entries(template.Resources)

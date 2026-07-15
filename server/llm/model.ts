@@ -6,10 +6,11 @@ const bedrockClient = new BedrockRuntimeClient({
 });
 
 // Model fallback configuration
-type ModelId = 'us.anthropic.claude-sonnet-4-20250514-v1:0' | 'us.anthropic.claude-3-7-sonnet-20250219-v1:0' | 'us.amazon.nova-pro-v1:0';
+type ModelId = 'us.anthropic.claude-sonnet-5' | 'us.amazon.nova-pro-v1:0';
 const MODELS: ModelId[] = [
-  //'us.anthropic.claude-sonnet-4-20250514-v1:0',
-  'us.anthropic.claude-3-7-sonnet-20250219-v1:0',
+  // Primary: latest Claude Sonnet. Fallback: Nova Pro. The failover logic below
+  // also covers the case where Sonnet access has not yet been granted.
+  'us.anthropic.claude-sonnet-5',
   'us.amazon.nova-pro-v1:0'
 ];
 
@@ -67,16 +68,26 @@ export const invoke = async (prompt: object): Promise<string | undefined> => {
       // Invoke the model using Converse API
       const response = await bedrockClient.send(command);
       
-      // Extract the response text
-      const output = response.output?.message?.content?.[0]?.text;
+      // Extract the response text. Some models (e.g. Claude Sonnet 5 with
+      // extended thinking) return a reasoningContent block before the text
+      // block, so select text blocks rather than assuming index 0.
+      const output = response.output?.message?.content
+        ?.filter((b: any) => typeof b?.text === 'string')
+        .map((b: any) => b.text)
+        .join('');
       
       console.log(`LLM - Model: ${currentModelId} Latency: ${response.metrics?.latencyMs} Cache: ${response.usage?.cacheReadInputTokens} In: ${response.usage?.inputTokens} Out: ${response.usage?.outputTokens}`);
       return output;
     } catch (err: any) {
       console.error(`Error with model ${currentModelId}:`, err);
       
-      // Check if it's a throttling error
-      if (err.name === 'ThrottlingException') {
+      // Fail over on throttling OR when the current model is unavailable
+      // (legacy/EOL, access not granted, or invalid model id).
+      const isFailover =
+        err.name === 'ThrottlingException' ||
+        err.name === 'ResourceNotFoundException' ||
+        err.name === 'AccessDeniedException';
+      if (isFailover) {
         // Mark current model as in cooldown
         modelFallbackState.set(currentModelId, Date.now());
         
@@ -91,7 +102,7 @@ export const invoke = async (prompt: object): Promise<string | undefined> => {
       }
       
       // If we've exhausted all attempts or it's not a throttling error
-      if (attempts >= maxAttempts - 1 || err.name !== 'ThrottlingException') {
+      if (attempts >= maxAttempts - 1 || !isFailover) {
         return undefined;
       }
       
@@ -148,8 +159,13 @@ export const invokeStream = async (
     } catch (err: any) {
       console.error(`Error with streaming model ${currentModelId}:`, err);
       
-      // Check if it's a throttling error
-      if (err.name === 'ThrottlingException') {
+      // Fail over on throttling OR when the current model is unavailable
+      // (legacy/EOL, access not granted, or invalid model id).
+      const isFailover =
+        err.name === 'ThrottlingException' ||
+        err.name === 'ResourceNotFoundException' ||
+        err.name === 'AccessDeniedException';
+      if (isFailover) {
         // Mark current model as in cooldown
         modelFallbackState.set(currentModelId, Date.now());
         
@@ -164,7 +180,7 @@ export const invokeStream = async (
       }
       
       // If we've exhausted all attempts or it's not a throttling error
-      if (attempts >= maxAttempts - 1 || err.name !== 'ThrottlingException') {
+      if (attempts >= maxAttempts - 1 || !isFailover) {
         return;
       }
       

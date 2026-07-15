@@ -82,14 +82,13 @@ echo "Checking AWS Bedrock model access..."
 # List of required models
 required_models=(
     "amazon.nova-pro"
-    "anthropic.claude-3-sonnet-20240229"
-    "anthropic.claude-3-sonnet-20240229-v1:0"
+    "anthropic.claude-sonnet-5"
 )
 
 # List of optional models (for image generation)
 optional_models=(
     "amazon.titan-embed-text-v2:0"
-    "amazon.nova-canvas"
+    "stability.stable-image-core-v1:1"
 )
 
 # Get available models

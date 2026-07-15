@@ -115,10 +115,12 @@ export async function storeKeyValue(
   metadata?: Record<string, any>
 ): Promise<string> {
   try {
-    // Ensure vector index exists
+    // Ensure vector index exists. If RediSearch is unavailable, skip the
+    // vector-store write (dedup optimization is a no-op) rather than failing.
     const indexExists = await ensureVectorIndex();
     if (!indexExists) {
-      throw new Error('Failed to ensure vector index exists');
+      console.warn('Vector index unavailable; skipping vector store write');
+      return '';
     }
     
     // Generate embeddings for the input key
@@ -156,10 +158,13 @@ export async function nearestMatch(
   limit: number = 1
 ): Promise<any> {
   try {
-    // Ensure vector index exists
+    // Ensure vector index exists. If RediSearch is unavailable, degrade
+    // gracefully by treating this as "no match" so a fresh image is generated
+    // rather than failing the request.
     const indexExists = await ensureVectorIndex();
     if (!indexExists) {
-      throw new Error('Failed to ensure vector index exists');
+      console.warn('Vector index unavailable; skipping similarity match (generating fresh)');
+      return;
     }
     
     // Generate embeddings for the input key
