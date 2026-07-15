@@ -53,10 +53,16 @@ export async function generateImage(prompt) {
 }
 
 export async function uploadToS3(imageData, fileName) {
-  // Resize the base64 image to 320x320 pixels
-  const resizedImageBuffer = await sharp(Buffer.from(imageData, 'base64'))
-    .resize(320, 320)
-    .toBuffer();
+  // Resize the base64 image to 320x320 pixels. sharp's native binding can be
+  // unreliable in some runtime/arch combos, so fall back to the original image
+  // rather than failing the whole request.
+  const originalBuffer = Buffer.from(imageData, 'base64');
+  let resizedImageBuffer = originalBuffer;
+  try {
+    resizedImageBuffer = await sharp(originalBuffer).resize(320, 320).toBuffer();
+  } catch (err) {
+    console.warn('sharp resize failed; uploading original image:', err instanceof Error ? err.message : err);
+  }
 
   const params = {
     Bucket: IMAGES_BUCKET_NAME,
