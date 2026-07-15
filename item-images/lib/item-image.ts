@@ -1,5 +1,6 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { randomUUID } from 'node:crypto';
 import sharp from 'sharp';
 import { S3_CONFIG, CLOUDFRONT_CONFIG } from '../config';
@@ -11,33 +12,32 @@ if (!IMAGES_BUCKET_NAME) {
 }
 
 const CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME = CLOUDFRONT_CONFIG.domain;
-if (!CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME) {
+
+// Local-testing mode: return presigned S3 URLs instead of CloudFront URLs.
+const USE_PRESIGNED_URLS = process.env.USE_PRESIGNED_URLS === 'true';
+if (!USE_PRESIGNED_URLS && !CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME) {
   throw new Error('CLOUDFRONT_DOMAIN environment variable is required');
 }
 
-const bedrockRuntime = new BedrockRuntimeClient({ region: "us-east-1" });
-const s3Client = new S3Client();
+// Image generation model (text-to-image). Nova Canvas v1 is now a legacy,
+// access-restricted Bedrock model, so default to an active Stability model.
+const IMAGE_MODEL_ID = process.env.IMAGE_MODEL_ID || 'stability.stable-image-core-v1:1';
+const IMAGE_MODEL_REGION = process.env.IMAGE_MODEL_REGION || 'us-west-2';
+
+const bedrockRuntime = new BedrockRuntimeClient({ region: IMAGE_MODEL_REGION });
+const s3Client = new S3Client({ region: process.env.AWS_REGION || IMAGE_MODEL_REGION });
 
 export async function generateImage(prompt) {
   const params = {
-    modelId: 'amazon.nova-canvas-v1:0',
+    modelId: IMAGE_MODEL_ID,
     contentType: 'application/json',
     accept: 'application/json',
     body: JSON.stringify({
-      taskType: "TEXT_IMAGE", 
-      textToImageParams: {
-        text: prompt,
-        negativeText: 'shadow, floor, human, person, realistic'
-      },
-      imageGenerationConfig: {
-        cfgScale: 9.9,
-        seed: Math.floor(Math.random() * 1000000),
-        quality: "standard", 
-        // Smallest possible size for Nova canvas (https://docs.aws.amazon.com/nova/latest/userguide/image-gen-access.html#image-gen-resolutions)
-        width: 320, 
-        height: 320,
-        numberOfImages: 1
-      }
+      prompt,
+      negative_prompt: 'shadow, floor, human, person, realistic',
+      mode: 'text-to-image',
+      aspect_ratio: '1:1',
+      output_format: 'png'
     })
   };
 
@@ -53,10 +53,16 @@ export async function generateImage(prompt) {
 }
 
 export async function uploadToS3(imageData, fileName) {
-  // Resize the base64 image to 320x320 pixels
-  const resizedImageBuffer = await sharp(Buffer.from(imageData, 'base64'))
-    .resize(320, 320)
-    .toBuffer();
+  // Resize the base64 image to 320x320 pixels. sharp's native binding can be
+  // unreliable in some runtime/arch combos, so fall back to the original image
+  // rather than failing the whole request.
+  const originalBuffer = Buffer.from(imageData, 'base64');
+  let resizedImageBuffer = originalBuffer;
+  try {
+    resizedImageBuffer = await sharp(originalBuffer).resize(320, 320).toBuffer();
+  } catch (err) {
+    console.warn('sharp resize failed; uploading original image:', err instanceof Error ? err.message : err);
+  }
 
   const params = {
     Bucket: IMAGES_BUCKET_NAME,
@@ -69,6 +75,13 @@ export async function uploadToS3(imageData, fileName) {
   try {
     const command = new PutObjectCommand(params);
     await s3Client.send(command);
+    if (USE_PRESIGNED_URLS) {
+      return await getSignedUrl(
+        s3Client,
+        new GetObjectCommand({ Bucket: IMAGES_BUCKET_NAME, Key: fileName }),
+        { expiresIn: 3600 }
+      );
+    }
     return `https://${CLOUDFRONT_DISTRIBUTION_DOMAIN_NAME}/${fileName}`;
   } catch (error) {
     console.error('Error uploading to S3:', error);
@@ -136,7 +149,11 @@ export async function getImage(item, similarityThreshold = 0.25) {
       { id: item.id, text: itemKey }  // Store item metadata
     );
     
-    console.log(`NEW: "${item.icon}" Closest match "${similarImage.value.key_text}" with score ${similarImage.value.score}: ${imageUrl}`);
+    if (similarImage) {
+      console.log(`NEW: "${item.icon}" Closest match "${similarImage.value.key_text}" with score ${similarImage.value.score}: ${imageUrl}`);
+    } else {
+      console.log(`NEW: "${item.icon}" (no prior match): ${imageUrl}`);
+    }
     return imageUrl;
   } catch (error) {
 

@@ -19,12 +19,11 @@ Running this project relies on the following dependencies:
 * A local installation of [Docker Desktop](https://www.docker.com/products/docker-desktop/) or [Podman](https://podman.io/).
 * An AWS account, [credentials to access that AWS account](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-prereqs.html), and [`aws` CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html).
 * AWS Bedrock access to the following models
-   - One or more of:
+   - One or more of (for item text generation):
+      - Anthropic Claude Sonnet 5
       - Amazon Nova Pro
-      - Anthropic Claude Sonnet 3.7
-      - Anthropic Claude Sonnet 4
    - Amazon Titan Text Embeddings v2 (only if you want to generate item images yourself)
-   - Amazon Nova Canvas (only if you want to generate item images yourself)
+   - Stability Stable Image Core (only if you want to generate item images yourself)
 
 Run the following script to verify that the dependencies are fulfilled:
 

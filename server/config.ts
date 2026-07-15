@@ -57,7 +57,7 @@ export const REDIS_CONFIG = {
 };
 
 export const ITEM_IMAGES_SERVICE_CONFIG = {
-  url: getEnv('ITEM_IMAGES_SERVICE_URL') || 'https://item-images.nathanpeck.gg',
+  url: getEnv('ITEM_IMAGES_SERVICE_URL') || 'http://spirit-of-kiro-service-alb-826422305.us-west-2.elb.amazonaws.com',
 };
 
 export const COGNITO_CONFIG = {
