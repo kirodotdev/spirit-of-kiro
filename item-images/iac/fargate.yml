@@ -70,6 +70,15 @@ Parameters:
     Default: 2
     Description: Number of task instances to run
 
+  RateLimitPerIp:
+    Type: Number
+    Default: 300
+    Description: >-
+      Max requests allowed per source IP within the WAF evaluation window
+      (5 minutes) before that IP is blocked. Generous enough for a real
+      tutorial player; bounds abuse of this public, unauthenticated endpoint.
+    MinValue: 10
+
 Resources:
   # ECS Cluster
   ECSCluster:
@@ -342,6 +351,43 @@ Resources:
         - Type: forward
           TargetGroupArn: !Ref TargetGroup
 
+  # AWS WAF: per-IP rate limiting on the public /image endpoint. This service is
+  # shared and unauthenticated (every player's local game calls it), and it is
+  # backed by Bedrock + S3, so an unbounded endpoint is a cost/abuse risk. The
+  # rate-based rule blocks a source IP that exceeds RateLimitPerIp requests in a
+  # rolling 5-minute window; everything else is allowed (DefaultAction: Allow).
+  WebAcl:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: !Sub "${AWS::StackName}-web-acl"
+      Scope: REGIONAL
+      DefaultAction:
+        Allow: {}
+      VisibilityConfig:
+        SampledRequestsEnabled: true
+        CloudWatchMetricsEnabled: true
+        MetricName: !Sub "${AWS::StackName}-web-acl"
+      Rules:
+        - Name: RateLimitPerIp
+          Priority: 0
+          Action:
+            Block: {}
+          Statement:
+            RateBasedStatement:
+              Limit: !Ref RateLimitPerIp
+              AggregateKeyType: IP
+              EvaluationWindowSec: 300
+          VisibilityConfig:
+            SampledRequestsEnabled: true
+            CloudWatchMetricsEnabled: true
+            MetricName: !Sub "${AWS::StackName}-rate-limit-per-ip"
+
+  WebAclAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      ResourceArn: !Ref LoadBalancer
+      WebAclArn: !GetAtt WebAcl.Arn
+
   # ECS Service
   Service:
     Type: AWS::ECS::Service
@@ -397,6 +443,12 @@ Outputs:
     Value: !GetAtt LoadBalancer.DNSName
     Export:
       Name: !Sub "${AWS::StackName}-LoadBalancerDNS"
+
+  WebAclArn:
+    Description: ARN of the WAF WebACL rate-limiting the ALB
+    Value: !GetAtt WebAcl.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-WebAclArn"
 
   PlaceholderOutput:
     Description: Placeholder output value
